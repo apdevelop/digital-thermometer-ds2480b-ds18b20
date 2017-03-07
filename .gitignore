@@ -1,0 +1,9 @@
+Dist
+
+Src/**/[Bb]in/
+Src/**/[Oo]bj/
+Src/*.suo
+Src/**/*.user
+Src/**/StyleCop.Cache
+
+Src/packages/
