@@ -1,4 +1,4 @@
-# Digital Thermometer using DS2480B 1-Wire bus driver with DB18B20 digital temperature sensors
+# Digital Thermometer using DS2480B 1-Wire bus driver with DS18B20 digital temperature sensors
 Windows desktop application with basic hardware support implementation in separate assembly.
 
 ### Technologies
