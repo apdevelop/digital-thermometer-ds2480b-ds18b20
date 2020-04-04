@@ -45,7 +45,7 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return Hardware.SerialPortUtils.GetSerialPortNames();
+                return SerialPortUtils.GetSerialPortNames();
             }
         }
 
@@ -63,7 +63,7 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.selectedSerialPortName != value)
                 {
                     this.selectedSerialPortName = value;
-                    base.OnPropertyChanged("SelectedSerialPortName");
+                    base.OnPropertyChanged(nameof(SelectedSerialPortName));
                 }
             }
         }
@@ -110,7 +110,7 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.isSimultaneousMeasurementsMode != value)
                 {
                     this.isSimultaneousMeasurementsMode = value;
-                    base.OnPropertyChanged("IsSimultaneousMeasurementsMode");
+                    base.OnPropertyChanged(nameof(IsSimultaneousMeasurementsMode));
                 }
             }
         }
@@ -132,7 +132,7 @@ namespace DigitalThermometer.App.ViewModels
                 {
                     this.isTimerMeasurementsMode = value;
                     this.measurementsTimer.IsEnabled = value;
-                    base.OnPropertyChanged("IsTimerMeasurementsMode");
+                    base.OnPropertyChanged(nameof(IsTimerMeasurementsMode));
                 }
             }
         }
@@ -225,12 +225,12 @@ namespace DigitalThermometer.App.ViewModels
                     this.measuresRuns++;
                     var stopwatch = Stopwatch.StartNew();
 
-                    var portConnection = new Hardware.SerialPortConnection();
+                    var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
                     var busMaster = new Hardware.OneWireMaster(portConnection);
 
                     try
                     {
-                        var busResult = busMaster.Open(this.SelectedSerialPortName);
+                        var busResult = busMaster.Open();
 
                         // Bus diagnostic
                         switch (busResult)

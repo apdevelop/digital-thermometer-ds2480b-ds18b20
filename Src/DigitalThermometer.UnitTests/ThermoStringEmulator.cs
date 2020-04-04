@@ -9,7 +9,7 @@ namespace DigitalThermometer.UnitTests
     /// <summary>
     /// Simple software emulator of DS2480B + DS18B20
     /// </summary>
-    sealed class ThermoStringEmulator : ISerialPortConnection
+    sealed class ThermoStringEmulator : ISerialConnection
     {
         private bool isOpened = false;
 
@@ -22,6 +22,7 @@ namespace DigitalThermometer.UnitTests
             this.romCodes = romCodes.ToList();
             foreach (var romCode in this.romCodes)
             {
+                // TODO: check family code 0x28
                 if (Crc8Utility.CalculateCrc8(BitConverter.GetBytes(romCode)) != 0)
                 {
                     throw new ArgumentException($"CRC Error for ROM Code = {romCode:X8}");
@@ -29,29 +30,19 @@ namespace DigitalThermometer.UnitTests
             }
         }
 
-        #region ISerialPortConnection Members
+        #region ISerialConnection Members
 
-        public void OpenPort(string serialPortName, int baudRate)
+        void ISerialConnection.OpenPort()
         {
             this.isOpened = true;
         }
 
-        public void ClosePort(bool self)
+        void ISerialConnection.ClosePort(bool self)
         {
             this.isOpened = false;
         }
 
-        public void SetDtr(bool value)
-        {
-
-        }
-
-        public void SetRts(bool value)
-        {
-
-        }
-
-        public void TransmitData(byte[] data)
+        void ISerialConnection.TransmitData(byte[] data)
         {
             if (!this.isOpened)
             {
@@ -63,11 +54,7 @@ namespace DigitalThermometer.UnitTests
             var response = this.ProcessRxBuffer();
             if (response != null)
             {
-                if (this.OnDataReceived != null)
-                {
-                    this.OnDataReceived(response.ToArray());
-                }
-
+                this.OnDataReceived?.Invoke(response.ToArray());
                 this.rxBuffer.Clear();
             }
         }
@@ -101,7 +88,8 @@ namespace DigitalThermometer.UnitTests
                 }
                 // TODO: split to MATCH_ROM + READ_SCRATCHPAD
                 else if ((this.rxBuffer.Count == 20) &&
-                         (this.rxBuffer[1] == DS18B20.MATCH_ROM) && (this.rxBuffer[10] == DS18B20.READ_SCRATCHPAD))
+                         (this.rxBuffer[1] == DS18B20.MATCH_ROM) && 
+                         (this.rxBuffer[10] == DS18B20.READ_SCRATCHPAD))
                 {
                     var result = new List<byte>();
                     result.Add(DS18B20.MATCH_ROM); // TODO: check ROM presense in this.romCodes

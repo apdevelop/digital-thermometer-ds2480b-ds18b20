@@ -10,11 +10,9 @@ namespace DigitalThermometer.Hardware
     /// </summary>
     public class OneWireMaster
     {
-        private const int SerialPortBaudRate = 9600; // TODO: abstraction from SerialPort
-
         private const int ResetBusTimeout = 500; // TODO: configurable timeouts
 
-        private ISerialPortConnection portconn; // TODO: abstraction from SerialPort
+        private readonly ISerialConnection port;
 
         private readonly List<byte> receiveBuffer = new List<byte>(); // TODO: threading issues ?
 
@@ -29,16 +27,16 @@ namespace DigitalThermometer.Hardware
 
         private byte[] romCodeTempBuffer = new byte[21];
 
-        public OneWireMaster(ISerialPortConnection portConnection)
+        public OneWireMaster(ISerialConnection portConnection)
         {
-            this.portconn = portConnection;
-            this.portconn.OnDataReceived += this.PortByteReceived;
+            this.port = portConnection;
+            this.port.OnDataReceived += this.PortByteReceived;
         }
 
-        public OneWireBusResetResponse Open(string serialPortName)
+        public OneWireBusResetResponse Open()
         {
             this.rxDataWaitHandle = new AutoResetEvent(false);
-            this.portconn.OpenPort(serialPortName, SerialPortBaudRate); // TODO: abstraction from SerialPort
+            this.port.OpenPort();
             this.Set1WireMode();
 
             this.ClearReceiveBuffer();
@@ -58,7 +56,7 @@ namespace DigitalThermometer.Hardware
         public void Close()
         {
             this.rxDataWaitHandle.Close();
-            this.portconn.ClosePort();
+            this.port.ClosePort();
         }
 
         /// <summary>
@@ -67,7 +65,7 @@ namespace DigitalThermometer.Hardware
         /// <param name="data">Data to transmit to port as-is</param>
         private void TransmitRawData(byte[] data)
         {
-            this.portconn.TransmitData(data);
+            this.port.TransmitData(data);
         }
 
         private AutoResetEvent rxDataWaitHandle;
@@ -97,8 +95,6 @@ namespace DigitalThermometer.Hardware
         private void Set1WireMode()
         {
             this.ClearReceiveBuffer();
-            //this.portconn.SetDTR(true);
-            //this.portconn.SetRTS(false);
             this.Set1WireFlexParams();
             Thread.Sleep(500); // TODO: async
             this.ClearReceiveBuffer();

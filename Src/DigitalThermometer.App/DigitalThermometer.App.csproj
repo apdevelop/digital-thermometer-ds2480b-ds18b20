@@ -67,8 +67,11 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Models\SensorStateModel.cs" />
+    <Compile Include="Utils\SerialPortConnection.cs" />
     <Compile Include="Utils\BaseNotifyPropertyChanged.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
+    <Compile Include="Utils\SerialPortUtils.cs" />
+    <Compile Include="Utils\StringLogicalComparer.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\SensorStateViewModel.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">

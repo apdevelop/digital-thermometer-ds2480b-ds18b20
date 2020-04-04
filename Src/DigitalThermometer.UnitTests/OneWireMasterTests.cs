@@ -14,7 +14,7 @@ namespace DigitalThermometer.UnitTests
         {
             var emulator = new ThermoStringEmulator(new[] { 0x91000000BED06928, });
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open("COM1");
+            var result = busMaster.Open();
 
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
         }
@@ -24,7 +24,7 @@ namespace DigitalThermometer.UnitTests
         {
             var emulator = new ThermoStringEmulator(new ulong[] { });
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open("COM1");
+            var result = busMaster.Open();
 
             Assert.AreEqual(OneWireBusResetResponse.NoPresencePulse, result);
         }
@@ -37,7 +37,7 @@ namespace DigitalThermometer.UnitTests
 
             var emulator = new ThermoStringEmulator(new ulong[] { device1, device2, });
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open("COM1");
+            var result = busMaster.Open();
 
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
 
@@ -53,7 +53,7 @@ namespace DigitalThermometer.UnitTests
             var romCodes = new ulong[] { 0x4D000000BE736128, 0x91000000BED06928, };
             var emulator = new ThermoStringEmulator(romCodes);
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open("COM1");
+            var result = busMaster.Open();
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
 
             var measurements = busMaster.PerformDS18B20TemperatureMeasure(romCodes);

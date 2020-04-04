@@ -30,19 +30,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="BitUtility.cs" />
     <Compile Include="Crc8Utility.cs" />
     <Compile Include="DS18B20.cs" />
     <Compile Include="DS2480B.cs" />
-    <Compile Include="ISerialPortConnection.cs" />
+    <Compile Include="ISerialConnection.cs" />
     <Compile Include="OneWireBusResetResponse.cs" />
     <Compile Include="OneWireMaster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SerialPortConnection.cs" />
-    <Compile Include="SerialPortUtils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
