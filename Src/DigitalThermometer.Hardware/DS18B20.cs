@@ -110,10 +110,10 @@ namespace DigitalThermometer.Hardware
         }
 
         /// <summary>
-        /// Convert temperature code to value (12bit mode)
+        /// Convert temperature code to value (12-bit mode)
         /// </summary>
         /// <param name="temperatureCode">Temperature code</param>
-        /// <returns>Temperature value (in Celsius degrees)</returns>
+        /// <returns>Temperature value in Celsius degrees</returns>
         public static double DecodeTemperature12bit(UInt16 temperatureCode)
         {
             if ((temperatureCode >= 0x0000) && (temperatureCode <= DS18B20.MaxTemperatureCode))
@@ -188,8 +188,6 @@ namespace DigitalThermometer.Hardware
                 return false;
             }
 
-            // TODO: range of temperature code
-
             var crc = Crc8Utility.CalculateCrc8(scratchpad);
             if (crc != 0)
             {
@@ -199,9 +197,26 @@ namespace DigitalThermometer.Hardware
             return true;
         }
 
+        private static void ValidateScratchpad(byte[] scratchpad)
+        {
+            if (scratchpad.Length != ScratchpadSize)
+            {
+                throw new ArgumentException($"scratchpad.Length = {scratchpad.Length} (should be {ScratchpadSize} bytes)");
+            }
+
+            var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
+            if (crc != scratchpad[ScratchpadSize - 1])
+            {
+                throw new ArgumentException($"Scratchpad CRC error: expected=0x{crc:X2} actual=0x{scratchpad[ScratchpadSize - 1]:X2}");
+            }
+        }
+
         public static readonly int ConversionTime12bit = 750;
 
-        public static readonly int ScratchpadSize = 9;
+        /// <summary>
+        /// Size of SRAM scratchpad in bytes
+        /// </summary>
+        public const int ScratchpadSize = 9;
 
         private const int MemoryMapOffsetTemperatureLsb = 0;
 
@@ -252,20 +267,6 @@ namespace DigitalThermometer.Hardware
             scratchpad.Add(crc);
 
             return scratchpad.ToArray();
-        }
-
-        private static void ValidateScratchpad(byte[] scratchpad)
-        {
-            if (scratchpad.Length != ScratchpadSize)
-            {
-                throw new ArgumentException($"scratchpad.Length = {scratchpad.Length} (shuld be {ScratchpadSize} bytes)");
-            }
-
-            var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
-            if (crc != scratchpad[ScratchpadSize - 1])
-            {
-                throw new ArgumentException($"Scratchpad CRC error: expected=0x{crc:X2} actual=0x{scratchpad[ScratchpadSize - 1]:X2}");
-            }
         }
 
         public static ThermometerResolution GetThermometerResolution(byte[] scratchpad)

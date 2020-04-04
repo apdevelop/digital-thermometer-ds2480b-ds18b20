@@ -6,22 +6,22 @@ using System.Threading;
 namespace DigitalThermometer.Hardware
 {
     /// <summary>
-    /// MicroLan (DS18B20) master based on SerialPort + DS2480B bridge
+    /// MicroLan (1-Wire) master working with SerialPort + DS2480B driver + DS18B20 slave devices
     /// </summary>
     public class OneWireMaster
     {
-        private const int SerialPortBaudRate = 9600;
+        private const int SerialPortBaudRate = 9600; // TODO: abstraction from SerialPort
 
-        private const int ResetBusTimeout = 500;
+        private const int ResetBusTimeout = 500; // TODO: configurable timeouts
 
-        private ISerialPortConnection portconn;
+        private ISerialPortConnection portconn; // TODO: abstraction from SerialPort
 
-        private List<byte> inputbuffer = new List<byte>(); // TODO: ? locking ?
+        private readonly List<byte> receiveBuffer = new List<byte>(); // TODO: threading issues ?
 
         /// <summary>
-        /// Length of ROM code, in bytes
+        /// Length of 1-Wire devices ROM code, in bytes
         /// </summary>
-        private const int ROMCodeSize = 8;
+        private const int ROMCodeLength = 8;
 
         private byte lastDiscrepancy = 0;
 
@@ -38,19 +38,19 @@ namespace DigitalThermometer.Hardware
         public OneWireBusResetResponse Open(string serialPortName)
         {
             this.rxDataWaitHandle = new AutoResetEvent(false);
-            this.portconn.OpenPort(serialPortName, SerialPortBaudRate);
+            this.portconn.OpenPort(serialPortName, SerialPortBaudRate); // TODO: abstraction from SerialPort
             this.Set1WireMode();
 
-            this.ClearBuffer();
+            this.ClearReceiveBuffer();
             this.ResetBus();
             if (!this.WaitResponse(1, 1000))
             {
-                this.ClearBuffer();
+                this.ClearReceiveBuffer();
                 return OneWireBusResetResponse.NoBusResetResponse;
             }
 
-            var resetResponse = DS2480B.CheckResetResponse(this.inputbuffer[0]);
-            this.ClearBuffer();
+            var resetResponse = DS2480B.CheckResetResponse(this.receiveBuffer[0]);
+            this.ClearReceiveBuffer();
 
             return resetResponse;
         }
@@ -61,21 +61,20 @@ namespace DigitalThermometer.Hardware
             this.portconn.ClosePort();
         }
 
-        private void SendData(byte[] data)
+        /// <summary>
+        /// Transmit data to port without any conversion / escaping
+        /// </summary>
+        /// <param name="data">Data to transmit to port as-is</param>
+        private void TransmitRawData(byte[] data)
         {
             this.portconn.TransmitData(data);
-        }
-
-        private void SendData(byte data)
-        {
-            this.portconn.TransmitData(new[] { data });
         }
 
         private AutoResetEvent rxDataWaitHandle;
 
         private void PortByteReceived(byte[] data)
         {
-            this.inputbuffer.AddRange(data);
+            this.receiveBuffer.AddRange(data);
             this.rxDataWaitHandle.Set();
         }
 
@@ -84,7 +83,7 @@ namespace DigitalThermometer.Hardware
             var t = Stopwatch.StartNew();
             while (t.ElapsedMilliseconds < millisecondsTimeout)
             {
-                if (this.inputbuffer.Count == bytesCount)
+                if (this.receiveBuffer.Count == bytesCount)
                 {
                     return true;
                 }
@@ -97,60 +96,56 @@ namespace DigitalThermometer.Hardware
 
         private void Set1WireMode()
         {
-            this.ClearBuffer();
+            this.ClearReceiveBuffer();
             //this.portconn.SetDTR(true);
             //this.portconn.SetRTS(false);
             this.Set1WireFlexParams();
-            Thread.Sleep(500);
-            this.ClearBuffer();
+            Thread.Sleep(500); // TODO: async
+            this.ClearReceiveBuffer();
         }
 
         private void ResetBus()
         {
-            this.SendData(new[] 
-            { 
-                DS2480B.SwitchToCommandMode, 
-                DS2480B.CommandResetAtFlexSpeed, 
+            this.TransmitRawData(new[]
+            {
+                DS2480B.SwitchToCommandMode,
+                DS2480B.CommandResetAtFlexSpeed,
             });
         }
 
-        private void SendDataPacket(byte[] buffer)
+        /// <summary>
+        /// Transmit data to 1-Wire bus with Switch to Command Mode reserved byte escaping
+        /// </summary>
+        /// <param name="data">Data to transmit</param>
+        private void TransmitDataPacket(IList<byte> data)
         {
-            for (var i = 0; i < buffer.Length; i++)
-            {
-                // Escape 0xE3 in packet by doubling it
-                if (buffer[i] == DS2480B.SwitchToCommandMode)
-                {
-                    this.SendData(DS2480B.SwitchToCommandMode);
-                }
-
-                this.SendData(buffer[i]);
-            }
+            var rawData = DS2480B.EscapeDataPacket(data);
+            this.TransmitRawData(rawData);
         }
 
         private void Set1WireFlexParams()
         {
             // TODO: calibration ? (DS2480B p.3 at bottom)
-            this.ClearBuffer();
-            this.SendData(new[] 
-            { 
-                DS2480B.SwitchToCommandMode, 
-                DS2480B.CommandResetAtFlexSpeed, 
+            this.ClearReceiveBuffer();
+            this.TransmitRawData(new[]
+            {
+                DS2480B.SwitchToCommandMode,
+                DS2480B.CommandResetAtFlexSpeed,
             });
 
-            Thread.Sleep(150);
+            Thread.Sleep(150); // TODO: async
 
-            this.ClearBuffer();
-            this.SendData(new[] 
-            { 
-                DS2480B.SwitchToCommandMode, 
-                DS2480B.CommandResetAtFlexSpeed, 
+            this.ClearReceiveBuffer();
+            this.TransmitRawData(new[]
+            {
+                DS2480B.SwitchToCommandMode,
+                DS2480B.CommandResetAtFlexSpeed,
             });
 
-            Thread.Sleep(15);
+            Thread.Sleep(15); // TODO: async
 
-            this.ClearBuffer();
-            this.SendData(new[]
+            this.ClearReceiveBuffer();
+            this.TransmitRawData(new[]
             {
                 DS2480B.PDSRC_1p37Vpus,
                 DS2480B.PPD_512us,
@@ -162,22 +157,22 @@ namespace DigitalThermometer.Hardware
             });
         }
 
-        private void ClearBuffer()
+        private void ClearReceiveBuffer()
         {
-            this.inputbuffer.Clear();
+            this.receiveBuffer.Clear();
         }
 
         private void SendSearchCommand()
         {
-            this.ClearBuffer();
+            this.ClearReceiveBuffer();
             this.ResetBus();
             this.WaitResponse(1, ResetBusTimeout);
 
-            var resetResponse = DS2480B.CheckResetResponse(this.inputbuffer[0]); // TODO: use response
+            // TODO: check result var resetResponse = DS2480B.CheckResetResponse(this.inputbuffer[0]); // TODO: use response
 
             var buffer = new byte[]
-            {	
-                DS2480B.SwitchToDataMode, DS18B20.SEARCH_ROM, 
+            {
+                DS2480B.SwitchToDataMode, DS18B20.SEARCH_ROM,
                 DS2480B.SwitchToCommandMode, DS2480B.CommandSearchAcceleratorControlOnAtRegularSpeed,
                 DS2480B.SwitchToDataMode,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -192,7 +187,7 @@ namespace DigitalThermometer.Hardware
                 {
                     if (i < (this.lastDiscrepancy - 1))
                     {
-                        BitUtility.WriteBit(bpois, (i * 2 + 1), BitUtility.ReadBit(this.romCodeTempBuffer, i));
+                        BitUtility.WriteBit(bpois, i * 2 + 1, BitUtility.ReadBit(this.romCodeTempBuffer, i));
                     }
                     else
                     {
@@ -209,13 +204,13 @@ namespace DigitalThermometer.Hardware
                 }
             }
 
-            this.SendData(buffer);
+            this.TransmitRawData(buffer);
             this.WaitResponse(1 + 17, 1000);
         }
 
         private byte[] DecodeSearchResponse()
         {
-            if (this.inputbuffer.Count < 18)
+            if (this.receiveBuffer.Count < 18)
             {
                 return null;
             }
@@ -224,9 +219,9 @@ namespace DigitalThermometer.Hardware
 
             for (byte i = 0; i < 64; i++)
             {
-                BitUtility.WriteBit(this.romCodeTempBuffer, i, BitUtility.ReadBit(this.inputbuffer, i * 2 + 1 + 8 + 8));
+                BitUtility.WriteBit(this.romCodeTempBuffer, i, BitUtility.ReadBit(this.receiveBuffer, i * 2 + 1 + 8 + 8));
 
-                if ((BitUtility.ReadBit(this.inputbuffer, i * 2 + 8 + 8) == 1) && (BitUtility.ReadBit(this.inputbuffer, i * 2 + 1 + 8 + 8) == 0))
+                if ((BitUtility.ReadBit(this.receiveBuffer, i * 2 + 8 + 8) == 1) && (BitUtility.ReadBit(this.receiveBuffer, i * 2 + 1 + 8 + 8) == 0))
                 {
                     lastZero = (byte)(i + 1);
                 }
@@ -251,14 +246,19 @@ namespace DigitalThermometer.Hardware
                     this.lastDeviceFlag = true;
                 }
 
-                var romCode = new byte[ROMCodeSize];
-                Array.Copy(romCodeTempBuffer, romCode, ROMCodeSize);
+                var romCode = new byte[ROMCodeLength];
+                Array.Copy(romCodeTempBuffer, romCode, ROMCodeLength);
 
                 return romCode;
             }
         }
 
-        private void SendStartAllMeasureCommand()
+        #region DS18B20 specific methods
+
+        /// <summary>
+        /// Perform temperature conversion on all DS18B20 slave devices on bus
+        /// </summary>
+        private void PerformDS18B20TemperatureConversion()
         {
             var selectStartAllMeasurePacket = new byte[]
             {
@@ -267,116 +267,122 @@ namespace DigitalThermometer.Hardware
                 DS18B20.CONVERT_T,
             };
 
-            this.ClearBuffer();
+            this.ClearReceiveBuffer();
             this.ResetBus();
-            this.WaitResponse(1, ResetBusTimeout);
+            this.WaitResponse(1, ResetBusTimeout); // TODO: check result
 
-            this.SendData(selectStartAllMeasurePacket);
-            Thread.Sleep(DS18B20.ConversionTime12bit);
+            this.TransmitDataPacket(selectStartAllMeasurePacket);
+            Thread.Sleep(DS18B20.ConversionTime12bit); // TODO: async
 
             this.ResetBus();
-            this.WaitResponse(1 + (selectStartAllMeasurePacket.Length - 1) + 1, ResetBusTimeout);
-            this.ClearBuffer();
+            this.WaitResponse(1 + (selectStartAllMeasurePacket.Length - 1) + 1, ResetBusTimeout); // TODO: check result
+            this.ClearReceiveBuffer();
         }
 
-        private void SendStartMeasureCommand(byte[] romCode)
+        /// <summary>
+        /// Perform temperature conversion on specified DS18B20 slave device 
+        /// </summary>
+        /// <param name="romCode">ROM code of DS18B20</param>
+        private void PerformDS18B20TemperatureConversion(UInt64 romCode)
         {
-            var selectDeviceAndStartMeasurePacket = new byte[]
+            var dataPacket = new List<byte>();
+            dataPacket.Add(DS2480B.SwitchToDataMode);
+            dataPacket.Add(DS18B20.MATCH_ROM);
+            dataPacket.AddRange(BitConverter.GetBytes(romCode));
+            dataPacket.Add(DS18B20.CONVERT_T);
+
+            this.ClearReceiveBuffer();
+            this.ResetBus();
+            this.WaitResponse(1, ResetBusTimeout); // TODO: check result
+
+            this.TransmitDataPacket(dataPacket);
+            Thread.Sleep(DS18B20.ConversionTime12bit); // TODO: async
+
+            this.ResetBus();
+            this.WaitResponse(1 + (dataPacket.Count - 1) + 1, ResetBusTimeout); // TODO: check result
+            this.ClearReceiveBuffer();
+        }
+
+        private static byte[] CreateReadDS18B20ScratchpadRequest(ulong romCode)
+        {
+            var dataPacket = new List<byte>();
+
+            // 1. Select slave device
+            dataPacket.Add(DS2480B.SwitchToDataMode);
+            dataPacket.Add(DS18B20.MATCH_ROM);
+            dataPacket.AddRange(BitConverter.GetBytes(romCode));
+
+            // 2. Read scratchpad
+            dataPacket.Add(DS18B20.READ_SCRATCHPAD);
+            for (var i = 0; i < DS18B20.ScratchpadSize; i++)
             {
-                DS2480B.SwitchToDataMode, 
-                DS18B20.MATCH_ROM, 
-                romCode[0], romCode[1], romCode[2], romCode[3], romCode[4], romCode[5], romCode[6], romCode[7], 
-                DS18B20.CONVERT_T,
-            };
+                dataPacket.Add(0xFF); // Buffer for receiving response (scratchpad contents)
+            }
 
-            this.ClearBuffer();
-            this.ResetBus();
-            this.WaitResponse(1, ResetBusTimeout);
-
-            this.SendDataPacket(selectDeviceAndStartMeasurePacket);
-            Thread.Sleep(DS18B20.ConversionTime12bit);
-
-            this.ResetBus();
-            this.WaitResponse(1 + (selectDeviceAndStartMeasurePacket.Length - 1) + 1, ResetBusTimeout);
-            this.ClearBuffer();
+            return dataPacket.ToArray();
         }
 
         ///<summary>
-        /// Send read command for device with specified ROM code
+        /// Read scratchpad of specified DS18B20 slave device
         ///</summary> 
-        ///<param name="romCode">ROM code (64 bits = 8 bytes)</param>
-        private void SelectDeviceAndReadScratchpad(byte[] romCode)
+        ///<param name="romCode">ROM code of DS18B20</param>
+        private byte[] ReadDS18B20Scratchpad(UInt64 romCode)
         {
-            if (romCode == null)
-            {
-                throw new ArgumentNullException(nameof(romCode));
-            }
+            var dataPacket = CreateReadDS18B20ScratchpadRequest(romCode);
 
-            if (romCode.Length != ROMCodeSize)
-            {
-                throw new ArgumentException($"ROM code length = {romCode.Length}");
-            }
-
-            var selectDevicePacket = new byte[]
-            {
-                DS2480B.SwitchToDataMode, 
-                DS18B20.MATCH_ROM, 
-                romCode[0], romCode[1], romCode[2], romCode[3], romCode[4], romCode[5], romCode[6], romCode[7], 
-            };
-
-            var readDevicePacket = new byte[]
-            {
-                DS18B20.READ_SCRATCHPAD, 
-                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-            };
-
-            this.ClearBuffer();
+            this.ClearReceiveBuffer();
             this.ResetBus();
-            this.WaitResponse(1, ResetBusTimeout);
+            this.WaitResponse(1, ResetBusTimeout); // TODO: check result
 
-            this.SendDataPacket(selectDevicePacket);
-            this.SendData(readDevicePacket);
-
-            this.WaitResponse(1 + (selectDevicePacket.Length - 1) + readDevicePacket.Length, 1000);
+            this.TransmitDataPacket(dataPacket);
+            this.WaitResponse(dataPacket.Length, 1000); // TODO: check result
 
             this.ResetBus();
-            this.WaitResponse(1 + (selectDevicePacket.Length - 1) + readDevicePacket.Length + 1, ResetBusTimeout);
+            this.WaitResponse(dataPacket.Length + 1, ResetBusTimeout); // TODO: check result
+
+            var buffer = this.DecodeReadDS18B20ScratchpadResponse(romCode);
+
+            return buffer;
         }
 
-        private byte[] DecodeReadScratchpadResponse(byte[] romCode)
+        private byte[] DecodeReadDS18B20ScratchpadResponse(UInt64 romCode)
         {
+            var romCodeBytes = BitConverter.GetBytes(romCode);
+
             // Check response format
             // [CD] [55] <ROM code> [BE] <Scratchpad>
 
-            if (this.inputbuffer.Count < (2 + ROMCodeSize + 1 + DS18B20.ScratchpadSize))
+            if (this.receiveBuffer.Count < (2 + ROMCodeLength + 1 + DS18B20.ScratchpadSize))
             {
                 return null;
             }
 
-            if (DS2480B.CheckResetResponse(this.inputbuffer[0]) != OneWireBusResetResponse.PresencePulse)
+            if (DS2480B.CheckResetResponse(this.receiveBuffer[0]) != OneWireBusResetResponse.PresencePulse)
             {
                 return null;
             }
 
-            if ((this.inputbuffer[1] != DS18B20.MATCH_ROM) || (this.inputbuffer[10] != DS18B20.READ_SCRATCHPAD))
+            if ((this.receiveBuffer[1] != DS18B20.MATCH_ROM) || (this.receiveBuffer[10] != DS18B20.READ_SCRATCHPAD))
             {
                 return null;
             }
 
-            // ROM code received 
-            for (int i = 0; i < ROMCodeSize; i++)
+            // Compare received ROM code with given one
+            for (int i = 0; i < ROMCodeLength; i++)
             {
-                if (this.inputbuffer[i + 2] != romCode[i])
+                if (this.receiveBuffer[i + 2] != romCodeBytes[i])
                 {
                     return null;
                 }
             }
 
             var result = new byte[DS18B20.ScratchpadSize];
-            this.inputbuffer.CopyTo(2 + ROMCodeSize + 1, result, 0, result.Length);
+            this.receiveBuffer.CopyTo(2 + ROMCodeLength + 1, result, 0, result.Length);
 
             return result;
         }
+
+        #endregion
 
         #region High-level methods
 
@@ -422,24 +428,20 @@ namespace DigitalThermometer.Hardware
             return result;
         }
 
-        public IDictionary<UInt64, double> PerformMeasureOnAll(IList<UInt64> romCodes, Action<Tuple<UInt64, double>> measurementCompleted = null)
+        public IDictionary<UInt64, double> PerformDS18B20TemperatureMeasure(IList<UInt64> romCodes, Action<Tuple<UInt64, double>> measurementCompleted = null)
         {
-            this.SendStartAllMeasureCommand();
+            this.PerformDS18B20TemperatureConversion();
 
             var result = new Dictionary<UInt64, double>(romCodes.Count);
 
             foreach (var romCode in romCodes)
             {
-                var romCodeBytes = BitConverter.GetBytes(romCode);
-
-                this.SelectDeviceAndReadScratchpad(romCodeBytes);
-
-                var buffer = this.DecodeReadScratchpadResponse(romCodeBytes);
-                if (buffer != null)
+                var scratchpad = this.ReadDS18B20Scratchpad(romCode);
+                if (scratchpad != null)
                 {
-                    if (DS18B20.CheckScratchpad(buffer))
+                    if (DS18B20.CheckScratchpad(scratchpad))
                     {
-                        var temperatureCode = DS18B20.GetTemperatureCode(buffer);
+                        var temperatureCode = DS18B20.GetTemperatureCode(scratchpad);
                         if (DS18B20.IsValidTemperatureCode(temperatureCode))
                         {
                             var temperature = DS18B20.DecodeTemperature12bit(temperatureCode);
@@ -459,19 +461,20 @@ namespace DigitalThermometer.Hardware
             return result;
         }
 
-        public double? PerformMeasure(ulong romCode)
+        /// <summary>
+        /// Perform temperature measure on specified DS18B20 slave device 
+        /// </summary>
+        /// <param name="romCode">ROM code of DS18B20</param>
+        public double? PerformDS18B20TemperatureMeasure(UInt64 romCode)
         {
-            var romCodeBytes = BitConverter.GetBytes(romCode);
+            this.PerformDS18B20TemperatureConversion(romCode);
 
-            this.SendStartMeasureCommand(romCodeBytes);
-            this.SelectDeviceAndReadScratchpad(romCodeBytes);
-
-            var buffer = this.DecodeReadScratchpadResponse(romCodeBytes);
-            if (buffer != null)
+            var scratchpad = this.ReadDS18B20Scratchpad(romCode);
+            if (scratchpad != null)
             {
-                if (DS18B20.CheckScratchpad(buffer))
+                if (DS18B20.CheckScratchpad(scratchpad))
                 {
-                    var temperatureCode = DS18B20.GetTemperatureCode(buffer);
+                    var temperatureCode = DS18B20.GetTemperatureCode(scratchpad);
                     if (DS18B20.IsValidTemperatureCode(temperatureCode))
                     {
                         return DS18B20.DecodeTemperature12bit(temperatureCode);
@@ -485,8 +488,6 @@ namespace DigitalThermometer.Hardware
 
             return null;
         }
-
-        // TODO: add MeasureOneByOne(romCode[]) method
 
         #endregion
     }

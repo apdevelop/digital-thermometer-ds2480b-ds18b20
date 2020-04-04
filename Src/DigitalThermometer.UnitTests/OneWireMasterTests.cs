@@ -56,7 +56,7 @@ namespace DigitalThermometer.UnitTests
             var result = busMaster.Open("COM1");
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
 
-            var measurements = busMaster.PerformMeasureOnAll(romCodes);
+            var measurements = busMaster.PerformDS18B20TemperatureMeasure(romCodes);
             Assert.AreEqual(measurements.Count, romCodes.Length);
             Assert.AreEqual(25.9375, measurements[romCodes[0]]);
             Assert.AreEqual(25.9375, measurements[romCodes[1]]);

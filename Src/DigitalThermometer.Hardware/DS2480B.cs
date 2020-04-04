@@ -1,7 +1,9 @@
-﻿namespace DigitalThermometer.Hardware
+﻿using System.Collections.Generic;
+
+namespace DigitalThermometer.Hardware
 {
     /// <summary>
-    /// DS2480B Serial 1-Wire Line Driver with Load Sensor (Serial to 1-Wire Bridge)
+    /// DS2480B Serial 1-Wire Line Driver
     /// </summary>
     public class DS2480B
     {
@@ -123,6 +125,24 @@
             }
 
             return OneWireBusResetResponse.InvalidResponse;
+        }
+
+        public static byte[] EscapeDataPacket(IList<byte> data)
+        {
+            var result = new List<byte>(data.Count);
+            for (var i = 0; i < data.Count; i++)
+            {
+                // If the reserved code that normally switches to Command Mode is to be written to the 1-Wire bus, this code byte must be sent twice (duplicated).
+                if (data[i] == DS2480B.SwitchToCommandMode)
+                {
+                    // Escape 0xE3 in packet by doubling it
+                    result.Add(DS2480B.SwitchToCommandMode);
+                }
+
+                result.Add(data[i]);
+            }
+
+            return result.ToArray();
         }
     }
 }

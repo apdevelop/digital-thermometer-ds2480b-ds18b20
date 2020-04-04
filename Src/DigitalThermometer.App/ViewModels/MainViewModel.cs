@@ -156,15 +156,15 @@ namespace DigitalThermometer.App.ViewModels
 
                   var list = sensors.Select(s => new SensorStateModel { RomCode = s.RomCode, TemperatureValue = null, }).ToList();
 
-                  System.Threading.Thread.Sleep(1000);
+                  System.Threading.Thread.Sleep(1000); // TODO: async
 
                   this.MarshalToMainThread((items) => this.SensorsState = items, list);
 
-                  System.Threading.Thread.Sleep(1000);
+                  System.Threading.Thread.Sleep(1000); // TODO: async
 
                   foreach (var s in sensors)
                   {
-                      System.Threading.Thread.Sleep(200);
+                      System.Threading.Thread.Sleep(200); // TODO: async
                       this.MarshalToMainThread((state) => this.UpdateSensorState(state), s);
                   }
 
@@ -285,7 +285,7 @@ namespace DigitalThermometer.App.ViewModels
                             if (this.IsSimultaneousMeasurementsMode)
                             {
                                 var counter = 0;
-                                results = (Dictionary<ulong, double>)busMaster.PerformMeasureOnAll(list, (v) =>
+                                results = (Dictionary<ulong, double>)busMaster.PerformDS18B20TemperatureMeasure(list, (v) =>
                                     {
                                         counter++;
                                         this.MarshalToMainThread(
@@ -301,7 +301,7 @@ namespace DigitalThermometer.App.ViewModels
                                 {
                                     counter++;
                                     this.DisplayState($"Performing measure: {counter}/{list.Count}");
-                                    var t = busMaster.PerformMeasure(romCode);
+                                    var t = busMaster.PerformDS18B20TemperatureMeasure(romCode);
                                     if (t.HasValue)
                                     {
                                         results.Add(romCode, t.Value);
