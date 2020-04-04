@@ -37,7 +37,7 @@ namespace DigitalThermometer.Hardware
 
         public static readonly byte ALARM_SEARCH = 0xEC;
 
-        //DS18B20 FUNCTION COMMANDS
+        #region DS18B20 FUNCTION COMMANDS
 
         /// <summary>
         /// CONVERT T [44h]
@@ -63,11 +63,16 @@ namespace DigitalThermometer.Hardware
 
         public static readonly byte READ_POWER_SUPPLY = 0xB4;
 
+        #endregion
+
         /// <summary>
         /// Initial value
         /// </summary>
         public static readonly UInt16 PowerOnTemperatureCode = 0x550;
 
+        /// <summary>
+        /// The power-on reset value of the temperature register is +85°C
+        /// </summary>
         public static readonly double PowerOnTemperature = +85.0;
 
         public static readonly UInt16 MinTemperatureCode = 0xFC90;
@@ -78,10 +83,13 @@ namespace DigitalThermometer.Hardware
 
         public static readonly double MaxTemperature = +125.0;
 
+        /// <summary>
+        /// DS18B20’s 1-Wire family code
+        /// </summary>
         public static readonly byte FamilyCode = 0x28;
 
         /// <summary>
-        /// Temperature step in 12bit mode
+        /// Temperature step in 12-bit resolution, Celsius degrees
         /// </summary>
         public static readonly double TemperatureStep12bit = 0.0625;
 
@@ -110,45 +118,45 @@ namespace DigitalThermometer.Hardware
         {
             if ((temperatureCode >= 0x0000) && (temperatureCode <= DS18B20.MaxTemperatureCode))
             {
-                return (+TemperatureStep12bit * ((double)temperatureCode));
+                return +TemperatureStep12bit * ((double)temperatureCode);
             }
             else if ((temperatureCode >= DS18B20.MinTemperatureCode) && (temperatureCode <= 0xFFFF))
             {
-                return (-TemperatureStep12bit * (double)(((~temperatureCode) + 1) & 0xFFFF));
+                return -TemperatureStep12bit * (double)(((~temperatureCode) + 1) & 0xFFFF);
             }
             else
             {
-                throw new ArgumentOutOfRangeException("temperatureCode", String.Format(CultureInfo.InvariantCulture, "temperatureCode={0:X4}", temperatureCode));
+                throw new ArgumentOutOfRangeException(nameof(temperatureCode), $"temperatureCode={temperatureCode:X4}");
             }
         }
 
         /// <summary>
-        /// Convert temperature value to temperature code (12bit mode)
+        /// Convert temperature value to temperature code (12-bit resolution)
         /// </summary>
-        /// <param name="temperature">Temperature value (in Celsius degrees)</param>
+        /// <param name="temperature">Temperature value in Celsius degrees</param>
         /// <returns>Temperature code</returns>
         public static UInt16 EncodeTemperature12bit(double temperature)
         {
             if ((temperature < DS18B20.MinTemperature) || (temperature > DS18B20.MaxTemperature))
             {
-                throw new ArgumentOutOfRangeException("temperature", String.Format(CultureInfo.InvariantCulture, "temperature = {0}", temperature));
+                throw new ArgumentOutOfRangeException(nameof(temperature), $"temperature = {temperature}");
             }
 
             if (temperature >= 0.0)
-                return ((UInt16)(temperature / TemperatureStep12bit));
+                return (UInt16)(temperature / TemperatureStep12bit);
             else
-                return ((UInt16)(0xFFFF - (UInt16)(-temperature / TemperatureStep12bit) + 1));
+                return (UInt16)(0xFFFF - (UInt16)(-temperature / TemperatureStep12bit) + 1);
         }
 
         public static bool CheckRomCodeFormat(string s)
         {
-            return (Regex.IsMatch(s, @"^[0-9A-F]{16}$", RegexOptions.IgnoreCase));
+            return Regex.IsMatch(s, @"^[0-9A-F]{16}$", RegexOptions.IgnoreCase);
         }
 
         /// <summary>
         /// Get ROM code from its string representation
         /// </summary>
-        /// <param name="s">ROM code in string format, like 28xxxxxxCRC</param>
+        /// <param name="s">ROM code in HEX string format, little-endian, like 28xxxxxxCRC</param>
         /// <returns>ROM code</returns>
         public static UInt64 RomCodeFromLEString(string s)
         {
@@ -169,7 +177,7 @@ namespace DigitalThermometer.Hardware
         {
             if (scratchpad == null)
             {
-                throw new ArgumentNullException("scratchpad");
+                throw new ArgumentNullException(nameof(scratchpad));
             }
 
             // DS18B20 MEMORY MAP Figure 7
@@ -219,7 +227,7 @@ namespace DigitalThermometer.Hardware
         {
             ValidateScratchpad(scratchpad);
 
-            return ((UInt16)((scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | scratchpad[MemoryMapOffsetTemperatureLsb]));
+            return (UInt16)((scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | scratchpad[MemoryMapOffsetTemperatureLsb]);
         }
 
         public static byte[] EncodeScratchpad12bit(double temperatureValue, byte thCode, byte tlCode, byte reserved1, byte reserved2, byte reserved3)
@@ -250,13 +258,13 @@ namespace DigitalThermometer.Hardware
         {
             if (scratchpad.Length != ScratchpadSize)
             {
-                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "scratchpad.Length = {0}", scratchpad.Length));
+                throw new ArgumentException($"scratchpad.Length = {scratchpad.Length} (shuld be {ScratchpadSize} bytes)");
             }
 
             var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
             if (crc != scratchpad[ScratchpadSize - 1])
             {
-                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "Scratchpad Crc error: expected=0x{0:X2} actual=0x{1:X2}", crc, scratchpad[ScratchpadSize - 1]));
+                throw new ArgumentException($"Scratchpad CRC error: expected=0x{crc:X2} actual=0x{scratchpad[ScratchpadSize - 1]:X2}");
             }
         }
 
@@ -269,14 +277,14 @@ namespace DigitalThermometer.Hardware
 
         public static ThermometerResolution GetThermometerResolution(byte configurationRegister)
         {
-            var bits56 = ((configurationRegister & 0x60) >> 5);
+            var bits56 = (configurationRegister & 0x60) >> 5;
             switch (bits56)
             {
                 case 0x00: return ThermometerResolution.Resolution9bit;
                 case 0x01: return ThermometerResolution.Resolution10bit;
                 case 0x02: return ThermometerResolution.Resolution11bit;
                 case 0x03: return ThermometerResolution.Resolution12bit;
-                default: throw new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, "{0:X2}", configurationRegister));
+                default: throw new InvalidOperationException(configurationRegister.ToString("X2"));
             }
         }
     }

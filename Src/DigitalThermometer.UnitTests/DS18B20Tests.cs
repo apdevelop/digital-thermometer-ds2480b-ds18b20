@@ -9,12 +9,10 @@ namespace DigitalThermometer.UnitTests
     [TestFixture]
     class DS18B20Tests
     {
-        /// <summary>
-        /// TEMPERATURE/DATA RELATIONSHIP Table 2
-        /// </summary>
         [Test]
         public void DecodeTemperature12bit()
         {
+            // TEMPERATURE/DATA RELATIONSHIP Table 2
             Assert.AreEqual(+125.0, DS18B20.DecodeTemperature12bit(0x07D0));
             Assert.AreEqual(+85.0, DS18B20.DecodeTemperature12bit(0x0550));
             Assert.AreEqual(+25.0625, DS18B20.DecodeTemperature12bit(0x0191));

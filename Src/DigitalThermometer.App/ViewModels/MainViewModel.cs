@@ -45,7 +45,7 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return DigitalThermometer.Hardware.SerialPortUtils.GetSerialPortNames();
+                return Hardware.SerialPortUtils.GetSerialPortNames();
             }
         }
 
@@ -145,27 +145,27 @@ namespace DigitalThermometer.App.ViewModels
             Task.Factory.StartNew(() =>
               {
                   // TODO: implement it in separate application
-                  var sensors = new List<SensorStateModel>(new[] 
-                        {
-                            new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, },
-                            new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +15.875, },
-                            new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -25.5, },
-                            new SensorStateModel { RomCode = 0xEA00000078B0FC28, TemperatureValue = null, },
-                            new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, },
-                        });
+                  var sensors = new List<SensorStateModel>(new[]
+                    {
+                        new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, },
+                        new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +15.875, },
+                        new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -25.5, },
+                        new SensorStateModel { RomCode = 0xEA00000078B0FC28, TemperatureValue = null, },
+                        new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, },
+                    });
 
                   var list = sensors.Select(s => new SensorStateModel { RomCode = s.RomCode, TemperatureValue = null, }).ToList();
 
                   System.Threading.Thread.Sleep(1000);
 
-                  this.MarshalToMainThread<List<SensorStateModel>>((items) => this.SensorsState = items, list);
+                  this.MarshalToMainThread((items) => this.SensorsState = items, list);
 
                   System.Threading.Thread.Sleep(1000);
 
                   foreach (var s in sensors)
                   {
                       System.Threading.Thread.Sleep(200);
-                      this.MarshalToMainThread<SensorStateModel>((state) => this.UpdateSensorState(state), s);
+                      this.MarshalToMainThread((state) => this.UpdateSensorState(state), s);
                   }
 
                   this.MarshalToMainThread(() => this.IsBusy = false);
@@ -174,7 +174,7 @@ namespace DigitalThermometer.App.ViewModels
 
         private void MarshalToMainThread(Action action)
         {
-            Application.Current.Dispatcher.BeginInvoke((Action)delegate()
+            Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
             {
                 action();
             });
@@ -182,7 +182,7 @@ namespace DigitalThermometer.App.ViewModels
 
         private void MarshalToMainThread<T>(Action<T> action, T parameter)
         {
-            Application.Current.Dispatcher.BeginInvoke((Action)delegate()
+            Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
             {
                 action(parameter);
             });
@@ -202,14 +202,14 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.busState != value)
                 {
                     this.busState = value;
-                    base.OnPropertyChanged("BusState");
+                    base.OnPropertyChanged(nameof(BusState));
                 }
             }
         }
 
         private void DisplayState(string state)
         {
-            this.MarshalToMainThread<string>(s => this.BusState = s, state);
+            this.MarshalToMainThread(s => this.BusState = s, state);
         }
 
         private void PerformMeasures()
@@ -266,10 +266,10 @@ namespace DigitalThermometer.App.ViewModels
                         var list = busMaster.SearchDevicesOnBus((romCode) =>
                         {
                             count++;
-                            this.MarshalToMainThread<SensorStateModel>(
-                                (s) => this.AddFoundedSensor(s),
+                            this.MarshalToMainThread(
+                                (s) => this.AddFoundSensor(s),
                                 new SensorStateModel { RomCode = romCode, TemperatureValue = null, });
-                            this.DisplayState(String.Format(CultureInfo.CurrentCulture, "Sensors found: {0}", count));
+                            this.DisplayState($"Sensors found: {count}");
                         });
 
                         // TODO: order list of sensors
@@ -278,7 +278,7 @@ namespace DigitalThermometer.App.ViewModels
                         {
                             // http://www.claassen.net/geek/blog/2007/07/inotifypropertychanged-and-cross-thread-exceptions.html
 
-                            this.DisplayState(String.Format(CultureInfo.CurrentCulture, "Sensors found: {0}", list.Count));
+                            this.DisplayState($"Sensors found: {list.Count}");
                             this.DisplayState("Performing measure...");
 
                             var results = new Dictionary<ulong, double>();
@@ -288,10 +288,10 @@ namespace DigitalThermometer.App.ViewModels
                                 results = (Dictionary<ulong, double>)busMaster.PerformMeasureOnAll(list, (v) =>
                                     {
                                         counter++;
-                                        this.MarshalToMainThread<SensorStateModel>(
+                                        this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
                                             new SensorStateModel { RomCode = v.Item1, TemperatureValue = v.Item2 });
-                                        this.DisplayState(String.Format(CultureInfo.CurrentCulture, "Result: {0}/{1}", counter, list.Count));
+                                        this.DisplayState($"Result: {counter}/{list.Count}");
                                     });
                             }
                             else
@@ -300,27 +300,27 @@ namespace DigitalThermometer.App.ViewModels
                                 foreach (var romCode in list)
                                 {
                                     counter++;
-                                    this.DisplayState(String.Format(CultureInfo.CurrentCulture, "Performing measure: {0}/{1}", counter, list.Count));
+                                    this.DisplayState($"Performing measure: {counter}/{list.Count}");
                                     var t = busMaster.PerformMeasure(romCode);
                                     if (t.HasValue)
                                     {
                                         results.Add(romCode, t.Value);
-                                        this.MarshalToMainThread<SensorStateModel>(
+                                        this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
                                             new SensorStateModel { RomCode = romCode, TemperatureValue = t.Value });
-                                        this.DisplayState(String.Format(CultureInfo.CurrentCulture, "Result: {0}/{1}", counter, list.Count));
+                                        this.DisplayState($"Result: {counter}/{list.Count}");
                                     }
                                     else
                                     {
-                                        this.MarshalToMainThread<SensorStateModel>(
+                                        this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
                                             new SensorStateModel { RomCode = romCode, TemperatureValue = null });
-                                        this.DisplayState(String.Format(CultureInfo.CurrentCulture, "Error: {0}/{1}", counter, list.Count));
+                                        this.DisplayState($"Error: {counter}/{list.Count}");
                                     }
                                 }
                             }
 
-                            this.DisplayState(String.Format(CultureInfo.CurrentCulture, "Completed ({0:0.0} s)", stopwatch.Elapsed.TotalSeconds));
+                            this.DisplayState($"Completed ({stopwatch.Elapsed})");
                             return results;
                         }
                         else
@@ -330,7 +330,7 @@ namespace DigitalThermometer.App.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        this.DisplayState(String.Format("Fatal error: {0}", ex.Message));
+                        this.DisplayState($"Fatal error: {ex.Message}");
                         return null;
                     }
                     finally
@@ -358,7 +358,7 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return String.Format(CultureInfo.CurrentCulture, "{0}/{1}", this.measuresCompleted, this.measuresRuns);
+                return $"{this.measuresCompleted}/{this.measuresRuns}";
             }
         }
 
@@ -378,7 +378,7 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        public void AddFoundedSensor(SensorStateModel state)
+        public void AddFoundSensor(SensorStateModel state)
         {
             this.SensorsState.Add(state);
             base.OnPropertyChanged("SensorsStateItems");

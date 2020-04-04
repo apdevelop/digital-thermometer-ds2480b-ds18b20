@@ -16,7 +16,7 @@ namespace DigitalThermometer.Hardware
             }
             catch (System.ComponentModel.Win32Exception ex)
             {
-                throw new IOException(String.Format("Error getting list of serial ports: {0}, error code {1:X8}", ex.Message, ex.ErrorCode));
+                throw new IOException($"Error getting list of serial ports: {ex.Message}, error code {ex.ErrorCode:X8}");
             }
 
             if (sort)

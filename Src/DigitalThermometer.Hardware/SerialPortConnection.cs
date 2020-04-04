@@ -224,13 +224,13 @@ namespace DigitalThermometer.Hardware
                         {
                             if (this.serialPort == null)
                             {
-                                throw new InvalidOperationException(String.Format("Port <{0}> is in invalid state (serialPort == null)", serialPort.PortName));
+                                throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort == null)");
                             }
                             else
                             {
                                 if (!this.serialPort.IsOpen)
                                 {
-                                    throw new InvalidOperationException(String.Format("Port <{0}> is in invalid state (serialPort.IsOpen == false)", serialPort.PortName));
+                                    throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort.IsOpen == false)");
                                 }
                             }
                         }
@@ -258,7 +258,7 @@ namespace DigitalThermometer.Hardware
                     {
                         serialPort.DiscardInBuffer();
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
 
                     }
@@ -395,12 +395,12 @@ namespace DigitalThermometer.Hardware
         {
             if (data == null)
             {
-                throw new ArgumentNullException("data", "data is null");
+                throw new ArgumentNullException(nameof(data), "data is null");
             }
 
             if (data.Length == 0)
             {
-                throw new ArgumentException("data", "data.Length = 0");
+                throw new ArgumentException(nameof(data), "data.Length = 0");
             }
 
             try

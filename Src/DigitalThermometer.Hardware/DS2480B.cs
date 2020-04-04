@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DigitalThermometer.Hardware
+﻿namespace DigitalThermometer.Hardware
 {
     /// <summary>
     /// DS2480B Serial 1-Wire Line Driver with Load Sensor (Serial to 1-Wire Bridge)

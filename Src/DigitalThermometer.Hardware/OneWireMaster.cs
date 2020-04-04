@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Threading;
 
 namespace DigitalThermometer.Hardware
@@ -19,6 +18,9 @@ namespace DigitalThermometer.Hardware
 
         private List<byte> inputbuffer = new List<byte>(); // TODO: ? locking ?
 
+        /// <summary>
+        /// Length of ROM code, in bytes
+        /// </summary>
         private const int ROMCodeSize = 8;
 
         private byte lastDiscrepancy = 0;
@@ -177,10 +179,10 @@ namespace DigitalThermometer.Hardware
             {	
                 DS2480B.SwitchToDataMode, DS18B20.SEARCH_ROM, 
                 DS2480B.SwitchToCommandMode, DS2480B.CommandSearchAcceleratorControlOnAtRegularSpeed,
-				DS2480B.SwitchToDataMode,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				DS2480B.SwitchToCommandMode, DS2480B.CommandSearchAcceleratorControlOffAtRegularSpeed,
+                DS2480B.SwitchToDataMode,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                DS2480B.SwitchToCommandMode, DS2480B.CommandSearchAcceleratorControlOffAtRegularSpeed,
             };
 
             if (this.lastDiscrepancy != 0)
@@ -307,12 +309,12 @@ namespace DigitalThermometer.Hardware
         {
             if (romCode == null)
             {
-                throw new ArgumentNullException("romCode");
+                throw new ArgumentNullException(nameof(romCode));
             }
 
             if (romCode.Length != ROMCodeSize)
             {
-                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "ROM code length = {0}", romCode.Length));
+                throw new ArgumentException($"ROM code length = {romCode.Length}");
             }
 
             var selectDevicePacket = new byte[]
@@ -381,7 +383,7 @@ namespace DigitalThermometer.Hardware
         /// <summary>
         /// Search for devices on bus
         /// </summary>
-        /// <returns>List of ROM codes of devices founded</returns>
+        /// <returns>List of ROM codes of devices found</returns>
         public IList<UInt64> SearchDevicesOnBus(Action<ulong> deviceFound = null)
         {
             this.lastDiscrepancy = 0;
@@ -401,10 +403,7 @@ namespace DigitalThermometer.Hardware
                     // TODO: check duplicates
                     var code = BitConverter.ToUInt64(romCode, 0);
                     result.Add(code);
-                    if (deviceFound != null)
-                    {
-                        deviceFound(code);
-                    }
+                    deviceFound?.Invoke(code);
 
                     timeoutControl.Restart();
 
@@ -446,10 +445,7 @@ namespace DigitalThermometer.Hardware
                             var temperature = DS18B20.DecodeTemperature12bit(temperatureCode);
 
                             result.Add(romCode, temperature); // TODO: callback in case of error
-                            if (measurementCompleted != null)
-                            {
-                                measurementCompleted(new Tuple<ulong, double>(romCode, temperature));
-                            }
+                            measurementCompleted?.Invoke(new Tuple<ulong, double>(romCode, temperature));
                         }
                     }
 

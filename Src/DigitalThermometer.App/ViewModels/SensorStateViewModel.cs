@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 
 using DigitalThermometer.App.Models;
 
@@ -21,7 +20,7 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return (this.indexNumber + 1);
+                return this.indexNumber + 1;
             }
         }
 
@@ -29,7 +28,7 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return DigitalThermometer.Hardware.DS18B20.RomCodeToLEString(this.sensorState.RomCode);
+                return Hardware.DS18B20.RomCodeToLEString(this.sensorState.RomCode);
             }
         }
 
@@ -38,8 +37,8 @@ namespace DigitalThermometer.App.ViewModels
             get
             {
                 return this.sensorState.TemperatureValue.HasValue ?
-                    ((this.sensorState.TemperatureValue > 0.0) ? "+" : String.Empty) + 
-                        String.Format(CultureInfo.CurrentCulture, "{0:0.000}", this.sensorState.TemperatureValue) :
+                    ((this.sensorState.TemperatureValue > 0.0) ? "+" : String.Empty) +
+                        this.sensorState.TemperatureValue.Value.ToString("F3") :
                     "?";
             }
         }

@@ -21,7 +21,7 @@ namespace DigitalThermometer.Hardware
         {
             if (location >= buffer.Count * BitsInByte)
             {
-                throw new ArgumentOutOfRangeException("location", String.Format(CultureInfo.InvariantCulture, "buffer.Count = {0}  location={1}", buffer.Count, location));
+                throw new ArgumentOutOfRangeException(nameof(location), $"buffer.Count = {buffer.Count}  location={location}");
             }
 
             var nbyte = location / BitsInByte;
@@ -33,7 +33,7 @@ namespace DigitalThermometer.Hardware
                 b = (byte)(b >> 1);
             };
 
-            return ((byte)(b & 0x01));
+            return (byte)(b & 0x01);
         }
 
         /// <summary>
@@ -46,12 +46,12 @@ namespace DigitalThermometer.Hardware
         {
             if (location >= buffer.Count * BitsInByte)
             {
-                throw new ArgumentOutOfRangeException("location", String.Format(CultureInfo.InvariantCulture, "buffer.Count = {0}  location={1}", buffer.Count, location));
+                throw new ArgumentOutOfRangeException(nameof(location), $"buffer.Count = {buffer.Count} location={location}");
             }
 
             if (!((value == 0) || (value == 1)))
             {
-                throw new ArgumentOutOfRangeException("value", value, "value should be 0 or 1");
+                throw new ArgumentOutOfRangeException(nameof(value), value, "value should be 0 or 1");
             }
 
             var nbyte = location / BitsInByte;

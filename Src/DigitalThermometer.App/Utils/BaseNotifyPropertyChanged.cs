@@ -25,11 +25,9 @@
         [Conditional("DEBUG")]
         private void VerifyProperty(string propertyName)
         {
-            const string paramName = "propertyName";
-
             if (propertyName == null)
             {
-                throw new ArgumentNullException(paramName);
+                throw new ArgumentNullException(nameof(propertyName));
             }
 
             if (!String.IsNullOrEmpty(propertyName))
@@ -39,7 +37,7 @@
 
                 if (propInfo == null)
                 {
-                    throw new ArgumentException(String.Format("Property '{0}' was not found in '{1}' class", propertyName, type.FullName), paramName);
+                    throw new ArgumentException($"Property '{propertyName}' was not found in '{type.FullName}' class", nameof(propertyName));
                 }
             }
         }
