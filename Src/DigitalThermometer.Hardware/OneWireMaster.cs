@@ -66,7 +66,7 @@ namespace DigitalThermometer.Hardware
         /// <param name="data">Data to transmit to port as-is</param>
         private void TransmitRawData(byte[] data)
         {
-            Debug.WriteLine($"> {String.Join(" ", data.Select(d => d.ToString("X2")))}");
+            Debug.WriteLine($"> {String.Join(" ", data.Select(b => b.ToString("X2")))}");
             this.port.TransmitData(data);
         }
 
@@ -74,7 +74,7 @@ namespace DigitalThermometer.Hardware
 
         private void PortDataReceived(byte[] data)
         {
-            Debug.WriteLine($"< {String.Join(" ", data.Select(d => d.ToString("X2")))}");
+            Debug.WriteLine($"< {String.Join(" ", data.Select(b => b.ToString("X2")))}");
             this.receiveBuffer.AddRange(data);
             this.rxDataWaitHandle.Set();
         }
@@ -314,10 +314,10 @@ namespace DigitalThermometer.Hardware
         }
 
         ///<summary>
-        /// Read scratchpad of specified DS18B20 slave device
+        /// Read scratchpad data of specified DS18B20 slave device
         ///</summary> 
         ///<param name="romCode">ROM code of DS18B20</param>
-        private byte[] ReadDS18B20Scratchpad(UInt64 romCode)
+        private byte[] ReadDS18B20ScratchpadData(UInt64 romCode)
         {
             var dataPacket = CreateReadDS18B20ScratchpadRequest(romCode);
 
@@ -417,13 +417,12 @@ namespace DigitalThermometer.Hardware
 
             foreach (var romCode in romCodes)
             {
-                var scratchpadData = this.ReadDS18B20Scratchpad(romCode);
+                var scratchpadData = this.ReadDS18B20ScratchpadData(romCode);
                 if (scratchpadData != null)
                 {
-                    if (DS18B20.CheckScratchpad(scratchpadData))
+                    var scratchpad = new DS18B20.Scratchpad(scratchpadData);
+                    if (scratchpad.IsValidCrc)
                     {
-                        var scratchpad = new DS18B20.Scratchpad(scratchpadData);
-
                         result.Add(romCode, scratchpad);
                         measurementCompleted?.Invoke(new Tuple<ulong, DS18B20.Scratchpad>(romCode, scratchpad));
                     }
@@ -431,8 +430,7 @@ namespace DigitalThermometer.Hardware
                     // TODO: callback in case of error
                     // TODO: TResult<result?, isError, errorText>
                     // TODO: ? check power-on state (85C) as error
-                    // TODO: ! check response, crc and store results
-                    // Errors: NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange
+                    // TODO: detailed diagnostics (NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange)
                 }
             }
 
@@ -448,13 +446,12 @@ namespace DigitalThermometer.Hardware
         {
             this.PerformDS18B20TemperatureConversion(romCode);
 
-            var scratchpadData = this.ReadDS18B20Scratchpad(romCode);
+            var scratchpadData = this.ReadDS18B20ScratchpadData(romCode);
             if (scratchpadData != null)
             {
-                if (DS18B20.CheckScratchpad(scratchpadData))
+                var scratchpad = new DS18B20.Scratchpad(scratchpadData);
+                if (scratchpad.IsValidCrc)
                 {
-                    var scratchpad = new DS18B20.Scratchpad(scratchpadData);
-
                     return scratchpad;
                 }
 

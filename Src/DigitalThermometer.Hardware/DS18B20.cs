@@ -155,34 +155,6 @@ namespace DigitalThermometer.Hardware
             return BitConverter.ToUInt64(BitConverter.GetBytes(romCode).Reverse().ToArray(), 0).ToString("X16");
         }
 
-        // TODO: CheckScratchpad + ValidateScratchpad
-
-        public static bool CheckScratchpad(byte[] scratchpad)
-        {
-            if (scratchpad == null)
-            {
-                throw new ArgumentNullException(nameof(scratchpad));
-            }
-
-            // DS18B20 MEMORY MAP Figure 7
-
-            // TODO: result enum with reason
-            if (scratchpad.Length != ScratchpadSize)
-            {
-                return false;
-            }
-
-            var crc = Crc8Utility.CalculateCrc8(scratchpad);
-            if (crc != 0)
-            {
-                return false; // BadCrc
-            }
-
-            // TODO: IsValidTemperatureCode(temperatureCode)
-
-            return true;
-        }
-
         public static readonly int ConversionTime12bit = 750;
 
         /// <summary>
@@ -227,6 +199,10 @@ namespace DigitalThermometer.Hardware
 
             private readonly byte[] scratchpad;
 
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="rawData">Raw contents of scratchpad, can contains invalid (bad CRC) data</param>
             public Scratchpad(byte[] rawData)
             {
                 if (rawData == null)
@@ -234,9 +210,17 @@ namespace DigitalThermometer.Hardware
                     throw new ArgumentNullException(nameof(rawData));
                 }
 
-                this.scratchpad = rawData; // TODO: ? validate?
+                if (rawData.Length != ScratchpadSize)
+                {
+                    throw new ArgumentException($"rawData.Length = {rawData.Length} (should be {ScratchpadSize} bytes)");
+                }
+
+                this.scratchpad = rawData;
             }
 
+            /// <summary>
+            /// Raw contents of scratchpad, can contains invalid (bad CRC) data
+            /// </summary>
             public byte[] RawData
             {
                 get
@@ -245,6 +229,9 @@ namespace DigitalThermometer.Hardware
                 }
             }
 
+            /// <summary>
+            /// Actual CRC value from scratchpad
+            /// </summary>
             public byte ActualCrc
             {
                 get
@@ -253,6 +240,9 @@ namespace DigitalThermometer.Hardware
                 }
             }
 
+            /// <summary>
+            /// Computed CRC of scratchpad contents
+            /// </summary>
             public byte ComputedCrc
             {
                 get
@@ -261,21 +251,29 @@ namespace DigitalThermometer.Hardware
                 }
             }
 
-            public UInt16 TemperatureRawData
+            public bool IsValidCrc
             {
                 get
                 {
-                    // TODO: ? ValidateScratchpad(scratchpad); to prevent invalid readings
-                    return (UInt16)((this.scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | this.scratchpad[MemoryMapOffsetTemperatureLsb]);
+                    return Crc8Utility.CalculateCrc8(this.scratchpad) == 0;
                 }
             }
 
-            public double Temperature
+            public UInt16? TemperatureRawData
+            {
+                get
+                {
+                    return this.IsValidCrc ? (UInt16)((this.scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | this.scratchpad[MemoryMapOffsetTemperatureLsb]) : (UInt16?)null;
+                }
+            }
+
+            public double? Temperature
             {
                 get
                 {
                     // TODO: check config register for using actual resolution
-                    return DS18B20.Scratchpad.DecodeTemperature12bit(this.TemperatureRawData);
+                    // TODO: ? IsValidTemperatureCode(temperatureCode)
+                    return this.IsValidCrc ? DS18B20.Scratchpad.DecodeTemperature12bit(this.TemperatureRawData.Value) : (double?)null;
                 }
             }
 
@@ -289,22 +287,28 @@ namespace DigitalThermometer.Hardware
 
             // TODO: add Th, Tl
 
-            public ThermometerResolution ThermometerResolution
+            public ThermometerResolution? ThermometerActualResolution
             {
                 get
                 {
-                    // TODO: ? ValidateScratchpad(scratchpad); to prevent invalid readings
-                    var configurationRegister = this.scratchpad[MemoryMapOffsetConfigurationRegister];
-
-                    // See Figure 8, Table 3
-                    var bits56 = (configurationRegister & 0x60) >> 5;
-                    switch (bits56)
+                    if (this.IsValidCrc)
                     {
-                        case 0x00: return ThermometerResolution.Resolution9bit;
-                        case 0x01: return ThermometerResolution.Resolution10bit;
-                        case 0x02: return ThermometerResolution.Resolution11bit;
-                        case 0x03: return ThermometerResolution.Resolution12bit;
-                        default: throw new InvalidOperationException(configurationRegister.ToString("X2"));
+                        var configurationRegister = this.scratchpad[MemoryMapOffsetConfigurationRegister];
+
+                        // See Figure 8, Table 3
+                        var bits56 = (configurationRegister & 0x60) >> 5;
+                        switch (bits56)
+                        {
+                            case 0x00: return ThermometerResolution.Resolution9bit;
+                            case 0x01: return ThermometerResolution.Resolution10bit;
+                            case 0x02: return ThermometerResolution.Resolution11bit;
+                            case 0x03: return ThermometerResolution.Resolution12bit;
+                            default: throw new InvalidOperationException(configurationRegister.ToString("X2"));
+                        }
+                    }
+                    else
+                    {
+                        return (ThermometerResolution?)null;
                     }
                 }
             }
@@ -354,20 +358,6 @@ namespace DigitalThermometer.Hardware
                 scratchpad.Add(crc);
 
                 return scratchpad.ToArray();
-            }
-
-            private static void ValidateScratchpad(byte[] scratchpad)
-            {
-                if (scratchpad.Length != ScratchpadSize)
-                {
-                    throw new ArgumentException($"scratchpad.Length = {scratchpad.Length} (should be {ScratchpadSize} bytes)");
-                }
-
-                var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
-                if (crc != scratchpad[ScratchpadSize - 1])
-                {
-                    throw new ArgumentException($"Scratchpad CRC error: expected=0x{crc:X2} actual=0x{scratchpad[ScratchpadSize - 1]:X2}");
-                }
             }
         }
     }

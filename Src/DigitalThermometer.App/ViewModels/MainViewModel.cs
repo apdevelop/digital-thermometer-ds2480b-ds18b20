@@ -270,9 +270,11 @@ namespace DigitalThermometer.App.ViewModels
                         }
 
                         var count = 0;
+                        this.DisplayState("Searching devices on bus...");
                         var list = busMaster.SearchDevicesOnBus((romCode) =>
                         {
                             count++;
+                            this.DisplayState($"Sensor found: {count} <{Hardware.DS18B20.RomCodeToLEString(romCode)}>");
                             this.MarshalToMainThread(
                                 (s) => this.AddFoundSensor(s),
                                 new SensorStateModel
@@ -282,7 +284,6 @@ namespace DigitalThermometer.App.ViewModels
                                     TemperatureRawCode = null,
                                     ThermometerResolution = null,
                                 });
-                            this.DisplayState($"Sensors found: {count}");
                         });
 
                         // TODO: order list of sensors
@@ -291,24 +292,26 @@ namespace DigitalThermometer.App.ViewModels
                         {
                             // http://www.claassen.net/geek/blog/2007/07/inotifypropertychanged-and-cross-thread-exceptions.html
 
-                            this.DisplayState($"Sensors found: {list.Count}");
+                            this.DisplayState($"Totoal sensors found: {list.Count}");
                             this.DisplayState("Performing measure...");
 
                             var results = new Dictionary<ulong, Hardware.DS18B20.Scratchpad>();
                             if (this.IsSimultaneousMeasurementsMode)
                             {
                                 var counter = 0;
-                                results = (Dictionary<ulong, Hardware.DS18B20.Scratchpad>)busMaster.PerformDS18B20TemperatureMeasure(list, (v) =>
+                                results = (Dictionary<ulong, Hardware.DS18B20.Scratchpad>)busMaster.PerformDS18B20TemperatureMeasure(list, (r) =>
                                     {
                                         counter++;
                                         this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
                                             new SensorStateModel
                                             {
-                                                RomCode = v.Item1,
-                                                TemperatureValue = v.Item2.Temperature,
-                                                TemperatureRawCode = v.Item2.TemperatureRawData,
-                                                ThermometerResolution = v.Item2.ThermometerResolution,
+                                                RomCode = r.Item1,
+                                                TemperatureValue = r.Item2.Temperature,
+                                                TemperatureRawCode = r.Item2.TemperatureRawData,
+                                                ThermometerResolution = r.Item2.ThermometerActualResolution,
+                                                RawData = r.Item2.RawData,
+                                                ComputedCrc = r.Item2.ComputedCrc,
                                             });
                                         this.DisplayState($"Result: {counter}/{list.Count}");
                                     });
@@ -320,18 +323,20 @@ namespace DigitalThermometer.App.ViewModels
                                 {
                                     counter++;
                                     this.DisplayState($"Performing measure: {counter}/{list.Count}");
-                                    var t = busMaster.PerformDS18B20TemperatureMeasure(romCode);
-                                    if (t != null)
+                                    var r = busMaster.PerformDS18B20TemperatureMeasure(romCode);
+                                    if (r != null)
                                     {
-                                        results.Add(romCode, t);
+                                        results.Add(romCode, r);
                                         this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
                                             new SensorStateModel
                                             {
                                                 RomCode = romCode,
-                                                TemperatureValue = t.Temperature,
-                                                TemperatureRawCode = t.TemperatureRawData,
-                                                ThermometerResolution = t.ThermometerResolution,
+                                                TemperatureValue = r.Temperature,
+                                                TemperatureRawCode = r.TemperatureRawData,
+                                                ThermometerResolution = r.ThermometerActualResolution,
+                                                RawData = r.RawData,
+                                                ComputedCrc = r.ComputedCrc,
                                             });
                                         this.DisplayState($"Result: {counter}/{list.Count}");
                                     }

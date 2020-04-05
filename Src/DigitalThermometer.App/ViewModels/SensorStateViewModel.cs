@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using DigitalThermometer.App.Models;
 
@@ -48,7 +49,7 @@ namespace DigitalThermometer.App.ViewModels
             get
             {
                 return this.sensorState.TemperatureRawCode.HasValue ?
-                    this.sensorState.TemperatureRawCode.Value.ToString("X4") :
+                    "0x" + this.sensorState.TemperatureRawCode.Value.ToString("X4") :
                     "?";
             }
         }
@@ -72,6 +73,31 @@ namespace DigitalThermometer.App.ViewModels
                 {
                     return "?";
                 }
+            }
+        }
+
+        public string RawDataString
+        {
+            get
+            {
+                if (this.sensorState.RawData != null)
+                {
+                    return String.Join(" ", this.sensorState.RawData.Select(b => b.ToString("X2")));
+                }
+                else
+                {
+                    return "-";
+                }
+            }
+        }
+
+        public string ComputedCrcString
+        {
+            get
+            {
+                return this.sensorState.ComputedCrc.HasValue ?
+                    "0x" + this.sensorState.ComputedCrc.Value.ToString("X2") :
+                    "?";
             }
         }
     }

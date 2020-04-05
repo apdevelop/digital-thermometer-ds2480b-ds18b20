@@ -60,7 +60,7 @@ namespace DigitalThermometer.UnitTests
         {
             var scratchpad = new DS18B20.Scratchpad(new byte[] { 0x55, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x0B, 0x10, 0xD0 });
 
-            Assert.AreEqual(DS18B20.ThermometerResolution.Resolution12bit, scratchpad.ThermometerResolution);
+            Assert.AreEqual(DS18B20.ThermometerResolution.Resolution12bit, scratchpad.ThermometerActualResolution);
         }
 
         [Test]
@@ -99,10 +99,11 @@ namespace DigitalThermometer.UnitTests
         [Test]
         public void CheckScratchpad()
         {
-            Assert.IsTrue(DS18B20.CheckScratchpad(new byte[] { 0x50, 0x05, 0x4B, 0x46, 0x7F, 0xFF, 0x0C, 0x10, 0x1C, }));
-            Assert.IsTrue(DS18B20.CheckScratchpad(new byte[] { 0x9E, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x02, 0x10, 0x56, }));
+            Assert.IsTrue(new DS18B20.Scratchpad(new byte[] { 0x50, 0x05, 0x4B, 0x46, 0x7F, 0xFF, 0x0C, 0x10, 0x1C, }).IsValidCrc);
+            Assert.IsTrue(new DS18B20.Scratchpad(new byte[] { 0x9E, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x02, 0x10, 0x56, }).IsValidCrc);
 
-            Assert.That(() => { DS18B20.CheckScratchpad(null); }, Throws.ArgumentNullException);
+            Assert.That(() => { new DS18B20.Scratchpad(null); }, Throws.ArgumentNullException);
+            Assert.That(() => { new DS18B20.Scratchpad(new byte[0]); }, Throws.ArgumentException);
         }
 
         [TestCase("28341BF802000001")]
