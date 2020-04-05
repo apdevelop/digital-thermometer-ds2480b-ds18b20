@@ -144,17 +144,24 @@ namespace DigitalThermometer.App.ViewModels
 
             Task.Factory.StartNew(() =>
               {
-                  // TODO: implement it in separate application
                   var sensors = new List<SensorStateModel>(new[]
                     {
-                        new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, },
-                        new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +15.875, },
-                        new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -25.5, },
-                        new SensorStateModel { RomCode = 0xEA00000078B0FC28, TemperatureValue = null, },
-                        new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, },
+                        new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, TemperatureRawCode = 0x00A0, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
+                        new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +25.0625, TemperatureRawCode = 0x0191, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
+                        new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -10.125, TemperatureRawCode= 0xFF5E, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
+                        new SensorStateModel { RomCode = 0xEA00000078B0FC28, TemperatureValue = null, TemperatureRawCode = null, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
+                        new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, TemperatureRawCode = 0x0550, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
                     });
 
-                  var list = sensors.Select(s => new SensorStateModel { RomCode = s.RomCode, TemperatureValue = null, }).ToList();
+                  var list = sensors
+                      .Select(s => new SensorStateModel
+                      {
+                          RomCode = s.RomCode,
+                          TemperatureValue = null,
+                          TemperatureRawCode = null,
+                          ThermometerResolution = null,
+                      })
+                      .ToList();
 
                   System.Threading.Thread.Sleep(1000); // TODO: async
 
@@ -220,7 +227,7 @@ namespace DigitalThermometer.App.ViewModels
 
             // TODO: ? use .NET 4.5 with async/await
 
-            var task = Task<Dictionary<UInt64, double>>.Factory.StartNew(() =>
+            var task = Task<Dictionary<UInt64, Hardware.DS18B20.Scratchpad>>.Factory.StartNew(() =>
                 {
                     this.measuresRuns++;
                     var stopwatch = Stopwatch.StartNew();
@@ -268,7 +275,13 @@ namespace DigitalThermometer.App.ViewModels
                             count++;
                             this.MarshalToMainThread(
                                 (s) => this.AddFoundSensor(s),
-                                new SensorStateModel { RomCode = romCode, TemperatureValue = null, });
+                                new SensorStateModel
+                                {
+                                    RomCode = romCode,
+                                    TemperatureValue = null,
+                                    TemperatureRawCode = null,
+                                    ThermometerResolution = null,
+                                });
                             this.DisplayState($"Sensors found: {count}");
                         });
 
@@ -281,16 +294,22 @@ namespace DigitalThermometer.App.ViewModels
                             this.DisplayState($"Sensors found: {list.Count}");
                             this.DisplayState("Performing measure...");
 
-                            var results = new Dictionary<ulong, double>();
+                            var results = new Dictionary<ulong, Hardware.DS18B20.Scratchpad>();
                             if (this.IsSimultaneousMeasurementsMode)
                             {
                                 var counter = 0;
-                                results = (Dictionary<ulong, double>)busMaster.PerformDS18B20TemperatureMeasure(list, (v) =>
+                                results = (Dictionary<ulong, Hardware.DS18B20.Scratchpad>)busMaster.PerformDS18B20TemperatureMeasure(list, (v) =>
                                     {
                                         counter++;
                                         this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
-                                            new SensorStateModel { RomCode = v.Item1, TemperatureValue = v.Item2 });
+                                            new SensorStateModel
+                                            {
+                                                RomCode = v.Item1,
+                                                TemperatureValue = v.Item2.Temperature,
+                                                TemperatureRawCode = v.Item2.TemperatureRawData,
+                                                ThermometerResolution = v.Item2.ThermometerResolution,
+                                            });
                                         this.DisplayState($"Result: {counter}/{list.Count}");
                                     });
                             }
@@ -302,19 +321,31 @@ namespace DigitalThermometer.App.ViewModels
                                     counter++;
                                     this.DisplayState($"Performing measure: {counter}/{list.Count}");
                                     var t = busMaster.PerformDS18B20TemperatureMeasure(romCode);
-                                    if (t.HasValue)
+                                    if (t != null)
                                     {
-                                        results.Add(romCode, t.Value);
+                                        results.Add(romCode, t);
                                         this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
-                                            new SensorStateModel { RomCode = romCode, TemperatureValue = t.Value });
+                                            new SensorStateModel
+                                            {
+                                                RomCode = romCode,
+                                                TemperatureValue = t.Temperature,
+                                                TemperatureRawCode = t.TemperatureRawData,
+                                                ThermometerResolution = t.ThermometerResolution,
+                                            });
                                         this.DisplayState($"Result: {counter}/{list.Count}");
                                     }
                                     else
                                     {
                                         this.MarshalToMainThread(
                                             (s) => this.UpdateSensorState(s),
-                                            new SensorStateModel { RomCode = romCode, TemperatureValue = null });
+                                            new SensorStateModel
+                                            {
+                                                RomCode = romCode,
+                                                TemperatureValue = null,
+                                                TemperatureRawCode = null,
+                                                ThermometerResolution = null,
+                                            });
                                         this.DisplayState($"Error: {counter}/{list.Count}");
                                     }
                                 }

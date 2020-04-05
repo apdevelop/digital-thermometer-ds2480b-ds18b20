@@ -58,8 +58,8 @@ namespace DigitalThermometer.UnitTests
 
             var measurements = busMaster.PerformDS18B20TemperatureMeasure(romCodes);
             Assert.AreEqual(measurements.Count, romCodes.Length);
-            Assert.AreEqual(25.9375, measurements[romCodes[0]]);
-            Assert.AreEqual(25.9375, measurements[romCodes[1]]);
+            Assert.AreEqual(25.9375, measurements[romCodes[0]].Temperature);
+            Assert.AreEqual(25.9375, measurements[romCodes[1]].Temperature);
         }
     }
 }

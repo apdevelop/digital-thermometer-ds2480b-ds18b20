@@ -49,14 +49,14 @@
                       IsEnabled="{Binding IsMeasuresEnabled}"
                       ItemsSource="{Binding SerialPortNames}"
                       SelectedItem="{Binding SelectedSerialPortName}" />
-            
+
             <CheckBox Content="Simultaneous" 
                       VerticalAlignment="Center"
                       Margin="120,0,0,0"
                       ToolTip="Simultaneous measurements on all connected sensors"
                       IsEnabled="{Binding IsMeasuresEnabled}" 
                       IsChecked="{Binding IsSimultaneousMeasurementsMode, Mode=TwoWay}" />
-            
+
             <CheckBox Content="Timer" 
                       VerticalAlignment="Center"
                       Margin="20,0,0,0"
@@ -78,14 +78,28 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="№" 
                                 Binding="{Binding IndexNumberString}"
-                                Width="40" />
+                                CanUserSort="False"
+                                Width="35" />
                 <DataGridTextColumn Header="ROM Code" 
                                 Binding="{Binding RomCodeString}"
                                 CanUserSort="False"
-                                Width="130" />
+                                FontFamily="Courier New"
+                                Width="125" />
                 <DataGridTextColumn Header="T, &#186;C" 
-                                Binding="{Binding TemperatureValueString}" 
-                                Width="60" />
+                                Binding="{Binding TemperatureValueString}"
+                                CanUserSort="False"
+                                FontFamily="Courier New"
+                                Width="65" />
+                <DataGridTextColumn Header="Code" 
+                                Binding="{Binding TemperatureRawCodeString}" 
+                                CanUserSort="False"
+                                FontFamily="Courier New"
+                                Width="45" />
+                <DataGridTextColumn Header="Mode" 
+                                Binding="{Binding ThermometerResolutionString}" 
+                                CanUserSort="False"
+                                FontFamily="Courier New"
+                                Width="50" />
             </DataGrid.Columns>
         </DataGrid>
 

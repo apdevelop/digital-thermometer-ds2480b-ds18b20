@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -66,7 +65,7 @@ namespace DigitalThermometer.Hardware
         #endregion
 
         /// <summary>
-        /// Initial value
+        /// Power-on reset value of the temperature register (+85°C)
         /// </summary>
         public static readonly UInt16 PowerOnTemperatureCode = 0x550;
 
@@ -106,27 +105,6 @@ namespace DigitalThermometer.Hardware
             else
             {
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Convert temperature code to value (12-bit mode)
-        /// </summary>
-        /// <param name="temperatureCode">Temperature code</param>
-        /// <returns>Temperature value in Celsius degrees</returns>
-        public static double DecodeTemperature12bit(UInt16 temperatureCode)
-        {
-            if ((temperatureCode >= 0x0000) && (temperatureCode <= DS18B20.MaxTemperatureCode))
-            {
-                return +TemperatureStep12bit * ((double)temperatureCode);
-            }
-            else if ((temperatureCode >= DS18B20.MinTemperatureCode) && (temperatureCode <= 0xFFFF))
-            {
-                return -TemperatureStep12bit * (double)(((~temperatureCode) + 1) & 0xFFFF);
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(temperatureCode), $"temperatureCode={temperatureCode:X4}");
             }
         }
 
@@ -173,6 +151,8 @@ namespace DigitalThermometer.Hardware
             return BitConverter.ToUInt64(BitConverter.GetBytes(romCode).Reverse().ToArray(), 0).ToString("X16");
         }
 
+        // TODO: CheckScratchpad + ValidateScratchpad
+
         public static bool CheckScratchpad(byte[] scratchpad)
         {
             if (scratchpad == null)
@@ -182,7 +162,7 @@ namespace DigitalThermometer.Hardware
 
             // DS18B20 MEMORY MAP Figure 7
 
-            // TODO: enum with cases
+            // TODO: result enum with reason
             if (scratchpad.Length != ScratchpadSize)
             {
                 return false;
@@ -194,21 +174,9 @@ namespace DigitalThermometer.Hardware
                 return false; // BadCrc
             }
 
+            // TODO: IsValidTemperatureCode(temperatureCode)
+
             return true;
-        }
-
-        private static void ValidateScratchpad(byte[] scratchpad)
-        {
-            if (scratchpad.Length != ScratchpadSize)
-            {
-                throw new ArgumentException($"scratchpad.Length = {scratchpad.Length} (should be {ScratchpadSize} bytes)");
-            }
-
-            var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
-            if (crc != scratchpad[ScratchpadSize - 1])
-            {
-                throw new ArgumentException($"Scratchpad CRC error: expected=0x{crc:X2} actual=0x{scratchpad[ScratchpadSize - 1]:X2}");
-            }
         }
 
         public static readonly int ConversionTime12bit = 750;
@@ -218,83 +186,185 @@ namespace DigitalThermometer.Hardware
         /// </summary>
         public const int ScratchpadSize = 9;
 
-        private const int MemoryMapOffsetTemperatureLsb = 0;
-
-        private const int MemoryMapOffsetTemperatureMsb = 1;
-
-        private const int MemoryMapOffsetThRegister = 2;
-
-        private const int MemoryMapOffsetTlRegister = 3;
-
-        private const int MemoryMapOffsetConfigurationRegister = 4;
-
-        private const int MemoryMapOffsetReserved1 = 5;
-
-        private const int MemoryMapOffsetReserved2 = 6;
-
-        private const int MemoryMapOffsetReserved3 = 7;
-
-        private const int MemoryMapOffsetCrc = 8;
-
-        // temperature register
-        // see page 6
-        public static UInt16 GetTemperatureCode(byte[] scratchpad)
+        public enum ThermometerResolution
         {
-            ValidateScratchpad(scratchpad);
-
-            return (UInt16)((scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | scratchpad[MemoryMapOffsetTemperatureLsb]);
+            Resolution9bit,
+            Resolution10bit,
+            Resolution11bit,
+            Resolution12bit,
         }
 
-        public static byte[] EncodeScratchpad12bit(double temperatureValue, byte thCode, byte tlCode, byte reserved1, byte reserved2, byte reserved3)
+        /// <summary>
+        /// Scratchpad
+        /// </summary>
+        public class Scratchpad
         {
-            var temperatureCode = EncodeTemperature12bit(temperatureValue);
+            #region Memory map offsets
 
-            var scratchpad = new List<byte>(ScratchpadSize);
+            private const int MemoryMapOffsetTemperatureLsb = 0;
 
-            scratchpad.Add((byte)(temperatureCode & 0x00FF));
-            scratchpad.Add((byte)((temperatureCode & 0xFF00) >> 8));
+            private const int MemoryMapOffsetTemperatureMsb = 1;
 
-            scratchpad.Add(thCode); // Th
-            scratchpad.Add(tlCode); // Tl
-            scratchpad.Add(0x7F); // Configuration
+            private const int MemoryMapOffsetThRegister = 2;
 
-            // Reserved
-            scratchpad.Add(reserved1);
-            scratchpad.Add(reserved2);
-            scratchpad.Add(reserved3);
+            private const int MemoryMapOffsetTlRegister = 3;
 
-            var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
-            scratchpad.Add(crc);
+            private const int MemoryMapOffsetConfigurationRegister = 4;
 
-            return scratchpad.ToArray();
-        }
+            private const int MemoryMapOffsetReserved1 = 5;
 
-        public static ThermometerResolution GetThermometerResolution(byte[] scratchpad)
-        {
-            ValidateScratchpad(scratchpad);
+            private const int MemoryMapOffsetReserved2 = 6;
 
-            return GetThermometerResolution(scratchpad[MemoryMapOffsetConfigurationRegister]);
-        }
+            private const int MemoryMapOffsetReserved3 = 7;
 
-        public static ThermometerResolution GetThermometerResolution(byte configurationRegister)
-        {
-            var bits56 = (configurationRegister & 0x60) >> 5;
-            switch (bits56)
+            private const int MemoryMapOffsetCrc = 8;
+
+            #endregion
+
+            private readonly byte[] scratchpad;
+
+            public Scratchpad(byte[] rawData)
             {
-                case 0x00: return ThermometerResolution.Resolution9bit;
-                case 0x01: return ThermometerResolution.Resolution10bit;
-                case 0x02: return ThermometerResolution.Resolution11bit;
-                case 0x03: return ThermometerResolution.Resolution12bit;
-                default: throw new InvalidOperationException(configurationRegister.ToString("X2"));
+                if (rawData == null)
+                {
+                    throw new ArgumentNullException(nameof(rawData));
+                }
+
+                this.scratchpad = rawData; // TODO: ? validate?
+            }
+
+            public byte[] RawData
+            {
+                get
+                {
+                    return this.scratchpad.ToArray();
+                }
+            }
+
+            public byte ActualCrc
+            {
+                get
+                {
+                    return this.scratchpad[MemoryMapOffsetCrc];
+                }
+            }
+
+            public byte ComputedCrc
+            {
+                get
+                {
+                    return Crc8Utility.CalculateCrc8(this.scratchpad, 0, ScratchpadSize - 1 - 1); // bytes 0..7
+                }
+            }
+
+            public UInt16 TemperatureRawData
+            {
+                get
+                {
+                    // TODO: ? ValidateScratchpad(scratchpad); to prevent invalid readings
+                    return (UInt16)((this.scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | this.scratchpad[MemoryMapOffsetTemperatureLsb]);
+                }
+            }
+
+            public double Temperature
+            {
+                get
+                {
+                    // TODO: check config register for using actual resolution
+                    return DS18B20.Scratchpad.DecodeTemperature12bit(this.TemperatureRawData);
+                }
+            }
+
+            public bool IsPowerOnTemperature
+            {
+                get
+                {
+                    return this.TemperatureRawData == DS18B20.PowerOnTemperatureCode;
+                }
+            }
+
+            // TODO: add Th, Tl
+
+            public ThermometerResolution ThermometerResolution
+            {
+                get
+                {
+                    // TODO: ? ValidateScratchpad(scratchpad); to prevent invalid readings
+                    var configurationRegister = this.scratchpad[MemoryMapOffsetConfigurationRegister];
+
+                    // See Figure 8, Table 3
+                    var bits56 = (configurationRegister & 0x60) >> 5;
+                    switch (bits56)
+                    {
+                        case 0x00: return ThermometerResolution.Resolution9bit;
+                        case 0x01: return ThermometerResolution.Resolution10bit;
+                        case 0x02: return ThermometerResolution.Resolution11bit;
+                        case 0x03: return ThermometerResolution.Resolution12bit;
+                        default: throw new InvalidOperationException(configurationRegister.ToString("X2"));
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Convert temperature code to value (12-bit resolution)
+            /// </summary>
+            /// <param name="temperatureCode">Temperature code</param>
+            /// <returns>Temperature value in Celsius degrees</returns>
+            public static double DecodeTemperature12bit(UInt16 temperatureCode)
+            {
+                if ((temperatureCode >= 0x0000) && (temperatureCode <= DS18B20.MaxTemperatureCode))
+                {
+                    return +TemperatureStep12bit * ((double)temperatureCode);
+                }
+                else if ((temperatureCode >= DS18B20.MinTemperatureCode) && (temperatureCode <= 0xFFFF))
+                {
+                    return -TemperatureStep12bit * (double)(((~temperatureCode) + 1) & 0xFFFF);
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(temperatureCode), $"temperatureCode={temperatureCode:X4}");
+                }
+            }
+
+            // TODO: ? add set {} for using in device emulator scenario
+
+            public static byte[] EncodeScratchpad12bit(double temperatureValue, byte thCode, byte tlCode, byte reserved1, byte reserved2, byte reserved3)
+            {
+                var temperatureCode = EncodeTemperature12bit(temperatureValue);
+
+                var scratchpad = new List<byte>(ScratchpadSize);
+
+                scratchpad.Add((byte)(temperatureCode & 0x00FF));
+                scratchpad.Add((byte)((temperatureCode & 0xFF00) >> 8));
+
+                scratchpad.Add(thCode); // Th
+                scratchpad.Add(tlCode); // Tl
+                scratchpad.Add(0x7F); // Configuration
+
+                // Reserved
+                scratchpad.Add(reserved1);
+                scratchpad.Add(reserved2);
+                scratchpad.Add(reserved3);
+
+                var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
+                scratchpad.Add(crc);
+
+                return scratchpad.ToArray();
+            }
+
+            private static void ValidateScratchpad(byte[] scratchpad)
+            {
+                if (scratchpad.Length != ScratchpadSize)
+                {
+                    throw new ArgumentException($"scratchpad.Length = {scratchpad.Length} (should be {ScratchpadSize} bytes)");
+                }
+
+                var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
+                if (crc != scratchpad[ScratchpadSize - 1])
+                {
+                    throw new ArgumentException($"Scratchpad CRC error: expected=0x{crc:X2} actual=0x{scratchpad[ScratchpadSize - 1]:X2}");
+                }
             }
         }
-    }
-
-    public enum ThermometerResolution
-    {
-        Resolution9bit,
-        Resolution10bit,
-        Resolution11bit,
-        Resolution12bit,
     }
 }

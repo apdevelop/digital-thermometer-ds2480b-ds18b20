@@ -28,6 +28,11 @@ namespace DigitalThermometer.Hardware
             116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53
         };
 
+        /// <summary>
+        /// Calculate CRC8 checksum of given byte array
+        /// </summary>
+        /// <param name="array">Array</param>
+        /// <returns>Value of CRC8 checksum</returns>
         public static byte CalculateCrc8(IList<byte> array)
         {
             if (array == null)
@@ -38,6 +43,13 @@ namespace DigitalThermometer.Hardware
             return Crc8Utility.CalculateCrc8(array, 0, array.Count - 1);
         }
 
+        /// <summary>
+        /// Calculate CRC8 checksum of given byte array
+        /// </summary>
+        /// <param name="array">Array</param>
+        /// <param name="startIndex">Start index</param>
+        /// <param name="endIndex">EndIndex (inclusive)</param>
+        /// <returns>Value of CRC8 checksum</returns>
         public static byte CalculateCrc8(IList<byte> array, int startIndex, int endIndex)
         {
             if (array == null)

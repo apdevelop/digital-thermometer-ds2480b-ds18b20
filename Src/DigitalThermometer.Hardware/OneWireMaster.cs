@@ -424,30 +424,27 @@ namespace DigitalThermometer.Hardware
             return result;
         }
 
-        public IDictionary<UInt64, double> PerformDS18B20TemperatureMeasure(IList<UInt64> romCodes, Action<Tuple<UInt64, double>> measurementCompleted = null)
+        public IDictionary<UInt64, DS18B20.Scratchpad> PerformDS18B20TemperatureMeasure(IList<UInt64> romCodes, Action<Tuple<UInt64, DS18B20.Scratchpad>> measurementCompleted = null)
         {
             this.PerformDS18B20TemperatureConversion();
 
-            var result = new Dictionary<UInt64, double>(romCodes.Count);
+            var result = new Dictionary<UInt64, DS18B20.Scratchpad>(romCodes.Count);
 
             foreach (var romCode in romCodes)
             {
-                var scratchpad = this.ReadDS18B20Scratchpad(romCode);
-                if (scratchpad != null)
+                var scratchpadData = this.ReadDS18B20Scratchpad(romCode);
+                if (scratchpadData != null)
                 {
-                    if (DS18B20.CheckScratchpad(scratchpad))
+                    if (DS18B20.CheckScratchpad(scratchpadData))
                     {
-                        var temperatureCode = DS18B20.GetTemperatureCode(scratchpad);
-                        if (DS18B20.IsValidTemperatureCode(temperatureCode))
-                        {
-                            var temperature = DS18B20.DecodeTemperature12bit(temperatureCode);
+                        var scratchpad = new DS18B20.Scratchpad(scratchpadData);
 
-                            result.Add(romCode, temperature); // TODO: callback in case of error
-                            measurementCompleted?.Invoke(new Tuple<ulong, double>(romCode, temperature));
-                        }
+                        result.Add(romCode, scratchpad);
+                        measurementCompleted?.Invoke(new Tuple<ulong, DS18B20.Scratchpad>(romCode, scratchpad));
                     }
 
-                    // TODO: return class with full measure status (temperature code, error details)
+                    // TODO: callback in case of error
+                    // TODO: TResult<result?, isError, errorText>
                     // TODO: ? check power-on state (85C) as error
                     // TODO: ! check response, crc and store results
                     // Errors: NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange
@@ -461,23 +458,21 @@ namespace DigitalThermometer.Hardware
         /// Perform temperature measure on specified DS18B20 slave device 
         /// </summary>
         /// <param name="romCode">ROM code of DS18B20</param>
-        public double? PerformDS18B20TemperatureMeasure(UInt64 romCode)
+        /// <returns>Scratchpad contents</returns>
+        public DS18B20.Scratchpad PerformDS18B20TemperatureMeasure(UInt64 romCode)
         {
             this.PerformDS18B20TemperatureConversion(romCode);
 
-            var scratchpad = this.ReadDS18B20Scratchpad(romCode);
-            if (scratchpad != null)
+            var scratchpadData = this.ReadDS18B20Scratchpad(romCode);
+            if (scratchpadData != null)
             {
-                if (DS18B20.CheckScratchpad(scratchpad))
+                if (DS18B20.CheckScratchpad(scratchpadData))
                 {
-                    var temperatureCode = DS18B20.GetTemperatureCode(scratchpad);
-                    if (DS18B20.IsValidTemperatureCode(temperatureCode))
-                    {
-                        return DS18B20.DecodeTemperature12bit(temperatureCode);
-                    }
+                    var scratchpad = new DS18B20.Scratchpad(scratchpadData);
+
+                    return scratchpad;
                 }
 
-                // TODO: return full measure status (temperature code, error details)
                 // TODO: ? check power-on state (85C) as error
                 // Errors: NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange
             }

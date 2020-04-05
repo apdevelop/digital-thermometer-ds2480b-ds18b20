@@ -13,23 +13,24 @@ namespace DigitalThermometer.UnitTests
         public void DecodeTemperature12bit()
         {
             // TEMPERATURE/DATA RELATIONSHIP Table 2
-            Assert.AreEqual(+125.0, DS18B20.DecodeTemperature12bit(0x07D0));
-            Assert.AreEqual(+85.0, DS18B20.DecodeTemperature12bit(0x0550));
-            Assert.AreEqual(+25.0625, DS18B20.DecodeTemperature12bit(0x0191));
-            Assert.AreEqual(+10.125, DS18B20.DecodeTemperature12bit(0x00A2));
-            Assert.AreEqual(+0.5, DS18B20.DecodeTemperature12bit(0x0008));
+            Assert.AreEqual(+125.0, DS18B20.Scratchpad.DecodeTemperature12bit(0x07D0));
+            Assert.AreEqual(+85.0, DS18B20.Scratchpad.DecodeTemperature12bit(0x0550));
+            Assert.AreEqual(+25.0625, DS18B20.Scratchpad.DecodeTemperature12bit(0x0191));
+            Assert.AreEqual(+10.125, DS18B20.Scratchpad.DecodeTemperature12bit(0x00A2));
+            Assert.AreEqual(+10.0, DS18B20.Scratchpad.DecodeTemperature12bit(0x00A0));
+            Assert.AreEqual(+0.5, DS18B20.Scratchpad.DecodeTemperature12bit(0x0008));
 
-            Assert.AreEqual(0.0, DS18B20.DecodeTemperature12bit(0x0000));
+            Assert.AreEqual(0.0, DS18B20.Scratchpad.DecodeTemperature12bit(0x0000));
 
-            Assert.AreEqual(-0.5, DS18B20.DecodeTemperature12bit(0xFFF8));
-            Assert.AreEqual(-10.125, DS18B20.DecodeTemperature12bit(0xFF5E));
-            Assert.AreEqual(-25.0625, DS18B20.DecodeTemperature12bit(0xFE6F));
-            Assert.AreEqual(-55.0, DS18B20.DecodeTemperature12bit(0xFC90));
+            Assert.AreEqual(-0.5, DS18B20.Scratchpad.DecodeTemperature12bit(0xFFF8));
+            Assert.AreEqual(-10.125, DS18B20.Scratchpad.DecodeTemperature12bit(0xFF5E));
+            Assert.AreEqual(-25.0625, DS18B20.Scratchpad.DecodeTemperature12bit(0xFE6F));
+            Assert.AreEqual(-55.0, DS18B20.Scratchpad.DecodeTemperature12bit(0xFC90));
 
-            Assert.AreEqual(DS18B20.PowerOnTemperature, DS18B20.DecodeTemperature12bit(DS18B20.PowerOnTemperatureCode));
+            Assert.AreEqual(DS18B20.PowerOnTemperature, DS18B20.Scratchpad.DecodeTemperature12bit(DS18B20.PowerOnTemperatureCode));
 
-            Assert.That(() => { DS18B20.DecodeTemperature12bit(0x07FF); }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
-            Assert.That(() => { DS18B20.DecodeTemperature12bit(0xF000); }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
+            Assert.That(() => { DS18B20.Scratchpad.DecodeTemperature12bit(0x07FF); }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
+            Assert.That(() => { DS18B20.Scratchpad.DecodeTemperature12bit(0xF000); }, Throws.Exception.TypeOf<ArgumentOutOfRangeException>());
         }
 
         [Test]
@@ -49,23 +50,26 @@ namespace DigitalThermometer.UnitTests
         [Test]
         public void GetTemperatureCode()
         {
-            Assert.AreEqual(0x0550, DS18B20.GetTemperatureCode(new byte[] { 0x50, 0x05, 0x00, 0x00, 0x00, 0xFF, 0x0C, 0x10, 0xD6 }));
+            var scratchpad = new DS18B20.Scratchpad(new byte[] { 0x50, 0x05, 0x00, 0x00, 0x00, 0xFF, 0x0C, 0x10, 0xD6 });
+            Assert.AreEqual(0x0550, scratchpad.TemperatureRawData);
+            Assert.IsTrue(scratchpad.IsPowerOnTemperature);
         }
 
         [Test]
         public void GetThermometerResolution()
         {
-            Assert.AreEqual(ThermometerResolution.Resolution12bit, DS18B20.GetThermometerResolution(0x7F));
-            Assert.AreEqual(ThermometerResolution.Resolution12bit, DS18B20.GetThermometerResolution(new byte[] { 0x55, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x0B, 0x10, 0xD0 }));
+            var scratchpad = new DS18B20.Scratchpad(new byte[] { 0x55, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x0B, 0x10, 0xD0 });
+
+            Assert.AreEqual(DS18B20.ThermometerResolution.Resolution12bit, scratchpad.ThermometerResolution);
         }
 
         [Test]
         public void EncodeScratchpad12bit()
         {
-            var temperatureValue = DS18B20.DecodeTemperature12bit(0x0155);
+            var temperatureValue = DS18B20.Scratchpad.DecodeTemperature12bit(0x0155);
             Assert.AreEqual(
                 new byte[] { 0x55, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x0B, 0x10, 0xD0 },
-                DS18B20.EncodeScratchpad12bit(temperatureValue, 0x4B, 0x46, 0xFF, 0x0B, 0x10));
+                DS18B20.Scratchpad.EncodeScratchpad12bit(temperatureValue, 0x4B, 0x46, 0xFF, 0x0B, 0x10));
         }
 
         [Test]

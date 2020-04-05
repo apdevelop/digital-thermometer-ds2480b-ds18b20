@@ -96,8 +96,8 @@ namespace DigitalThermometer.UnitTests
                     for (var i = 0; i < 8; i++) result.Add(this.rxBuffer[2 + i]); // Copy ROM code 
                     result.Add(DS18B20.READ_SCRATCHPAD);
 
-                    var temperatureValue = DS18B20.DecodeTemperature12bit(0x019F);
-                    var scratchpad = DS18B20.EncodeScratchpad12bit(temperatureValue, 0x4B, 0x46, 0xFF, 0x01, 0x10);
+                    var temperatureValue = DS18B20.Scratchpad.DecodeTemperature12bit(0x019F);
+                    var scratchpad = DS18B20.Scratchpad.EncodeScratchpad12bit(temperatureValue, 0x4B, 0x46, 0xFF, 0x01, 0x10);
                     result.AddRange(scratchpad);
 
                     return result;
