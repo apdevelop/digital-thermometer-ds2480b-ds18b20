@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 
 namespace DigitalThermometer.Hardware
@@ -30,7 +31,7 @@ namespace DigitalThermometer.Hardware
         public OneWireMaster(ISerialConnection portConnection)
         {
             this.port = portConnection;
-            this.port.OnDataReceived += this.PortByteReceived;
+            this.port.OnDataReceived += this.PortDataReceived;
         }
 
         public OneWireBusResetResponse Open()
@@ -65,13 +66,15 @@ namespace DigitalThermometer.Hardware
         /// <param name="data">Data to transmit to port as-is</param>
         private void TransmitRawData(byte[] data)
         {
+            Debug.WriteLine($"> {String.Join(" ", data.Select(d => d.ToString("X2")))}");
             this.port.TransmitData(data);
         }
 
         private AutoResetEvent rxDataWaitHandle;
 
-        private void PortByteReceived(byte[] data)
+        private void PortDataReceived(byte[] data)
         {
+            Debug.WriteLine($"< {String.Join(" ", data.Select(d => d.ToString("X2")))}");
             this.receiveBuffer.AddRange(data);
             this.rxDataWaitHandle.Set();
         }
@@ -269,10 +272,6 @@ namespace DigitalThermometer.Hardware
 
             this.TransmitDataPacket(selectStartAllMeasurePacket);
             Thread.Sleep(DS18B20.ConversionTime12bit); // TODO: async
-
-            this.ResetBus();
-            this.WaitResponse(1 + (selectStartAllMeasurePacket.Length - 1) + 1, ResetBusTimeout); // TODO: check result
-            this.ClearReceiveBuffer();
         }
 
         /// <summary>
@@ -293,10 +292,6 @@ namespace DigitalThermometer.Hardware
 
             this.TransmitDataPacket(dataPacket);
             Thread.Sleep(DS18B20.ConversionTime12bit); // TODO: async
-
-            this.ResetBus();
-            this.WaitResponse(1 + (dataPacket.Count - 1) + 1, ResetBusTimeout); // TODO: check result
-            this.ClearReceiveBuffer();
         }
 
         private static byte[] CreateReadDS18B20ScratchpadRequest(ulong romCode)
@@ -333,22 +328,12 @@ namespace DigitalThermometer.Hardware
             this.TransmitDataPacket(dataPacket);
             this.WaitResponse(dataPacket.Length, 1000); // TODO: check result
 
-            this.ResetBus();
-            this.WaitResponse(dataPacket.Length + 1, ResetBusTimeout); // TODO: check result
-
-            var buffer = this.DecodeReadDS18B20ScratchpadResponse(romCode);
-
-            return buffer;
-        }
-
-        private byte[] DecodeReadDS18B20ScratchpadResponse(UInt64 romCode)
-        {
             var romCodeBytes = BitConverter.GetBytes(romCode);
 
             // Check response format
             // [CD] [55] <ROM code> [BE] <Scratchpad>
 
-            if (this.receiveBuffer.Count < (2 + ROMCodeLength + 1 + DS18B20.ScratchpadSize))
+            if (this.receiveBuffer.Count != (2 + ROMCodeLength + 1 + DS18B20.ScratchpadSize))
             {
                 return null;
             }

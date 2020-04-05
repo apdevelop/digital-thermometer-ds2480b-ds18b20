@@ -10,12 +10,14 @@ namespace DigitalThermometer.Hardware
     /// </summary>
     public class DS18B20
     {
+        #region ROM Commands
+
         /// <summary>
         /// SEARCH ROM [F0h]
         /// </summary>
-        public static readonly byte SEARCH_ROM = 0xF0;
+        public const byte SEARCH_ROM = 0xF0;
 
-        public static readonly byte READ_ROM = 0x33;
+        public const byte READ_ROM = 0x33;
 
         /// <summary>
         /// MATCH ROM [55h]
@@ -24,7 +26,7 @@ namespace DigitalThermometer.Hardware
         /// ROM code sequence will respond to the function command issued by the master; all other slaves on the
         /// bus will wait for a reset pulse.
         /// </summary>
-        public static readonly byte MATCH_ROM = 0x55;
+        public const byte MATCH_ROM = 0x55;
 
         /// <summary>
         /// SKIP ROM [CCh]
@@ -32,9 +34,11 @@ namespace DigitalThermometer.Hardware
         /// any ROM code information. For example, the master can make all DS18B20s on the bus perform
         /// simultaneous temperature conversions by issuing a Skip ROM command followed by a Convert T [44h] command.
         /// </summary>
-        public static readonly byte SKIP_ROM = 0xCC;
+        public const byte SKIP_ROM = 0xCC;
 
-        public static readonly byte ALARM_SEARCH = 0xEC;
+        public const byte ALARM_SEARCH = 0xEC;
+
+        #endregion
 
         #region DS18B20 FUNCTION COMMANDS
 
@@ -44,9 +48,9 @@ namespace DigitalThermometer.Hardware
         /// data is stored in the 2-byte temperature register in the scratchpad memory and the DS18B20 returns to its
         /// low-power idle state.
         /// </summary>
-        public static readonly byte CONVERT_T = 0x44;
+        public const byte CONVERT_T = 0x44;
 
-        public static readonly byte WRITE_SCRATCHPAD = 0x4E;
+        public const byte WRITE_SCRATCHPAD = 0x4E;
 
         /// <summary>
         /// READ SCRATCHPAD [BEh]
@@ -54,20 +58,20 @@ namespace DigitalThermometer.Hardware
         /// least significant bit of byte 0 and continues through the scratchpad until the 9th byte (byte 8 – CRC) is
         /// read. The master may issue a reset to terminate reading at any time if only part of the scratchpad data is needed.
         /// </summary>
-        public static readonly byte READ_SCRATCHPAD = 0xBE;
+        public const byte READ_SCRATCHPAD = 0xBE;
 
-        public static readonly byte COPY_SCRATCHPAD = 0x48;
+        public const byte COPY_SCRATCHPAD = 0x48;
 
-        public static readonly byte RECALL_E2 = 0xB8;
+        public const byte RECALL_E2 = 0xB8;
 
-        public static readonly byte READ_POWER_SUPPLY = 0xB4;
+        public const byte READ_POWER_SUPPLY = 0xB4;
 
         #endregion
 
         /// <summary>
         /// Power-on reset value of the temperature register (+85°C)
         /// </summary>
-        public static readonly UInt16 PowerOnTemperatureCode = 0x550;
+        public const UInt16 PowerOnTemperatureCode = 0x550;
 
         /// <summary>
         /// The power-on reset value of the temperature register is +85°C
@@ -85,12 +89,12 @@ namespace DigitalThermometer.Hardware
         /// <summary>
         /// DS18B20’s 1-Wire family code
         /// </summary>
-        public static readonly byte FamilyCode = 0x28;
+        public const byte FamilyCode = 0x28;
 
         /// <summary>
         /// Temperature step in 12-bit resolution, Celsius degrees
         /// </summary>
-        public static readonly double TemperatureStep12bit = 0.0625;
+        public const double TemperatureStep12bit = 0.0625;
 
         public static bool IsValidTemperatureCode(UInt16 temperatureCode)
         {
