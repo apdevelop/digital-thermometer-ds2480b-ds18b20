@@ -29,7 +29,7 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return Hardware.DS18B20.RomCodeToLEString(this.sensorState.RomCode);
+                return Hardware.Utils.RomCodeToLEString(this.sensorState.RomCode);
             }
         }
 

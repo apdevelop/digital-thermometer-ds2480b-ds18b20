@@ -93,7 +93,7 @@ namespace DigitalThermometer.UnitTests
         [TestCase("28 1F 7B BE 00 00 00 F8")]
         public void CalculateRomCodeCrc8(string romCodeString)
         {
-            Assert.AreEqual(0x00, Crc8Utility.CalculateCrc8(BitConverter.GetBytes(DS18B20.RomCodeFromLEString(romCodeString))));
+            Assert.AreEqual(0x00, Crc8Utility.CalculateCrc8(BitConverter.GetBytes(Utils.RomCodeFromLEString(romCodeString))));
         }
 
         [Test]
@@ -112,8 +112,8 @@ namespace DigitalThermometer.UnitTests
         [TestCase("28FCB078000000EA")]
         public void RomCodeToLEString(string romCodeString)
         {
-            var romCode = DS18B20.RomCodeFromLEString(romCodeString);
-            var romCodeStringNew = DS18B20.RomCodeToLEString(romCode);
+            var romCode = Utils.RomCodeFromLEString(romCodeString);
+            var romCodeStringNew = Utils.RomCodeToLEString(romCode);
             Assert.AreEqual(romCodeString, romCodeStringNew);
         }
     }

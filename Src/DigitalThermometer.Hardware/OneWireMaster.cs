@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace DigitalThermometer.Hardware
 {
@@ -26,7 +26,7 @@ namespace DigitalThermometer.Hardware
 
         private bool lastDeviceFlag = false;
 
-        private byte[] romCodeTempBuffer = new byte[21];
+        private readonly byte[] romCodeTempBuffer = new byte[21];
 
         public OneWireMaster(ISerialConnection portConnection)
         {
@@ -34,15 +34,17 @@ namespace DigitalThermometer.Hardware
             this.port.OnDataReceived += this.PortDataReceived;
         }
 
-        public OneWireBusResetResponse Open()
+        public async Task<OneWireBusResetResponse> OpenAsync()
         {
-            this.rxDataWaitHandle = new AutoResetEvent(false);
             this.port.OpenPort();
-            this.Set1WireMode();
+
+            this.ClearReceiveBuffer();
+            await this.SetOneWireFlexParamsAsync();
+            await Task.Delay(500); // TODO: config
 
             this.ClearReceiveBuffer();
             this.ResetBus();
-            if (!this.WaitResponse(1, 1000))
+            if (!await this.WaitResponseAsync(1, 1000))
             {
                 this.ClearReceiveBuffer();
                 return OneWireBusResetResponse.NoBusResetResponse;
@@ -56,7 +58,6 @@ namespace DigitalThermometer.Hardware
 
         public void Close()
         {
-            this.rxDataWaitHandle.Close();
             this.port.ClosePort();
         }
 
@@ -66,20 +67,17 @@ namespace DigitalThermometer.Hardware
         /// <param name="data">Data to transmit to port as-is</param>
         private void TransmitRawData(byte[] data)
         {
-            Debug.WriteLine($"> {String.Join(" ", data.Select(b => b.ToString("X2")))}");
+            Debug.WriteLine($"TX > {String.Join(" ", data.Select(b => b.ToString("X2")))}");
             this.port.TransmitData(data);
         }
 
-        private AutoResetEvent rxDataWaitHandle;
-
         private void PortDataReceived(byte[] data)
         {
-            Debug.WriteLine($"< {String.Join(" ", data.Select(b => b.ToString("X2")))}");
+            Debug.WriteLine($"RX < {String.Join(" ", data.Select(b => b.ToString("X2")))}");
             this.receiveBuffer.AddRange(data);
-            this.rxDataWaitHandle.Set();
         }
 
-        private bool WaitResponse(int bytesCount, int millisecondsTimeout)
+        private async Task<bool> WaitResponseAsync(int bytesCount, int millisecondsTimeout)
         {
             var t = Stopwatch.StartNew();
             while (t.ElapsedMilliseconds < millisecondsTimeout)
@@ -89,18 +87,10 @@ namespace DigitalThermometer.Hardware
                     return true;
                 }
 
-                this.rxDataWaitHandle.WaitOne(1);
+                await Task.Delay(1); // TODO: async version of AutoResetEvent: this.rxDataWaitHandle.WaitOne(1); ?
             }
 
             return false;
-        }
-
-        private void Set1WireMode()
-        {
-            this.ClearReceiveBuffer();
-            this.Set1WireFlexParams();
-            Thread.Sleep(500); // TODO: async
-            this.ClearReceiveBuffer();
         }
 
         private void ResetBus()
@@ -122,7 +112,7 @@ namespace DigitalThermometer.Hardware
             this.TransmitRawData(rawData);
         }
 
-        private void Set1WireFlexParams()
+        private async Task SetOneWireFlexParamsAsync()
         {
             // TODO: calibration ? (DS2480B p.3 at bottom)
             this.ClearReceiveBuffer();
@@ -132,7 +122,7 @@ namespace DigitalThermometer.Hardware
                 DS2480B.CommandResetAtFlexSpeed,
             });
 
-            Thread.Sleep(150); // TODO: async
+            await Task.Delay(150);
 
             this.ClearReceiveBuffer();
             this.TransmitRawData(new[]
@@ -141,7 +131,7 @@ namespace DigitalThermometer.Hardware
                 DS2480B.CommandResetAtFlexSpeed,
             });
 
-            Thread.Sleep(15); // TODO: async
+            await Task.Delay(15);
 
             this.ClearReceiveBuffer();
             this.TransmitRawData(new[]
@@ -161,11 +151,11 @@ namespace DigitalThermometer.Hardware
             this.receiveBuffer.Clear();
         }
 
-        private void SendSearchCommand()
+        private async Task SendSearchCommandAsync()
         {
             this.ClearReceiveBuffer();
             this.ResetBus();
-            this.WaitResponse(1, ResetBusTimeout);
+            await this.WaitResponseAsync(1, ResetBusTimeout);
 
             // TODO: check result var resetResponse = DS2480B.CheckResetResponse(this.inputbuffer[0]); // TODO: use response
 
@@ -192,7 +182,7 @@ namespace DigitalThermometer.Hardware
                     {
                         if (i == (this.lastDiscrepancy - 1))
                         {
-                            BitUtility.WriteBit(bpois, (i * 2 + 1), 1);
+                            BitUtility.WriteBit(bpois, i * 2 + 1, 1);
                         }
                     }
                 }
@@ -204,7 +194,7 @@ namespace DigitalThermometer.Hardware
             }
 
             this.TransmitRawData(buffer);
-            this.WaitResponse(1 + 17, 1000);
+            await this.WaitResponseAsync(1 + 17, 1000);
         }
 
         private byte[] DecodeSearchResponse()
@@ -257,7 +247,7 @@ namespace DigitalThermometer.Hardware
         /// <summary>
         /// Perform temperature conversion on all DS18B20 slave devices on bus
         /// </summary>
-        private void PerformDS18B20TemperatureConversion()
+        private async Task PerformDS18B20TemperatureConversionAsync()
         {
             var selectStartAllMeasurePacket = new byte[]
             {
@@ -268,17 +258,17 @@ namespace DigitalThermometer.Hardware
 
             this.ClearReceiveBuffer();
             this.ResetBus();
-            this.WaitResponse(1, ResetBusTimeout); // TODO: check result
+            await this.WaitResponseAsync(1, ResetBusTimeout); // TODO: check result
 
             this.TransmitDataPacket(selectStartAllMeasurePacket);
-            Thread.Sleep(DS18B20.ConversionTime12bit); // TODO: async
+            await Task.Delay(DS18B20.ConversionTime12bit);
         }
 
         /// <summary>
         /// Perform temperature conversion on specified DS18B20 slave device 
         /// </summary>
         /// <param name="romCode">ROM code of DS18B20</param>
-        private void PerformDS18B20TemperatureConversion(UInt64 romCode)
+        private async Task PerformDS18B20TemperatureConversionAsync(UInt64 romCode)
         {
             var dataPacket = new List<byte>();
             dataPacket.Add(DS2480B.SwitchToDataMode);
@@ -288,10 +278,10 @@ namespace DigitalThermometer.Hardware
 
             this.ClearReceiveBuffer();
             this.ResetBus();
-            this.WaitResponse(1, ResetBusTimeout); // TODO: check result
+            await this.WaitResponseAsync(1, ResetBusTimeout); // TODO: check result
 
             this.TransmitDataPacket(dataPacket);
-            Thread.Sleep(DS18B20.ConversionTime12bit); // TODO: async
+            await Task.Delay(DS18B20.ConversionTime12bit);
         }
 
         private static byte[] CreateReadDS18B20ScratchpadRequest(ulong romCode)
@@ -317,16 +307,16 @@ namespace DigitalThermometer.Hardware
         /// Read scratchpad data of specified DS18B20 slave device
         ///</summary> 
         ///<param name="romCode">ROM code of DS18B20</param>
-        private byte[] ReadDS18B20ScratchpadData(UInt64 romCode)
+        private async Task<byte[]> ReadDS18B20ScratchpadDataAsync(UInt64 romCode)
         {
             var dataPacket = CreateReadDS18B20ScratchpadRequest(romCode);
 
             this.ClearReceiveBuffer();
             this.ResetBus();
-            this.WaitResponse(1, ResetBusTimeout); // TODO: check result
+            await this.WaitResponseAsync(1, ResetBusTimeout); // TODO: check result
 
             this.TransmitDataPacket(dataPacket);
-            this.WaitResponse(dataPacket.Length, 1000); // TODO: check result
+            await this.WaitResponseAsync(dataPacket.Length, 1000); // TODO: check result
 
             var romCodeBytes = BitConverter.GetBytes(romCode);
 
@@ -371,7 +361,7 @@ namespace DigitalThermometer.Hardware
         /// Search for devices on bus
         /// </summary>
         /// <returns>List of ROM codes of devices found</returns>
-        public IList<UInt64> SearchDevicesOnBus(Action<ulong> deviceFound = null)
+        public async Task<IList<UInt64>> SearchDevicesOnBusAsync(Action<ulong> deviceFound = null)
         {
             this.lastDiscrepancy = 0;
             this.lastDeviceFlag = false;
@@ -382,7 +372,7 @@ namespace DigitalThermometer.Hardware
 
             for (; ; )
             {
-                this.SendSearchCommand();
+                await this.SendSearchCommandAsync();
 
                 var romCode = this.DecodeSearchResponse();
                 if (romCode != null)
@@ -409,15 +399,15 @@ namespace DigitalThermometer.Hardware
             return result;
         }
 
-        public IDictionary<UInt64, DS18B20.Scratchpad> PerformDS18B20TemperatureMeasure(IList<UInt64> romCodes, Action<Tuple<UInt64, DS18B20.Scratchpad>> measurementCompleted = null)
+        public async Task<IDictionary<UInt64, DS18B20.Scratchpad>> PerformDS18B20TemperatureMeasureAsync(IList<UInt64> romCodes, Action<Tuple<UInt64, DS18B20.Scratchpad>> measurementCompleted = null)
         {
-            this.PerformDS18B20TemperatureConversion();
+            await this.PerformDS18B20TemperatureConversionAsync();
 
             var result = new Dictionary<UInt64, DS18B20.Scratchpad>(romCodes.Count);
 
             foreach (var romCode in romCodes)
             {
-                var scratchpadData = this.ReadDS18B20ScratchpadData(romCode);
+                var scratchpadData = await this.ReadDS18B20ScratchpadDataAsync(romCode);
                 if (scratchpadData != null)
                 {
                     var scratchpad = new DS18B20.Scratchpad(scratchpadData);
@@ -442,11 +432,11 @@ namespace DigitalThermometer.Hardware
         /// </summary>
         /// <param name="romCode">ROM code of DS18B20</param>
         /// <returns>Scratchpad contents</returns>
-        public DS18B20.Scratchpad PerformDS18B20TemperatureMeasure(UInt64 romCode)
+        public async Task<DS18B20.Scratchpad> PerformDS18B20TemperatureMeasureAsync(UInt64 romCode)
         {
-            this.PerformDS18B20TemperatureConversion(romCode);
+            await this.PerformDS18B20TemperatureConversionAsync(romCode);
 
-            var scratchpadData = this.ReadDS18B20ScratchpadData(romCode);
+            var scratchpadData = await this.ReadDS18B20ScratchpadDataAsync(romCode);
             if (scratchpadData != null)
             {
                 var scratchpad = new DS18B20.Scratchpad(scratchpadData);

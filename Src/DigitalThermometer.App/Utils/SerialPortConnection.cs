@@ -60,11 +60,11 @@ namespace DigitalThermometer.App.Utils
         /// <param name="value">(default) false = 1 = -U | true = 0 = +U</param>
         public void SetRts(bool value)
         {
-            if (serialPort != null)
+            if (this.serialPort != null)
             {
-                if (serialPort.IsOpen)
+                if (this.serialPort.IsOpen)
                 {
-                    serialPort.RtsEnable = value;
+                    this.serialPort.RtsEnable = value;
                 }
             }
         }
@@ -75,11 +75,11 @@ namespace DigitalThermometer.App.Utils
         /// <param name="value">(default) false = 1 = -U | true = 0 = +U</param>
         public void SetDtr(bool value)
         {
-            if (serialPort != null)
+            if (this.serialPort != null)
             {
-                if (serialPort.IsOpen)
+                if (this.serialPort.IsOpen)
                 {
-                    serialPort.DtrEnable = value;
+                    this.serialPort.DtrEnable = value;
                 }
             }
         }
@@ -141,58 +141,27 @@ namespace DigitalThermometer.App.Utils
 
         private volatile bool stop;
 
-        private readonly object portlocker = new object();
+        private readonly object portMutex = new object(); // TODO: SemaphoreSlim
 
-        private readonly object rxBufferLocker = new object();
+        private readonly object rxBufferMutex = new object(); // TODO: SemaphoreSlim
 
         private readonly AutoResetEvent portByteReceivedWaitHandle = new AutoResetEvent(false);
 
         private readonly AutoResetEvent rxBufferWaitHandle = new AutoResetEvent(false);
 
         /// <summary>
-        /// Input queue
+        /// Receive buffer
         /// </summary>
-        private readonly Queue<byte> rxBuffer = new Queue<byte>();
+        private readonly Queue<byte> receiveBuffer = new Queue<byte>();
 
         public volatile bool IsConnected = false;
 
-        #region ThreadProc_RxData
-
-        private long rxDataIterations = 0L;
-
-        private long rxDataRxBytes = 0L;
-
-        private long RxDataIterations
-        {
-            get
-            {
-                return Interlocked.Read(ref rxDataIterations);
-            }
-        }
-
-        private long RxDataRxBytes
-        {
-            get
-            {
-                return Interlocked.Read(ref rxDataRxBytes);
-            }
-        }
-
-        #endregion
-
         private void ThreadProcRxData()
         {
-            Interlocked.Exchange(ref rxDataIterations, 0L);
-            Interlocked.Exchange(ref rxDataRxBytes, 0L);
-
-            const int InputBufferSize = 1024;
-
-            var inputBuffer = new byte[InputBufferSize];
+            var inputBuffer = new byte[4096];
 
             while (true)
             {
-                Interlocked.Increment(ref rxDataIterations);
-
                 if (stop)
                 {
                     break;
@@ -200,26 +169,25 @@ namespace DigitalThermometer.App.Utils
 
                 try
                 {
-                    lock (this.portlocker)
+                    lock (this.portMutex)
                     {
-                        if ((this.serialPort != null) && (this.serialPort.IsOpen))
+                        if ((this.serialPort != null) && this.serialPort.IsOpen)
                         {
                             var availibleBytes = this.serialPort.BytesToRead;
                             if (availibleBytes > 0)
                             {
-                                var bytesToRead = Math.Min(availibleBytes, InputBufferSize);
-                                var readedBytes = serialPort.Read(inputBuffer, 0, bytesToRead);
+                                var bytesToRead = Math.Min(availibleBytes, inputBuffer.Length);
+                                var readedBytes = this.serialPort.Read(inputBuffer, 0, bytesToRead); // TODO: async
                                 if (bytesToRead != readedBytes)
                                 {
                                     throw new InvalidOperationException("readedBytes != bytesToRead");
                                 }
 
-                                Interlocked.Add(ref rxDataRxBytes, readedBytes);
-                                lock (this.rxBufferLocker)
+                                lock (this.rxBufferMutex)
                                 {
                                     for (var i = 0; i < readedBytes; i++)
                                     {
-                                        this.rxBuffer.Enqueue(inputBuffer[i]);
+                                        this.receiveBuffer.Enqueue(inputBuffer[i]);
                                     }
                                 }
 
@@ -255,86 +223,10 @@ namespace DigitalThermometer.App.Utils
             IsConnected = false;
         }
 
-        public void ClearRxBuffer()
-        {
-            lock (portlocker)
-            {
-                if ((serialPort != null) && (serialPort.IsOpen))
-                {
-                    try
-                    {
-                        serialPort.DiscardInBuffer();
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-
-                lock (this.rxBufferLocker)
-                {
-                    if (rxBuffer.Count > 0)
-                    {
-                        rxBuffer.Clear();
-                    }
-                }
-            }
-        }
-
-        #region Diagnostic counters
-
-        private long _threadProc_TxData_ThreadId = 0L;
-
-        private uint TxDataThreadId
-        {
-            get
-            {
-                return (uint)Interlocked.Read(ref _threadProc_TxData_ThreadId);
-            }
-        }
-
-        private long txDataIterations = 0L;
-
-        private long txDataTxBytes = 0L;
-
-        private long ThreadProc_TxData_Iterations
-        {
-            get
-            {
-                return Interlocked.Read(ref txDataIterations);
-            }
-        }
-
-        private long ThreadProc_TxData_TxBytes
-        {
-            get
-            {
-                return Interlocked.Read(ref txDataTxBytes);
-            }
-        }
-
-        private int RxBufferCount
-        {
-            get
-            {
-                lock (this.rxBufferLocker)
-                {
-                    return rxBuffer.Count;
-                }
-            }
-        }
-
-        #endregion
-
         private void ThreadProcTxData()
         {
-            Interlocked.Exchange(ref txDataIterations, 0L);
-            Interlocked.Exchange(ref txDataTxBytes, 0L);
-
             while (true)
             {
-                Interlocked.Increment(ref txDataIterations);
-
                 if (stop)
                 {
                     break;
@@ -344,19 +236,18 @@ namespace DigitalThermometer.App.Utils
                 {
                     byte[] buffer = null;
 
-                    lock (this.rxBufferLocker)
+                    lock (this.rxBufferMutex)
                     {
-                        if (rxBuffer.Count > 0)
+                        if (this.receiveBuffer.Count > 0)
                         {
-                            buffer = rxBuffer.ToArray();
-                            rxBuffer.Clear();
+                            buffer = this.receiveBuffer.ToArray();
+                            this.receiveBuffer.Clear();
                         }
                     }
 
                     if (buffer != null)
                     {
                         this.OnDataReceived(buffer);
-                        Interlocked.Increment(ref txDataTxBytes);
                     }
                 }
 
@@ -392,7 +283,7 @@ namespace DigitalThermometer.App.Utils
                 }
             }
 
-            lock (portlocker)
+            lock (this.portMutex)
             {
                 this.DestroySerialPort();
             }
@@ -412,17 +303,17 @@ namespace DigitalThermometer.App.Utils
 
             try
             {
-                lock (portlocker)
+                lock (this.portMutex)
                 {
-                    if ((serialPort != null) && (serialPort.IsOpen))
+                    if ((this.serialPort != null) && (this.serialPort.IsOpen))
                     {
-                        serialPort.Write(data, 0, data.Length);
+                        this.serialPort.Write(data, 0, data.Length); // TODO: async
                     }
                 }
             }
             catch (Exception)
             {
-                ClosePort();
+                this.ClosePort();
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 
 using NUnit.Framework;
 
@@ -10,53 +10,53 @@ namespace DigitalThermometer.UnitTests
     class OneWireMasterTests
     {
         [Test]
-        public void ResetBus()
+        public async Task ResetBusAsync()
         {
             var emulator = new ThermoStringEmulator(new[] { 0x91000000BED06928, });
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open();
+            var result = await busMaster.OpenAsync();
 
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
         }
 
         [Test]
-        public void ResetBusNoPresense()
+        public async Task ResetBusNoPresenseAsync()
         {
             var emulator = new ThermoStringEmulator(new ulong[] { });
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open();
+            var result = await busMaster.OpenAsync();
 
             Assert.AreEqual(OneWireBusResetResponse.NoPresencePulse, result);
         }
 
         [Test]
-        public void SearchDevicesOnBus()
+        public async Task SearchDevicesOnBusAsync()
         {
             const ulong device1 = 0x4D000000BE736128;
             const ulong device2 = 0x91000000BED06928;
 
             var emulator = new ThermoStringEmulator(new ulong[] { device1, device2, });
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open();
+            var result = await busMaster.OpenAsync();
 
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
 
-            var devices = busMaster.SearchDevicesOnBus();
+            var devices = await busMaster.SearchDevicesOnBusAsync();
             Assert.AreEqual(2, devices.Count);
             Assert.AreEqual(device1, devices[0]);
             Assert.AreEqual(device2, devices[1]);
         }
 
         [Test]
-        public void PerformMeasure()
+        public async Task PerformMeasureAsync()
         {
             var romCodes = new ulong[] { 0x4D000000BE736128, 0x91000000BED06928, };
             var emulator = new ThermoStringEmulator(romCodes);
             var busMaster = new OneWireMaster(emulator);
-            var result = busMaster.Open();
+            var result = await busMaster.OpenAsync();
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
 
-            var measurements = busMaster.PerformDS18B20TemperatureMeasure(romCodes);
+            var measurements = await busMaster.PerformDS18B20TemperatureMeasureAsync(romCodes);
             Assert.AreEqual(measurements.Count, romCodes.Length);
             Assert.AreEqual(25.9375, measurements[romCodes[0]].Temperature);
             Assert.AreEqual(25.9375, measurements[romCodes[1]].Temperature);
