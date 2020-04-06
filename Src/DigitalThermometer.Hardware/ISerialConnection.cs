@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace DigitalThermometer.Hardware
 {
@@ -6,9 +7,9 @@ namespace DigitalThermometer.Hardware
     {
         void OpenPort();
 
-        void ClosePort(bool self = false);
+        Task ClosePortAsync();
 
-        void TransmitData(byte[] data);
+        Task TransmitDataAsync(byte[] data);
 
         event Action<byte[]> OnDataReceived;
     }

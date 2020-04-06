@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 using DigitalThermometer.Hardware;
 
 namespace DigitalThermometer.UnitTests
@@ -37,12 +37,13 @@ namespace DigitalThermometer.UnitTests
             this.isOpened = true;
         }
 
-        void ISerialConnection.ClosePort(bool self)
+        async Task ISerialConnection.ClosePortAsync()
         {
+            await Task.Delay(5);
             this.isOpened = false;
         }
 
-        void ISerialConnection.TransmitData(byte[] data)
+        async Task ISerialConnection.TransmitDataAsync(byte[] data)
         {
             if (!this.isOpened)
             {
@@ -57,6 +58,8 @@ namespace DigitalThermometer.UnitTests
                 this.OnDataReceived?.Invoke(response.ToArray());
                 this.rxBuffer.Clear();
             }
+
+            await Task.Delay(1);
         }
 
         public event Action<byte[]> OnDataReceived;

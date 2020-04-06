@@ -2,14 +2,13 @@
 Windows desktop (WPF) application with basic support of 1-Wire devices, implemented as separate assembly.
 
 ### Technologies
-Developed using MS Visual Studio 2017, C# .NET 4.0, WPF for UI. Application code separation according to MVVM pattern; unit tests are also included. 
+Developed using MS Visual Studio 2017, C#, .NET Framework 4.5.2, WPF for UI. Application code separation according to MVVM pattern; unit tests are also included. 
 
 ### Getting started with demo application
 * Connect any 1-Wire adapter, based on DS2480B chip to USB or Serial port on PC, connect one or several DS18B20 temperature sensors to 1-Wire port (in normal power mode, not parasite mode)
 * Run application, select serial port from list, press 'Measure' button.
 
 ### Known issues and limitations
-* Using .NET 4.0 without modern async/await programming model.
 * Demo application runs on Windows only, due to WPF.
 
 ### Screenshot

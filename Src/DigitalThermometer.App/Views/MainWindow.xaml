@@ -89,7 +89,7 @@
                                 Binding="{Binding TemperatureValueString}"
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="65" />
+                                Width="70" />
                 <DataGridTextColumn Header="Code" 
                                 Binding="{Binding TemperatureRawCodeString}" 
                                 CanUserSort="False"

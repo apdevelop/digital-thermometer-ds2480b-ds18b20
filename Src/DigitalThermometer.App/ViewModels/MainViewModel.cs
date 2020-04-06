@@ -21,8 +21,8 @@ namespace DigitalThermometer.App.ViewModels
 
         public MainViewModel()
         {
-            this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasuresAsync());
-            this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasuresInDemoModeAsync());
+            this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasurementsAsync());
+            this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasurementsInDemoModeAsync());
 
             // TODO: config and save/restore settings
             if (this.SerialPortNames.Count > 0)
@@ -34,7 +34,7 @@ namespace DigitalThermometer.App.ViewModels
             {
                 if (this.IsMeasuresEnabled)
                 {
-                    await this.PerformMeasuresAsync();
+                    await this.PerformMeasurementsAsync();
                 }
             };
         }
@@ -135,10 +135,11 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private async Task PerformMeasuresInDemoModeAsync()
+        private async Task PerformMeasurementsInDemoModeAsync()
         {
             this.IsBusy = true;
             this.SensorsState = null;
+            this.DisplayState(String.Empty);
 
             var sensors = new List<SensorStateModel>(new[]
             {
@@ -214,7 +215,7 @@ namespace DigitalThermometer.App.ViewModels
             this.MarshalToMainThread(s => this.BusState = s, state);
         }
 
-        private async Task PerformMeasuresAsync()
+        private async Task PerformMeasurementsAsync()
         {
             this.BusState = String.Empty;
             this.IsBusy = true;
@@ -223,6 +224,7 @@ namespace DigitalThermometer.App.ViewModels
             this.measuresRuns++;
             var stopwatch = Stopwatch.StartNew();
 
+            this.DisplayState("Initializing...");
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
             var busMaster = new Hardware.OneWireMaster(portConnection);
 
@@ -230,6 +232,7 @@ namespace DigitalThermometer.App.ViewModels
 
             try
             {
+                this.DisplayState("Performing bus reset...");
                 var busResult = await busMaster.OpenAsync();
 
                 // Bus diagnostic
@@ -371,7 +374,7 @@ namespace DigitalThermometer.App.ViewModels
             }
             finally
             {
-                busMaster.Close();
+                await busMaster.CloseAsync();
             }
 
             this.IsBusy = false;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading;
-
+using System.Threading.Tasks;
 using DigitalThermometer.Hardware;
 
 namespace DigitalThermometer.App.Utils
@@ -10,19 +10,36 @@ namespace DigitalThermometer.App.Utils
     /// <summary>
     /// SerialPort wrapper
     /// </summary>
-    public class SerialPortConnection : ISerialConnection, IDisposable
+    public class SerialPortConnection : ISerialConnection
     {
-        public event Action<byte[]> OnDataReceived;
-
-        private SerialPort serialPort;
-
-        private Thread thread_RxData;
-
-        private Thread thread_TxData;
-
         private readonly string serialPortName;
 
         private readonly int baudRate;
+
+        private SerialPort serialPort;
+
+        private Timer pollingTimer;
+
+        private readonly SemaphoreSlim pollingTimerMutex = new SemaphoreSlim(1, 1);
+
+        private volatile bool stopPending = false;
+
+        private readonly SemaphoreSlim portMutex = new SemaphoreSlim(1, 1);
+
+        private readonly SemaphoreSlim rxBufferMutex = new SemaphoreSlim(1, 1);
+
+        public event Action<byte[]> OnDataReceived;
+
+        private readonly List<byte> transmitQueue = new List<byte>();
+
+        private readonly SemaphoreSlim transmitQueueMutex = new SemaphoreSlim(1, 1);
+
+        private const int PollingPeriod = 10;
+
+        /// <summary>
+        /// Receive buffer
+        /// </summary>
+        private readonly Queue<byte> receiveBuffer = new Queue<byte>();
 
         public SerialPortConnection(string serialPortName, int baudRate)
         {
@@ -47,7 +64,6 @@ namespace DigitalThermometer.App.Utils
                 }
                 finally
                 {
-                    this.serialPort.DataReceived -= this.SerialPortDataReceived;
                     this.serialPort.Dispose();
                     this.serialPort = null;
                 }
@@ -86,13 +102,9 @@ namespace DigitalThermometer.App.Utils
 
         public void OpenPort()
         {
-            this.stop = false;
-            this.IsConnected = false;
+            this.stopPending = false;
 
             this.DestroySerialPort();
-
-            this.thread_RxData = null;
-            this.thread_TxData = null;
 
             this.serialPort = new SerialPort
             {
@@ -109,187 +121,180 @@ namespace DigitalThermometer.App.Utils
                 DiscardNull = false,
             };
 
-            this.serialPort.DataReceived += SerialPortDataReceived;
+            this.serialPort.DataReceived += async (s, e) => await SerialPortDataReceivedAsync(s, e);
 
             this.serialPort.Open();
 
-            this.thread_RxData = new Thread(ThreadProcRxData)
+            this.pollingTimer = new Timer(async (e) =>
             {
-                IsBackground = true,
-                Priority = ThreadPriority.AboveNormal,
-                Name = "thread_RxData",
-            };
-
-            this.thread_RxData.Start();
-
-            this.thread_TxData = new Thread(ThreadProcTxData)
-            {
-                IsBackground = true,
-                Priority = ThreadPriority.AboveNormal,
-                Name = "thread_TxData",
-            };
-
-            this.thread_TxData.Start();
-
-            this.IsConnected = true;
-        }
-
-        void SerialPortDataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            this.portByteReceivedWaitHandle.Set();
-        }
-
-        private volatile bool stop;
-
-        private readonly object portMutex = new object(); // TODO: SemaphoreSlim
-
-        private readonly object rxBufferMutex = new object(); // TODO: SemaphoreSlim
-
-        private readonly AutoResetEvent portByteReceivedWaitHandle = new AutoResetEvent(false);
-
-        private readonly AutoResetEvent rxBufferWaitHandle = new AutoResetEvent(false);
-
-        /// <summary>
-        /// Receive buffer
-        /// </summary>
-        private readonly Queue<byte> receiveBuffer = new Queue<byte>();
-
-        public volatile bool IsConnected = false;
-
-        private void ThreadProcRxData()
-        {
-            var inputBuffer = new byte[4096];
-
-            while (true)
-            {
-                if (stop)
+                if (await this.pollingTimerMutex.WaitAsync(0))
                 {
-                    break;
-                }
-
-                try
-                {
-                    lock (this.portMutex)
+                    try
                     {
-                        if ((this.serialPort != null) && this.serialPort.IsOpen)
+                        if (this.stopPending)
                         {
-                            var availibleBytes = this.serialPort.BytesToRead;
-                            if (availibleBytes > 0)
-                            {
-                                var bytesToRead = Math.Min(availibleBytes, inputBuffer.Length);
-                                var readedBytes = this.serialPort.Read(inputBuffer, 0, bytesToRead); // TODO: async
-                                if (bytesToRead != readedBytes)
-                                {
-                                    throw new InvalidOperationException("readedBytes != bytesToRead");
-                                }
-
-                                lock (this.rxBufferMutex)
-                                {
-                                    for (var i = 0; i < readedBytes; i++)
-                                    {
-                                        this.receiveBuffer.Enqueue(inputBuffer[i]);
-                                    }
-                                }
-
-                                this.rxBufferWaitHandle.Set();
-                                continue;
-                            }
+                            this.pollingTimer.Change(Timeout.Infinite, 0);
                         }
                         else
                         {
-                            if (this.serialPort == null)
+                            await this.PerformPollingAsync();
+                        }
+                    }
+                    finally
+                    {
+                        this.pollingTimerMutex.Release();
+                    }
+                }
+            }, null, PollingPeriod, PollingPeriod);
+        }
+
+        async Task SerialPortDataReceivedAsync(object sender, SerialDataReceivedEventArgs e)
+        {
+            if (await this.pollingTimerMutex.WaitAsync(0))
+            {
+                try
+                {
+                    if (!this.stopPending)
+                    {
+                        await this.PerformPollingAsync();
+                    }
+                }
+                finally
+                {
+                    this.pollingTimerMutex.Release();
+                }
+            }
+        }
+
+        private async Task TransmitAsync()
+        {
+            try
+            {
+                await this.portMutex.WaitAsync();
+                try
+                {
+                    if ((this.serialPort != null) && this.serialPort.IsOpen)
+                    {
+                        byte[] data = null;
+
+                        await this.transmitQueueMutex.WaitAsync();
+                        try
+                        {
+                            if (this.transmitQueue.Count > 0)
                             {
-                                throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort == null)");
+                                data = this.transmitQueue.ToArray();
+                                this.transmitQueue.Clear();
                             }
-                            else
+                        }
+                        finally
+                        {
+                            this.transmitQueueMutex.Release();
+                        }
+
+                        if (data != null)
+                        {
+                            this.serialPort.Write(data, 0, data.Length);
+                        }
+                    }
+                }
+                finally
+                {
+                    this.portMutex.Release();
+                }
+            }
+            catch (Exception)
+            {
+                await this.ClosePortAsync();
+            }
+        }
+
+        private async Task PerformPollingAsync()
+        {
+            await this.TransmitAsync();
+            await this.ReceiveAsync();
+            await this.DataReceivedEventDriverAsync();
+        }
+
+        byte[] inputBuffer = new byte[4096];
+
+        private async Task ReceiveAsync()
+        {
+            try
+            {
+                await this.portMutex.WaitAsync();
+                try
+                {
+                    if ((this.serialPort != null) && this.serialPort.IsOpen)
+                    {
+                        var availibleBytes = this.serialPort.BytesToRead;
+                        if (availibleBytes > 0)
+                        {
+                            var bytesToRead = Math.Min(availibleBytes, inputBuffer.Length);
+                            var readedBytes = this.serialPort.Read(inputBuffer, 0, bytesToRead);
+                            if (bytesToRead != readedBytes)
                             {
-                                if (!this.serialPort.IsOpen)
+                                throw new InvalidOperationException("readedBytes != bytesToRead");
+                            }
+
+                            await this.rxBufferMutex.WaitAsync();
+                            try
+                            {
+                                for (var i = 0; i < readedBytes; i++)
                                 {
-                                    throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort.IsOpen == false)");
+                                    this.receiveBuffer.Enqueue(inputBuffer[i]);
                                 }
                             }
+                            finally
+                            {
+                                this.rxBufferMutex.Release();
+                            }
+
+                            await Task.Delay(1);
                         }
                     }
-                }
-                catch (Exception)
-                {
-                    this.ClosePort(true);
-                    break;
-                }
-
-                this.portByteReceivedWaitHandle.WaitOne(1);
-            }
-
-            IsConnected = false;
-        }
-
-        private void ThreadProcTxData()
-        {
-            while (true)
-            {
-                if (stop)
-                {
-                    break;
-                }
-
-                if (this.OnDataReceived != null)
-                {
-                    byte[] buffer = null;
-
-                    lock (this.rxBufferMutex)
+                    else
                     {
-                        if (this.receiveBuffer.Count > 0)
+                        if (this.serialPort == null)
                         {
-                            buffer = this.receiveBuffer.ToArray();
-                            this.receiveBuffer.Clear();
+                            throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort == null)");
+                        }
+                        else
+                        {
+                            if (!this.serialPort.IsOpen)
+                            {
+                                throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort.IsOpen == false)");
+                            }
                         }
                     }
-
-                    if (buffer != null)
-                    {
-                        this.OnDataReceived(buffer);
-                    }
                 }
-
-                this.rxBufferWaitHandle.WaitOne(1);
+                finally
+                {
+                    this.portMutex.Release();
+                }
+            }
+            catch (Exception)
+            {
+                await this.ClosePortAsync();
+                return;
             }
         }
 
-        public void ClosePort(bool self = false)
+        public async Task ClosePortAsync()
         {
-            IsConnected = false;
-            stop = true;
+            this.stopPending = true;
 
-            if (thread_TxData != null)
-            {
-                if (!thread_TxData.Join(1000))
-                {
-
-                }
-
-                thread_TxData = null;
-            }
-
-            if (!self)
-            {
-                if (thread_RxData != null)
-                {
-                    if (!thread_RxData.Join(1000))
-                    {
-
-                    }
-
-                    thread_RxData = null;
-                }
-            }
-
-            lock (this.portMutex)
+            await this.portMutex.WaitAsync();
+            try
             {
                 this.DestroySerialPort();
             }
+            finally
+            {
+                this.portMutex.Release();
+            }
         }
 
-        public void TransmitData(byte[] data)
+        public async Task TransmitDataAsync(byte[] data)
         {
             if (data == null)
             {
@@ -298,31 +303,46 @@ namespace DigitalThermometer.App.Utils
 
             if (data.Length == 0)
             {
-                throw new ArgumentException(nameof(data), "data.Length = 0");
+                throw new ArgumentException("data.Length = 0", nameof(data));
             }
 
+            // TX queue for non-blocking calling TransmitDataAsync
+            await this.transmitQueueMutex.WaitAsync();
             try
             {
-                lock (this.portMutex)
-                {
-                    if ((this.serialPort != null) && (this.serialPort.IsOpen))
-                    {
-                        this.serialPort.Write(data, 0, data.Length); // TODO: async
-                    }
-                }
+                this.transmitQueue.AddRange(data);
             }
-            catch (Exception)
+            finally
             {
-                this.ClosePort();
+                this.transmitQueueMutex.Release();
             }
         }
 
-        public void Dispose()
+        private async Task DataReceivedEventDriverAsync()
         {
-            this.ClosePort();
+            if (this.OnDataReceived != null) // TODO: another way to read data instead of callback event
+            {
+                byte[] buffer = null;
 
-            this.portByteReceivedWaitHandle.Close();
-            this.rxBufferWaitHandle.Close();
+                await this.rxBufferMutex.WaitAsync();
+                try
+                {
+                    if (this.receiveBuffer.Count > 0)
+                    {
+                        buffer = this.receiveBuffer.ToArray();
+                        this.receiveBuffer.Clear();
+                    }
+                }
+                finally
+                {
+                    this.rxBufferMutex.Release();
+                }
+
+                if (buffer != null)
+                {
+                    this.OnDataReceived(buffer);
+                }
+            }
         }
     }
 }

@@ -43,7 +43,7 @@ namespace DigitalThermometer.Hardware
             await Task.Delay(500); // TODO: config
 
             this.ClearReceiveBuffer();
-            this.ResetBus();
+            await this.ResetBusAsync();
             if (!await this.WaitResponseAsync(1, 1000))
             {
                 this.ClearReceiveBuffer();
@@ -56,19 +56,19 @@ namespace DigitalThermometer.Hardware
             return resetResponse;
         }
 
-        public void Close()
+        public async Task CloseAsync()
         {
-            this.port.ClosePort();
+            await this.port.ClosePortAsync();
         }
 
         /// <summary>
         /// Transmit data to port without any conversion / escaping
         /// </summary>
         /// <param name="data">Data to transmit to port as-is</param>
-        private void TransmitRawData(byte[] data)
+        private async Task TransmitRawDataAsync(byte[] data)
         {
             Debug.WriteLine($"TX > {String.Join(" ", data.Select(b => b.ToString("X2")))}");
-            this.port.TransmitData(data);
+            await this.port.TransmitDataAsync(data);
         }
 
         private void PortDataReceived(byte[] data)
@@ -93,9 +93,9 @@ namespace DigitalThermometer.Hardware
             return false;
         }
 
-        private void ResetBus()
+        private async Task ResetBusAsync()
         {
-            this.TransmitRawData(new[]
+            await this.TransmitRawDataAsync(new[]
             {
                 DS2480B.SwitchToCommandMode,
                 DS2480B.CommandResetAtFlexSpeed,
@@ -106,17 +106,17 @@ namespace DigitalThermometer.Hardware
         /// Transmit data to 1-Wire bus with Switch to Command Mode reserved byte escaping
         /// </summary>
         /// <param name="data">Data to transmit</param>
-        private void TransmitDataPacket(IList<byte> data)
+        private async Task TransmitDataPacketAsync(IList<byte> data)
         {
             var rawData = DS2480B.EscapeDataPacket(data);
-            this.TransmitRawData(rawData);
+            await this.TransmitRawDataAsync(rawData);
         }
 
         private async Task SetOneWireFlexParamsAsync()
         {
             // TODO: calibration ? (DS2480B p.3 at bottom)
             this.ClearReceiveBuffer();
-            this.TransmitRawData(new[]
+            await this.TransmitRawDataAsync(new[]
             {
                 DS2480B.SwitchToCommandMode,
                 DS2480B.CommandResetAtFlexSpeed,
@@ -125,7 +125,7 @@ namespace DigitalThermometer.Hardware
             await Task.Delay(150);
 
             this.ClearReceiveBuffer();
-            this.TransmitRawData(new[]
+            await this.TransmitRawDataAsync(new[]
             {
                 DS2480B.SwitchToCommandMode,
                 DS2480B.CommandResetAtFlexSpeed,
@@ -134,7 +134,7 @@ namespace DigitalThermometer.Hardware
             await Task.Delay(15);
 
             this.ClearReceiveBuffer();
-            this.TransmitRawData(new[]
+            await this.TransmitRawDataAsync(new[]
             {
                 DS2480B.PDSRC_1p37Vpus,
                 DS2480B.PPD_512us,
@@ -154,7 +154,7 @@ namespace DigitalThermometer.Hardware
         private async Task SendSearchCommandAsync()
         {
             this.ClearReceiveBuffer();
-            this.ResetBus();
+            await this.ResetBusAsync();
             await this.WaitResponseAsync(1, ResetBusTimeout);
 
             // TODO: check result var resetResponse = DS2480B.CheckResetResponse(this.inputbuffer[0]); // TODO: use response
@@ -193,7 +193,7 @@ namespace DigitalThermometer.Hardware
                 }
             }
 
-            this.TransmitRawData(buffer);
+            await this.TransmitRawDataAsync(buffer);
             await this.WaitResponseAsync(1 + 17, 1000);
         }
 
@@ -257,10 +257,10 @@ namespace DigitalThermometer.Hardware
             };
 
             this.ClearReceiveBuffer();
-            this.ResetBus();
+            await this.ResetBusAsync();
             await this.WaitResponseAsync(1, ResetBusTimeout); // TODO: check result
 
-            this.TransmitDataPacket(selectStartAllMeasurePacket);
+            await this.TransmitDataPacketAsync(selectStartAllMeasurePacket);
             await Task.Delay(DS18B20.ConversionTime12bit);
         }
 
@@ -277,10 +277,10 @@ namespace DigitalThermometer.Hardware
             dataPacket.Add(DS18B20.CONVERT_T);
 
             this.ClearReceiveBuffer();
-            this.ResetBus();
+            await this.ResetBusAsync();
             await this.WaitResponseAsync(1, ResetBusTimeout); // TODO: check result
 
-            this.TransmitDataPacket(dataPacket);
+            await this.TransmitDataPacketAsync(dataPacket);
             await Task.Delay(DS18B20.ConversionTime12bit);
         }
 
@@ -312,10 +312,10 @@ namespace DigitalThermometer.Hardware
             var dataPacket = CreateReadDS18B20ScratchpadRequest(romCode);
 
             this.ClearReceiveBuffer();
-            this.ResetBus();
+            await this.ResetBusAsync();
             await this.WaitResponseAsync(1, ResetBusTimeout); // TODO: check result
 
-            this.TransmitDataPacket(dataPacket);
+            await this.TransmitDataPacketAsync(dataPacket);
             await this.WaitResponseAsync(dataPacket.Length, 1000); // TODO: check result
 
             var romCodeBytes = BitConverter.GetBytes(romCode);
