@@ -20,7 +20,7 @@ namespace DigitalThermometer.UnitTests
         }
 
         [Test]
-        public async Task ResetBusNoPresenseAsync()
+        public async Task ResetBusNoPresenceAsync()
         {
             var emulator = new ThermoStringEmulator(new ulong[] { });
             var busMaster = new OneWireMaster(emulator);
@@ -56,7 +56,7 @@ namespace DigitalThermometer.UnitTests
             var result = await busMaster.OpenAsync();
             Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
 
-            var measurements = await busMaster.PerformDS18B20TemperatureMeasureAsync(romCodes);
+            var measurements = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCodes);
             Assert.AreEqual(measurements.Count, romCodes.Length);
             Assert.AreEqual(25.9375, measurements[romCodes[0]].Temperature);
             Assert.AreEqual(25.9375, measurements[romCodes[1]].Temperature);

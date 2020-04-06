@@ -95,9 +95,24 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return this.sensorState.ComputedCrc.HasValue ?
-                    "0x" + this.sensorState.ComputedCrc.Value.ToString("X2") :
+                return (this.sensorState.ComputedCrc.HasValue && this.sensorState.IsValidCrc.HasValue) ?
+                    ("0x" + this.sensorState.ComputedCrc.Value.ToString("X2") + " (" + ((this.sensorState.IsValidCrc.Value) ? "OK" : "Bad") + ")") :
                     "?";
+            }
+        }
+
+        public bool? IsValidCrc
+        {
+            get
+            {
+                if (this.sensorState.IsValidCrc.HasValue)
+                {
+                    return this.sensorState.IsValidCrc.Value;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
     }

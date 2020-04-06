@@ -105,26 +105,29 @@ namespace DigitalThermometer.Hardware
         public static readonly byte RBR_115p2kbps = 0x77;
 
         /// <summary>
-        /// Table 2. COMMUNICATION COMMAND RESPONSE
+        /// Bus reset response
         /// </summary>
-        /// <param name="data">Response</param>
+        /// <param name="response">Response</param>
         /// <returns>Response check result</returns>
-        public static OneWireBusResetResponse CheckResetResponse(byte data)
+        public static OneWireBusResetResponse GetBusResetResponse(byte response)
         {
-            if ((data & 0xDC) == 0xCC)
+            // Table 2. COMMUNICATION COMMAND RESPONSE
+            if ((response & 0xDC) == 0xCC)
             {
-                var bits01 = data & 0x03;
+                var bits01 = response & 0x03;
                 switch (bits01)
                 {
-                    case 0x00: return OneWireBusResetResponse.OneWireShorted;
+                    case 0x00: return OneWireBusResetResponse.BusShorted;
                     case 0x01: return OneWireBusResetResponse.PresencePulse;
                     case 0x02: return OneWireBusResetResponse.AlarmingPresencePulse;
                     case 0x03: return OneWireBusResetResponse.NoPresencePulse;
                     default: return OneWireBusResetResponse.InvalidResponse;
                 }
             }
-
-            return OneWireBusResetResponse.InvalidResponse;
+            else
+            {
+                return OneWireBusResetResponse.InvalidResponse;
+            }
         }
 
         public static byte[] EscapeDataPacket(IList<byte> data)

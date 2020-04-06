@@ -15,5 +15,7 @@ namespace DigitalThermometer.App.Models
         public byte[] RawData { get; set; }
 
         public byte? ComputedCrc { get; set; }
+
+        public bool? IsValidCrc { get; set; }
     }
 }

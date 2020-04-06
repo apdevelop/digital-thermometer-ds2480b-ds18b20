@@ -177,12 +177,15 @@ namespace DigitalThermometer.Hardware
 
             #endregion
 
+            /// <summary>
+            /// Raw contents of scratchpad, can contain invalid (bad CRC) data
+            /// </summary>
             private readonly byte[] scratchpad;
 
             /// <summary>
             /// Constructor
             /// </summary>
-            /// <param name="rawData">Raw contents of scratchpad, can contains invalid (bad CRC) data</param>
+            /// <param name="rawData">Raw contents of scratchpad, can contain invalid (bad CRC) data</param>
             public Scratchpad(byte[] rawData)
             {
                 if (rawData == null)
@@ -199,7 +202,7 @@ namespace DigitalThermometer.Hardware
             }
 
             /// <summary>
-            /// Raw contents of scratchpad, can contains invalid (bad CRC) data
+            /// Raw contents of scratchpad, can contain invalid (bad CRC) data
             /// </summary>
             public byte[] RawData
             {
@@ -231,6 +234,9 @@ namespace DigitalThermometer.Hardware
                 }
             }
 
+            /// <summary>
+            /// Computes and checks CRC of entire scratchpad
+            /// </summary>
             public bool IsValidCrc
             {
                 get
@@ -288,7 +294,7 @@ namespace DigitalThermometer.Hardware
                     }
                     else
                     {
-                        return (ThermometerResolution?)null;
+                        return null;
                     }
                 }
             }

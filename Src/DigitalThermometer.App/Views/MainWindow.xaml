@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Digital Thermometer Demo App (DS2480B + DS18B20)" 
-        Width="600" Height="300"
-        MinWidth="600" MinHeight="300"
+        Width="620" Height="300"
+        MinWidth="620" MinHeight="300"
         ResizeMode="CanResizeWithGrip"
         FontFamily="Segoe UI">
 
@@ -74,7 +74,23 @@
             <DataGrid.Background>
                 <SolidColorBrush Color="{StaticResource MetroWhite}" />
             </DataGrid.Background>
-
+            
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsValidCrc}" Value="true">
+                            <Setter Property="Foreground" Value="DarkGreen"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsValidCrc}" Value="false">
+                            <Setter Property="Foreground" Value="Red"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsValidCrc}" Value="null">
+                            <Setter Property="Foreground" Value="Black"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            
             <DataGrid.Columns>
                 <DataGridTextColumn Header="№" 
                                 Binding="{Binding IndexNumberString}"
@@ -104,12 +120,12 @@
                                 Binding="{Binding ComputedCrcString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="40" />
-                <DataGridTextColumn Header="Raw Data" 
+                                Width="75" />
+                <DataGridTextColumn Header="Scratchpad Raw Data" 
                                 Binding="{Binding RawDataString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="200" />
+                                Width="190" />
             </DataGrid.Columns>
         </DataGrid>
 

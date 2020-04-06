@@ -95,7 +95,7 @@ namespace DigitalThermometer.UnitTests
                          (this.rxBuffer[10] == DS18B20.READ_SCRATCHPAD))
                 {
                     var result = new List<byte>();
-                    result.Add(DS18B20.MATCH_ROM); // TODO: check ROM presense in this.romCodes
+                    result.Add(DS18B20.MATCH_ROM); // TODO: check ROM presence in this.romCodes
                     for (var i = 0; i < 8; i++) result.Add(this.rxBuffer[2 + i]); // Copy ROM code 
                     result.Add(DS18B20.READ_SCRATCHPAD);
 

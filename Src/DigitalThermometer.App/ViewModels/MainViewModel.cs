@@ -250,7 +250,7 @@ namespace DigitalThermometer.App.ViewModels
                             result = null;
                             break;
                         }
-                    case Hardware.OneWireBusResetResponse.OneWireShorted:
+                    case Hardware.OneWireBusResetResponse.BusShorted:
                         {
                             this.DisplayState("Bus is shorted");
                             result = null;
@@ -301,7 +301,7 @@ namespace DigitalThermometer.App.ViewModels
                         if (this.IsSimultaneousMeasurementsMode)
                         {
                             var counter = 0;
-                            results = (Dictionary<ulong, Hardware.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasureAsync(list, (r) =>
+                            results = (Dictionary<ulong, Hardware.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
                                 {
                                     counter++;
                                     this.MarshalToMainThread(
@@ -314,6 +314,7 @@ namespace DigitalThermometer.App.ViewModels
                                             ThermometerResolution = r.Item2.ThermometerActualResolution,
                                             RawData = r.Item2.RawData,
                                             ComputedCrc = r.Item2.ComputedCrc,
+                                            IsValidCrc = r.Item2.IsValidCrc,
                                         });
                                     this.DisplayState($"Result: {counter}/{list.Count}");
                                 }));
@@ -325,7 +326,7 @@ namespace DigitalThermometer.App.ViewModels
                             {
                                 counter++;
                                 this.DisplayState($"Performing measure: {counter}/{list.Count}");
-                                var r = await busMaster.PerformDS18B20TemperatureMeasureAsync(romCode);
+                                var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
                                 if (r != null)
                                 {
                                     results.Add(romCode, r);
@@ -339,6 +340,7 @@ namespace DigitalThermometer.App.ViewModels
                                             ThermometerResolution = r.ThermometerActualResolution,
                                             RawData = r.RawData,
                                             ComputedCrc = r.ComputedCrc,
+                                            IsValidCrc = r.IsValidCrc,
                                         });
                                     this.DisplayState($"Result: {counter}/{list.Count}");
                                 }
