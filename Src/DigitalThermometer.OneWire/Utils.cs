@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace DigitalThermometer.OneWire
 {
@@ -23,6 +24,11 @@ namespace DigitalThermometer.OneWire
         public static string RomCodeToLEString(UInt64 romCode)
         {
             return BitConverter.ToUInt64(BitConverter.GetBytes(romCode).Reverse().ToArray(), 0).ToString("X16");
+        }
+
+        public static bool CheckRomCodeFormat(string s)
+        {
+            return Regex.IsMatch(s, @"^[0-9A-F]{16}$", RegexOptions.IgnoreCase);
         }
     }
 }

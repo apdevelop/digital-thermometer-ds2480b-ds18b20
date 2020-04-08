@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace DigitalThermometer.OneWire
 {
@@ -10,6 +9,11 @@ namespace DigitalThermometer.OneWire
     /// </summary>
     public class DS18B20
     {
+        /// <summary>
+        /// DS18B20’s 1-Wire family code
+        /// </summary>
+        public const byte FamilyCode = 0x28;
+
         #region ROM Commands
 
         /// <summary>
@@ -86,10 +90,12 @@ namespace DigitalThermometer.OneWire
 
         public static readonly double MaxTemperature = +125.0;
 
+        public static readonly int ConversionTime12bit = 750;
+
         /// <summary>
-        /// DS18B20’s 1-Wire family code
+        /// Size of SRAM scratchpad in bytes
         /// </summary>
-        public const byte FamilyCode = 0x28;
+        public const int ScratchpadSize = 9;
 
         /// <summary>
         /// Temperature step in 12-bit resolution, Celsius degrees
@@ -125,22 +131,14 @@ namespace DigitalThermometer.OneWire
             }
 
             if (temperature >= 0.0)
+            {
                 return (UInt16)(temperature / TemperatureStep12bit);
+            }
             else
+            {
                 return (UInt16)(0xFFFF - (UInt16)(-temperature / TemperatureStep12bit) + 1);
+            }
         }
-
-        public static bool CheckRomCodeFormat(string s)
-        {
-            return Regex.IsMatch(s, @"^[0-9A-F]{16}$", RegexOptions.IgnoreCase);
-        }
-
-        public static readonly int ConversionTime12bit = 750;
-
-        /// <summary>
-        /// Size of SRAM scratchpad in bytes
-        /// </summary>
-        public const int ScratchpadSize = 9;
 
         public enum ThermometerResolution
         {

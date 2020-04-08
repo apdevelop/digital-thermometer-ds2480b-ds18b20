@@ -1,16 +1,19 @@
 ﻿namespace DigitalThermometer.OneWire
 {
+    /// <summary>
+    /// 1-Wire bus reset response
+    /// </summary>
     public enum OneWireBusResetResponse
     {
-        /// <summary>
-        /// Invalid bus reset response value
-        /// </summary>
-        InvalidResponse,
-
         /// <summary>
         /// No bus reset response was received
         /// </summary>
         NoBusResetResponse,
+
+        /// <summary>
+        /// Invalid bus reset response value
+        /// </summary>
+        InvalidResponse,
 
         /// <summary>
         /// 1-Wire bus shorted
