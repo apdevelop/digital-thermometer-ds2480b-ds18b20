@@ -8,7 +8,7 @@
         /// <summary>
         /// No bus reset response was received
         /// </summary>
-        NoBusResetResponse,
+        NoResponse,
 
         /// <summary>
         /// Invalid bus reset response value

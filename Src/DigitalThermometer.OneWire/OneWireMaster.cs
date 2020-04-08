@@ -26,6 +26,18 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public int BusSearchTimeout { get; set; } = 1000;
 
+        // TODO: ? pass 1-Wire config as parameter ?
+        private readonly byte[] OneWireBusFlexConfiguration = new[]
+        {
+            (byte)DS2480B.PulldownSlewRateControl._1p37_Vpus,
+            (byte)DS2480B.ProgrammingPulseDuration.__512us,
+            (byte)DS2480B.StrongPullupDuration.__524ms,
+            (byte)DS2480B.Write1LowTime._11us,
+            (byte)DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us,
+            (byte)DS2480B.LoadSensorThreshold._3p0mA,
+            (byte)DS2480B.RS232BaudRate.______9p6kbps,
+        };
+
         private readonly ISerialConnection port;
 
         private readonly List<byte> receiveBuffer = new List<byte>(); // TODO: threading issues ?
@@ -67,12 +79,7 @@ namespace DigitalThermometer.OneWire
         {
             await this.port.OpenPortAsync();
 
-            this.ClearReceiveBuffer();
-            await this.SetOneWireBusFlexParamsAsync();
-            await Task.Delay(500); // TODO: config
-
-            var resetResponse = await this.OneWireBusResetAsync();
-            this.ClearReceiveBuffer();
+            var resetResponse = await this.SetOneWireBusFlexParametersAsync();
 
             return resetResponse;
         }
@@ -147,7 +154,7 @@ namespace DigitalThermometer.OneWire
                 {
                     var scratchpad = new DS18B20.Scratchpad(scratchpadData);
                     result.Add(romCode, scratchpad);
-                    measurementCompleted?.Invoke(new Tuple<ulong, DS18B20.Scratchpad>(romCode, scratchpad));
+                    measurementCompleted?.Invoke(new Tuple<UInt64, DS18B20.Scratchpad>(romCode, scratchpad));
 
                     // TODO: callback in case of error
                     // TODO: TResult<result?, isError, errorText>
@@ -198,9 +205,9 @@ namespace DigitalThermometer.OneWire
                 DS2480B.CommandResetAtFlexSpeed,
             });
 
-            if (!await this.WaitResponseAsync(BusResetResponseLength, BusResetTimeout))
+            if (!await this.WaitResponseAsync(BusResetResponseLength, this.BusResetTimeout))
             {
-                return OneWireBusResetResponse.NoBusResetResponse;
+                return OneWireBusResetResponse.NoResponse;
             }
             else
             {
@@ -208,38 +215,30 @@ namespace DigitalThermometer.OneWire
             }
         }
 
-        private async Task SetOneWireBusFlexParamsAsync()
+        private async Task<OneWireBusResetResponse> SetOneWireBusFlexParametersAsync()
         {
-            // TODO: calibration ? (DS2480B p.3 at bottom)
-            this.ClearReceiveBuffer();
-            await this.TransmitRawDataAsync(new[]
+            // Calibration procedure: will be NoResponse on first run after DS2480B power-on
+            var calibrationResetResponse = await this.OneWireBusResetAsync();
+
+            var busResetResponse = await this.OneWireBusResetAsync();
+            if (busResetResponse == OneWireBusResetResponse.PresencePulse)
             {
-                DS2480B.SwitchToCommandMode,
-                DS2480B.CommandResetAtFlexSpeed,
-            });
+                await this.TransmitRawDataAsync(this.OneWireBusFlexConfiguration);
+                var response = await this.WaitResponseAsync(BusResetResponseLength + this.OneWireBusFlexConfiguration.Length, this.BusResponseTimeout); // TODO: check response
+                if (response)
+                {
+                    for (var i = 0; i < this.OneWireBusFlexConfiguration.Length; i++)
+                    {
+                        // Table 6. CONFIGURATION COMMAND RESPONSE BYTE
+                        if (this.receiveBuffer[i + 1] != (this.OneWireBusFlexConfiguration[i] & 0b11111110))
+                        {
+                            ; // TODO: error
+                        }
+                    }
+                }
+            }
 
-            await Task.Delay(150);
-
-            this.ClearReceiveBuffer();
-            await this.TransmitRawDataAsync(new[]
-            {
-                DS2480B.SwitchToCommandMode,
-                DS2480B.CommandResetAtFlexSpeed,
-            });
-
-            await Task.Delay(15);
-
-            this.ClearReceiveBuffer();
-            await this.TransmitRawDataAsync(new[]
-            {
-                DS2480B.PDSRC_1p37Vpus,
-                DS2480B.PPD_512us,
-                DS2480B.SPUD_524ms,
-                DS2480B.W1LT_11us,
-                DS2480B.DSO_10us,
-                DS2480B.LOAD_3p0mA,
-                DS2480B.RBR_9p6kbps,
-            });
+            return busResetResponse;
         }
 
         #endregion
@@ -339,7 +338,7 @@ namespace DigitalThermometer.OneWire
             }
 
             await this.TransmitRawDataAsync(buffer);
-            await this.WaitResponseAsync(1 + 17, BusSearchTimeout);
+            await this.WaitResponseAsync(1 + 17, this.BusSearchTimeout);
         }
 
         private byte[] DecodeSearchResponse()
@@ -400,7 +399,7 @@ namespace DigitalThermometer.OneWire
             var busResetResponse = await this.OneWireBusResetAsync(); // TODO: check bus reset result
             await this.TransmitDataPacketAsync(request);
             await Task.Delay(DS18B20.ConversionTime12bit);
-            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, BusResponseTimeout); // TODO: check result
+            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, this.BusResponseTimeout); // TODO: check result
         }
 
         /// <summary>
@@ -414,7 +413,7 @@ namespace DigitalThermometer.OneWire
             var busResetResponse = await this.OneWireBusResetAsync(); // TODO: check bus reset result
             await this.TransmitDataPacketAsync(request);
             await Task.Delay(DS18B20.ConversionTime12bit);
-            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, BusResponseTimeout); // TODO: check result
+            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, this.BusResponseTimeout); // TODO: check result
         }
 
         ///<summary>
@@ -435,7 +434,7 @@ namespace DigitalThermometer.OneWire
             }
 
             await this.TransmitDataPacketAsync(request);
-            await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, BusResponseTimeout); // TODO: check result
+            await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, this.BusResponseTimeout); // TODO: check result
 
             // Check response format
             // [CD] [55] <ROM code> [BE] <Scratchpad>

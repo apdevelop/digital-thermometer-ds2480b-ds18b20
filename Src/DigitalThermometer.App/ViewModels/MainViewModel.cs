@@ -239,7 +239,7 @@ namespace DigitalThermometer.App.ViewModels
                 // Bus diagnostic
                 switch (busResult)
                 {
-                    case OW.OneWireBusResetResponse.NoBusResetResponse:
+                    case OW.OneWireBusResetResponse.NoResponse:
                         {
                             this.DisplayState("Bus reset response was not received");
                             result = null;
