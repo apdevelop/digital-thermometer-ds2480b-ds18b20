@@ -2,7 +2,7 @@
 
 using NUnit.Framework;
 
-using DigitalThermometer.Hardware;
+using DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.UnitTests
 {

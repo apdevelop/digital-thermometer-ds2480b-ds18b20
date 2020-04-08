@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
-using DigitalThermometer.Hardware;
+
+using OW = DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.App.Utils
 {
     /// <summary>
     /// SerialPort wrapper
     /// </summary>
-    public class SerialPortConnection : ISerialConnection
+    public class SerialPortConnection : OW.ISerialConnection
     {
         private readonly string serialPortName;
 

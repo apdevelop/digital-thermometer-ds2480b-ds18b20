@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.0</TargetFramework>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir                         $(SolutionDir)..\Dist\&#xD;&#xA;copy $(TargetPath)  $(SolutionDir)..\Dist\" />
+  </Target>
+
+</Project>

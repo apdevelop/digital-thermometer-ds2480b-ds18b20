@@ -52,16 +52,16 @@
     <Compile Include="ThermoStringEmulator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DigitalThermometer.Hardware\DigitalThermometer.Hardware.csproj">
-      <Project>{bc78e3b0-95b7-47d5-9bda-ca1570bc199c}</Project>
-      <Name>DigitalThermometer.Hardware</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DigitalThermometer.OneWire\DigitalThermometer.OneWire.csproj">
+      <Project>{a08490c1-0cfe-42ad-95a5-03910e18ae37}</Project>
+      <Name>DigitalThermometer.OneWire</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

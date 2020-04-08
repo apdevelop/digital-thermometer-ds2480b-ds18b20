@@ -2,6 +2,7 @@
 using System.Linq;
 
 using DigitalThermometer.App.Models;
+using OW = DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.App.ViewModels
 {
@@ -29,7 +30,7 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return Hardware.Utils.RomCodeToLEString(this.sensorState.RomCode);
+                return OW.Utils.RomCodeToLEString(this.sensorState.RomCode);
             }
         }
 
@@ -62,10 +63,10 @@ namespace DigitalThermometer.App.ViewModels
                 {
                     switch (this.sensorState.ThermometerResolution.Value)
                     {
-                        case Hardware.DS18B20.ThermometerResolution.Resolution9bit: return "9-bit";
-                        case Hardware.DS18B20.ThermometerResolution.Resolution10bit: return "10-bit";
-                        case Hardware.DS18B20.ThermometerResolution.Resolution11bit: return "11-bit";
-                        case Hardware.DS18B20.ThermometerResolution.Resolution12bit: return "12-bit";
+                        case OW.DS18B20.ThermometerResolution.Resolution9bit: return "9-bit";
+                        case OW.DS18B20.ThermometerResolution.Resolution10bit: return "10-bit";
+                        case OW.DS18B20.ThermometerResolution.Resolution11bit: return "11-bit";
+                        case OW.DS18B20.ThermometerResolution.Resolution12bit: return "12-bit";
                         default: throw new ArgumentOutOfRangeException();
                     }
                 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace DigitalThermometer.Hardware
+namespace DigitalThermometer.OneWire
 {
     public interface ISerialConnection
     {

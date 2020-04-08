@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,6 +9,8 @@ using System.Windows.Threading;
 
 using DigitalThermometer.App.Models;
 using DigitalThermometer.App.Utils;
+
+using OW = DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.App.ViewModels
 {
@@ -143,11 +144,11 @@ namespace DigitalThermometer.App.ViewModels
 
             var sensors = new List<SensorStateModel>(new[]
             {
-                new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, TemperatureRawCode = 0x00A0, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
-                new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +25.0625, TemperatureRawCode = 0x0191, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
-                new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -10.125, TemperatureRawCode= 0xFF5E, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
-                new SensorStateModel { RomCode = 0xEA00000078B0FC28, TemperatureValue = null, TemperatureRawCode = null, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
-                new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, TemperatureRawCode = 0x0550, ThermometerResolution = Hardware.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, TemperatureRawCode = 0x00A0, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +25.0625, TemperatureRawCode = 0x0191, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -10.125, TemperatureRawCode= 0xFF5E, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0xEA00000078B0FC28, TemperatureValue = null, TemperatureRawCode = null, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, TemperatureRawCode = 0x0550, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
             });
 
             var list = sensors
@@ -226,9 +227,9 @@ namespace DigitalThermometer.App.ViewModels
 
             this.DisplayState("Initializing...");
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
-            var busMaster = new Hardware.OneWireMaster(portConnection);
+            var busMaster = new OW.OneWireMaster(portConnection);
 
-            var result = new Dictionary<UInt64, Hardware.DS18B20.Scratchpad>();
+            var result = new Dictionary<UInt64, OW.DS18B20.Scratchpad>();
 
             try
             {
@@ -238,30 +239,30 @@ namespace DigitalThermometer.App.ViewModels
                 // Bus diagnostic
                 switch (busResult)
                 {
-                    case Hardware.OneWireBusResetResponse.NoBusResetResponse:
+                    case OW.OneWireBusResetResponse.NoBusResetResponse:
                         {
                             this.DisplayState("Bus reset response was not received");
                             result = null;
                             break;
                         }
-                    case Hardware.OneWireBusResetResponse.NoPresencePulse:
+                    case OW.OneWireBusResetResponse.NoPresencePulse:
                         {
                             this.DisplayState("No presence pulse");
                             result = null;
                             break;
                         }
-                    case Hardware.OneWireBusResetResponse.BusShorted:
+                    case OW.OneWireBusResetResponse.BusShorted:
                         {
                             this.DisplayState("Bus is shorted");
                             result = null;
                             break;
                         }
-                    case Hardware.OneWireBusResetResponse.PresencePulse:
+                    case OW.OneWireBusResetResponse.PresencePulse:
                         {
                             this.DisplayState("Presence pulse OK");
                             break;
                         }
-                    case Hardware.OneWireBusResetResponse.InvalidResponse:
+                    case OW.OneWireBusResetResponse.InvalidResponse:
                         {
                             this.DisplayState("Invalid response received");
                             result = null;
@@ -276,7 +277,7 @@ namespace DigitalThermometer.App.ViewModels
                     var list = await busMaster.SearchDevicesOnBusAsync((romCode) =>
                     {
                         count++;
-                        this.DisplayState($"Sensor found: {count} <{Hardware.Utils.RomCodeToLEString(romCode)}>");
+                        this.DisplayState($"Sensor found: {count} <{OW.Utils.RomCodeToLEString(romCode)}>");
                         this.MarshalToMainThread(
                             (s) => this.AddFoundSensor(s),
                             new SensorStateModel
@@ -297,11 +298,11 @@ namespace DigitalThermometer.App.ViewModels
                         this.DisplayState($"Totoal sensors found: {list.Count}");
                         this.DisplayState("Performing measure...");
 
-                        var results = new Dictionary<ulong, Hardware.DS18B20.Scratchpad>();
+                        var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
                         if (this.IsSimultaneousMeasurementsMode)
                         {
                             var counter = 0;
-                            results = (Dictionary<ulong, Hardware.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
+                            results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
                                 {
                                     counter++;
                                     this.MarshalToMainThread(

@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28306.52
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalThermometer.Hardware", "DigitalThermometer.Hardware\DigitalThermometer.Hardware.csproj", "{BC78E3B0-95B7-47D5-9BDA-CA1570BC199C}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalThermometer.UnitTests", "DigitalThermometer.UnitTests\DigitalThermometer.UnitTests.csproj", "{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalThermometer.App", "DigitalThermometer.App\DigitalThermometer.App.csproj", "{07195702-B4F0-4BC7-B9EA-96F59008D7D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalThermometer.OneWire", "DigitalThermometer.OneWire\DigitalThermometer.OneWire.csproj", "{A08490C1-0CFE-42AD-95A5-03910E18AE37}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BC78E3B0-95B7-47D5-9BDA-CA1570BC199C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC78E3B0-95B7-47D5-9BDA-CA1570BC199C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BC78E3B0-95B7-47D5-9BDA-CA1570BC199C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BC78E3B0-95B7-47D5-9BDA-CA1570BC199C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,8 +23,15 @@ Global
 		{07195702-B4F0-4BC7-B9EA-96F59008D7D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07195702-B4F0-4BC7-B9EA-96F59008D7D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07195702-B4F0-4BC7-B9EA-96F59008D7D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {46C01886-0A27-421C-9B01-A7CF1890B047}
 	EndGlobalSection
 EndGlobal

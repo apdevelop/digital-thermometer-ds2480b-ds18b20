@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DigitalThermometer.Hardware;
+
+using DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.UnitTests
 {

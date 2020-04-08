@@ -1,5 +1,7 @@
 ﻿using System;
 
+using OW = DigitalThermometer.OneWire;
+
 namespace DigitalThermometer.App.Models
 {
     public class SensorStateModel
@@ -10,7 +12,7 @@ namespace DigitalThermometer.App.Models
 
         public UInt16? TemperatureRawCode { get; set; }
 
-        public Hardware.DS18B20.ThermometerResolution? ThermometerResolution { get; set; }
+        public OW.DS18B20.ThermometerResolution? ThermometerResolution { get; set; }
 
         public byte[] RawData { get; set; }
 

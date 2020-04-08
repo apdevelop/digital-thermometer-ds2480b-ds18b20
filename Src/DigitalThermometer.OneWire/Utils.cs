@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace DigitalThermometer.Hardware
+namespace DigitalThermometer.OneWire
 {
     public static class Utils
     {
