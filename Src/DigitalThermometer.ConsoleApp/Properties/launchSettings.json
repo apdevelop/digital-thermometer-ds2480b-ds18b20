@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "DigitalThermometer.ConsoleApp": {
+      "commandName": "Project"
+    }
+  }
+}
