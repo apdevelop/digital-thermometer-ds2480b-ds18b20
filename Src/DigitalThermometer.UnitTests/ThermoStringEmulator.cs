@@ -33,8 +33,9 @@ namespace DigitalThermometer.UnitTests
 
         #region ISerialConnection Members
 
-        void ISerialConnection.OpenPort()
+        async Task ISerialConnection.OpenPortAsync()
         {
+            await Task.Delay(5);
             this.isOpened = true;
         }
 

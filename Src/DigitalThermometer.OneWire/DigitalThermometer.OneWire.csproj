@@ -4,6 +4,10 @@
     <TargetFramework>netstandard1.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="mkdir                         $(SolutionDir)..\Dist\&#xD;&#xA;copy $(TargetPath)  $(SolutionDir)..\Dist\" />
   </Target>

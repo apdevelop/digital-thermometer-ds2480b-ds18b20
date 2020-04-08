@@ -11,11 +11,20 @@ namespace DigitalThermometer.OneWire
     /// </summary>
     public class OneWireMaster
     {
-        private const int BusResetTimeout = 500; // TODO: configurable timeouts
+        /// <summary>
+        /// Timeout for waiting 1-Wire bus reset response, in milliseconds
+        /// </summary>
+        public int BusResetTimeout { get; set; } = 500;
 
-        private const int BusResponseTimeout = 1000; // TODO: configurable timeouts
+        /// <summary>
+        /// Timeout for waiting 1-Wire bus data response receiving, in milliseconds
+        /// </summary>
+        public int BusResponseTimeout { get; set; } = 1000;
 
-        private const int BusSearchTimeout = 1000; // TODO: configurable timeouts
+        /// <summary>
+        /// Timeout for waiting 1-Wire bus devices search response receiving, in milliseconds
+        /// </summary>
+        public int BusSearchTimeout { get; set; } = 1000;
 
         private readonly ISerialConnection port;
 
@@ -28,80 +37,178 @@ namespace DigitalThermometer.OneWire
 
         private const int BusResetResponseLength = 1;
 
+        #region Search devices private fields
+
         private byte lastDiscrepancy = 0;
 
         private bool lastDeviceFlag = false;
 
         private readonly byte[] romCodeTempBuffer = new byte[21];
 
+        #endregion
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="portConnection">Serial port connection which implements ISerialConnection</param>
         public OneWireMaster(ISerialConnection portConnection)
         {
             this.port = portConnection;
             this.port.OnDataReceived += this.PortDataReceived;
         }
 
+        #region Application-level public methods
+
+        /// <summary>
+        /// Opens connection, initializing 1-Wire bus
+        /// </summary>
+        /// <returns>1-Wire bus reset response</returns>
         public async Task<OneWireBusResetResponse> OpenAsync()
         {
-            this.port.OpenPort();
+            await this.port.OpenPortAsync();
 
             this.ClearReceiveBuffer();
-            await this.SetOneWireFlexParamsAsync();
+            await this.SetOneWireBusFlexParamsAsync();
             await Task.Delay(500); // TODO: config
 
-            var resetResponse = await OneWireBusResetAsync();
+            var resetResponse = await this.OneWireBusResetAsync();
             this.ClearReceiveBuffer();
 
             return resetResponse;
         }
 
+        /// <summary>
+        /// Closes connection
+        /// </summary>
+        /// <returns></returns>
         public async Task CloseAsync()
         {
             await this.port.ClosePortAsync();
         }
 
         /// <summary>
-        /// Transmit data to port without any conversion / escaping
+        /// Search for slave devices on bus
         /// </summary>
-        /// <param name="data">Data to transmit to port as-is</param>
-        private async Task TransmitRawDataAsync(byte[] data)
+        /// <returns>List of ROM codes of devices found</returns>
+        public async Task<IList<UInt64>> SearchDevicesOnBusAsync(Action<UInt64> deviceFound = null)
         {
-            Debug.WriteLine($"TX > {String.Join(" ", data.Select(b => b.ToString("X2")))}");
-            await this.port.TransmitDataAsync(data);
-        }
+            this.lastDiscrepancy = 0;
+            this.lastDeviceFlag = false;
 
-        private void PortDataReceived(byte[] data)
-        {
-            Debug.WriteLine($"RX < {String.Join(" ", data.Select(b => b.ToString("X2")))}");
-            this.receiveBuffer.AddRange(data);
-        }
+            var result = new List<UInt64>();
 
-        private async Task<bool> WaitResponseAsync(int bytesCount, int millisecondsTimeout)
-        {
-            var t = Stopwatch.StartNew();
-            while (t.ElapsedMilliseconds < millisecondsTimeout)
+            var timeoutControl = Stopwatch.StartNew();
+
+            for (; ; )
             {
-                if (this.receiveBuffer.Count == bytesCount)
+                await this.SendSearchCommandAsync();
+
+                var romCode = this.DecodeSearchResponse();
+                if (romCode != null)
                 {
-                    return true;
+                    // TODO: check duplicates
+                    var code = BitConverter.ToUInt64(romCode, 0);
+                    result.Add(code);
+                    deviceFound?.Invoke(code);
+
+                    timeoutControl.Restart();
+
+                    if ((this.lastDeviceFlag) || (this.lastDiscrepancy <= 0))
+                    {
+                        return result;
+                    }
                 }
 
-                await Task.Delay(1); // TODO: async version of AutoResetEvent: this.rxDataWaitHandle.WaitOne(1); ?
+                if (timeoutControl.ElapsedMilliseconds > 5000)
+                {
+                    break;
+                };
             }
 
-            return false;
+            return result;
         }
 
         /// <summary>
-        /// Transmit data to 1-Wire bus with Switch to Command Mode reserved byte escaping
+        /// Perform temperature measure on given DS18B20 slave devices on bus 
         /// </summary>
-        /// <param name="data">Data to transmit</param>
-        private async Task TransmitDataPacketAsync(IList<byte> data)
+        /// <param name="romCodes">ROM code of DS18B20</param>
+        /// <param name="measurementCompleted">Callback on measurement completed on each DS18B20</param>
+        /// <returns></returns>
+        public async Task<IDictionary<UInt64, DS18B20.Scratchpad>> PerformDS18B20TemperatureMeasurementAsync(IList<UInt64> romCodes, Action<Tuple<UInt64, DS18B20.Scratchpad>> measurementCompleted = null)
         {
-            var rawData = DS2480B.EscapeDataPacket(data);
-            await this.TransmitRawDataAsync(rawData);
+            await this.PerformDS18B20TemperatureConversionAsync();
+
+            var result = new Dictionary<UInt64, DS18B20.Scratchpad>(romCodes.Count);
+
+            foreach (var romCode in romCodes)
+            {
+                var scratchpadData = await this.ReadDS18B20ScratchpadDataAsync(romCode);
+                if (scratchpadData != null)
+                {
+                    var scratchpad = new DS18B20.Scratchpad(scratchpadData);
+                    result.Add(romCode, scratchpad);
+                    measurementCompleted?.Invoke(new Tuple<ulong, DS18B20.Scratchpad>(romCode, scratchpad));
+
+                    // TODO: callback in case of error
+                    // TODO: TResult<result?, isError, errorText>
+                    // TODO: ? check power-on state (85C) as error
+                    // TODO: detailed diagnostics (NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange)
+                }
+            }
+
+            return result;
         }
 
-        private async Task SetOneWireFlexParamsAsync()
+        /// <summary>
+        /// Perform temperature measure on specified DS18B20 slave device
+        /// </summary>
+        /// <param name="romCode">ROM code of DS18B20</param>
+        /// <returns>Scratchpad contents</returns>
+        public async Task<DS18B20.Scratchpad> PerformDS18B20TemperatureMeasurementAsync(UInt64 romCode)
+        {
+            await this.PerformDS18B20TemperatureConversionAsync(romCode);
+
+            var scratchpadData = await this.ReadDS18B20ScratchpadDataAsync(romCode);
+            if (scratchpadData != null)
+            {
+                return new DS18B20.Scratchpad(scratchpadData);
+
+                // TODO: ? check power-on state (85C) as error
+                // Errors: NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange
+            }
+
+            return null;
+        }
+
+        #endregion
+
+        #region 1-Wire bus management
+
+        /// <summary>
+        /// Performs bus reset with waiting for response
+        /// </summary>
+        /// <returns>Bus reset response</returns>
+        private async Task<OneWireBusResetResponse> OneWireBusResetAsync()
+        {
+            this.ClearReceiveBuffer();
+
+            await this.TransmitRawDataAsync(new[]
+            {
+                DS2480B.SwitchToCommandMode,
+                DS2480B.CommandResetAtFlexSpeed,
+            });
+
+            if (!await this.WaitResponseAsync(BusResetResponseLength, BusResetTimeout))
+            {
+                return OneWireBusResetResponse.NoBusResetResponse;
+            }
+            else
+            {
+                return DS2480B.GetBusResetResponse(this.receiveBuffer[0]);
+            }
+        }
+
+        private async Task SetOneWireBusFlexParamsAsync()
         {
             // TODO: calibration ? (DS2480B p.3 at bottom)
             this.ClearReceiveBuffer();
@@ -135,6 +242,10 @@ namespace DigitalThermometer.OneWire
             });
         }
 
+        #endregion
+
+        #region 1-Wire bus low-level I/O, buffering and responses waiting
+
         /// <summary>
         /// Clears receiving buffer
         /// </summary>
@@ -143,9 +254,55 @@ namespace DigitalThermometer.OneWire
             this.receiveBuffer.Clear();
         }
 
+        /// <summary>
+        /// Transmit data to port without any conversion / escaping
+        /// </summary>
+        /// <param name="data">Data to transmit to port as-is</param>
+        private async Task TransmitRawDataAsync(byte[] data)
+        {
+            Debug.WriteLine($"TX > {String.Join(" ", data.Select(b => b.ToString("X2")))}");
+            await this.port.TransmitDataAsync(data);
+        }
+
+        /// <summary>
+        /// Transmit data to 1-Wire bus with Switch to Command Mode reserved byte escaping
+        /// </summary>
+        /// <param name="data">Data to transmit</param>
+        private async Task TransmitDataPacketAsync(IList<byte> data)
+        {
+            var rawData = DS2480B.EscapeDataPacket(data);
+            await this.TransmitRawDataAsync(rawData);
+        }
+
+        private void PortDataReceived(byte[] data)
+        {
+            Debug.WriteLine($"RX < {String.Join(" ", data.Select(b => b.ToString("X2")))}");
+            this.receiveBuffer.AddRange(data);
+        }
+
+        private async Task<bool> WaitResponseAsync(int bytesCount, int millisecondsTimeout)
+        {
+            var t = Stopwatch.StartNew();
+            while (t.ElapsedMilliseconds < millisecondsTimeout)
+            {
+                if (this.receiveBuffer.Count == bytesCount)
+                {
+                    return true;
+                }
+
+                await Task.Delay(1); // TODO: async version of AutoResetEvent: this.rxDataWaitHandle.WaitOne(1); ?
+            }
+
+            return false;
+        }
+
+        #endregion
+
+        #region Search devices on bus private methods
+
         private async Task SendSearchCommandAsync()
         {
-            await this.OneWireBusResetAsync(); // TODO: check bus reset result
+            var resetResponse = await this.OneWireBusResetAsync(); // TODO: check bus reset result
 
             var buffer = new byte[]
             {
@@ -230,6 +387,8 @@ namespace DigitalThermometer.OneWire
             }
         }
 
+        #endregion
+
         #region DS18B20 specific methods
 
         /// <summary>
@@ -237,13 +396,7 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         private async Task PerformDS18B20TemperatureConversionAsync()
         {
-            var request = new byte[]
-            {
-                DS2480B.SwitchToDataMode,
-                DS18B20.SKIP_ROM,
-                DS18B20.CONVERT_T,
-            };
-
+            var request = CreatePerformDS18B20TemperatureConversionRequest();
             var busResetResponse = await this.OneWireBusResetAsync(); // TODO: check bus reset result
             await this.TransmitDataPacketAsync(request);
             await Task.Delay(DS18B20.ConversionTime12bit);
@@ -256,35 +409,12 @@ namespace DigitalThermometer.OneWire
         /// <param name="romCode">ROM code of DS18B20</param>
         private async Task PerformDS18B20TemperatureConversionAsync(UInt64 romCode)
         {
-            var request = new List<byte>();
-            request.Add(DS2480B.SwitchToDataMode);
-            request.Add(DS18B20.MATCH_ROM);
-            request.AddRange(BitConverter.GetBytes(romCode));
-            request.Add(DS18B20.CONVERT_T);
+            var request = CreatePerformDS18B20TemperatureConversionRequest(romCode);
 
             var busResetResponse = await this.OneWireBusResetAsync(); // TODO: check bus reset result
             await this.TransmitDataPacketAsync(request);
             await Task.Delay(DS18B20.ConversionTime12bit);
-            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Count - 1, BusResponseTimeout); // TODO: check result
-        }
-
-        private static byte[] CreateReadDS18B20ScratchpadRequest(ulong romCode)
-        {
-            var dataPacket = new List<byte>();
-
-            // 1. Select slave device
-            dataPacket.Add(DS2480B.SwitchToDataMode);
-            dataPacket.Add(DS18B20.MATCH_ROM);
-            dataPacket.AddRange(BitConverter.GetBytes(romCode));
-
-            // 2. Read scratchpad
-            dataPacket.Add(DS18B20.READ_SCRATCHPAD);
-            for (var i = 0; i < DS18B20.ScratchpadSize; i++)
-            {
-                dataPacket.Add(0xFF); // Buffer for receiving response (scratchpad contents)
-            }
-
-            return dataPacket.ToArray();
+            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, BusResponseTimeout); // TODO: check result
         }
 
         ///<summary>
@@ -294,6 +424,8 @@ namespace DigitalThermometer.OneWire
         ///<returns>Scratchpad contents</returns>
         private async Task<byte[]> ReadDS18B20ScratchpadDataAsync(UInt64 romCode)
         {
+            // TODO: validate romCode
+
             var request = CreateReadDS18B20ScratchpadRequest(romCode);
 
             var busResetResponse = await this.OneWireBusResetAsync();
@@ -336,120 +468,57 @@ namespace DigitalThermometer.OneWire
 
         #endregion
 
-        #region High-level methods
+        #region DS18B20 specific methods requests creating
 
-        /// <summary>
-        /// Search for slave devices on bus
-        /// </summary>
-        /// <returns>List of ROM codes of devices found</returns>
-        public async Task<IList<UInt64>> SearchDevicesOnBusAsync(Action<UInt64> deviceFound = null)
+        private static byte[] CreatePerformDS18B20TemperatureConversionRequest()
         {
-            this.lastDiscrepancy = 0;
-            this.lastDeviceFlag = false;
-
-            var result = new List<UInt64>();
-
-            var timeoutControl = Stopwatch.StartNew();
-
-            for (; ; )
+            var request = new byte[]
             {
-                await this.SendSearchCommandAsync();
+                DS2480B.SwitchToDataMode,
+                DS18B20.SKIP_ROM,
+                DS18B20.CONVERT_T,
+            };
 
-                var romCode = this.DecodeSearchResponse();
-                if (romCode != null)
-                {
-                    // TODO: check duplicates
-                    var code = BitConverter.ToUInt64(romCode, 0);
-                    result.Add(code);
-                    deviceFound?.Invoke(code);
-
-                    timeoutControl.Restart();
-
-                    if ((this.lastDeviceFlag) || (this.lastDiscrepancy <= 0))
-                    {
-                        return result;
-                    }
-                }
-
-                if (timeoutControl.ElapsedMilliseconds > 5000)
-                {
-                    break;
-                };
-            }
-
-            return result;
+            return request.ToArray();
         }
 
-        public async Task<IDictionary<UInt64, DS18B20.Scratchpad>> PerformDS18B20TemperatureMeasurementAsync(IList<UInt64> romCodes, Action<Tuple<UInt64, DS18B20.Scratchpad>> measurementCompleted = null)
+        private static byte[] CreatePerformDS18B20TemperatureConversionRequest(UInt64 romCode)
         {
-            await this.PerformDS18B20TemperatureConversionAsync();
+            // TODO: validate romCode
 
-            var result = new Dictionary<UInt64, DS18B20.Scratchpad>(romCodes.Count);
+            var request = new List<byte>();
 
-            foreach (var romCode in romCodes)
-            {
-                var scratchpadData = await this.ReadDS18B20ScratchpadDataAsync(romCode);
-                if (scratchpadData != null)
-                {
-                    var scratchpad = new DS18B20.Scratchpad(scratchpadData);
-                    result.Add(romCode, scratchpad);
-                    measurementCompleted?.Invoke(new Tuple<ulong, DS18B20.Scratchpad>(romCode, scratchpad));
+            request.Add(DS2480B.SwitchToDataMode);
 
-                    // TODO: callback in case of error
-                    // TODO: TResult<result?, isError, errorText>
-                    // TODO: ? check power-on state (85C) as error
-                    // TODO: detailed diagnostics (NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange)
-                }
-            }
+            request.Add(DS18B20.MATCH_ROM);
+            request.AddRange(BitConverter.GetBytes(romCode));
+            request.Add(DS18B20.CONVERT_T);
 
-            return result;
+            return request.ToArray();
         }
 
-        /// <summary>
-        /// Perform temperature measure on specified DS18B20 slave device 
-        /// </summary>
-        /// <param name="romCode">ROM code of DS18B20</param>
-        /// <returns>Scratchpad contents</returns>
-        public async Task<DS18B20.Scratchpad> PerformDS18B20TemperatureMeasurementAsync(UInt64 romCode)
+        private static byte[] CreateReadDS18B20ScratchpadRequest(UInt64 romCode)
         {
-            await this.PerformDS18B20TemperatureConversionAsync(romCode);
+            // TODO: validate romCode
 
-            var scratchpadData = await this.ReadDS18B20ScratchpadDataAsync(romCode);
-            if (scratchpadData != null)
+            var request = new List<byte>();
+
+            request.Add(DS2480B.SwitchToDataMode);
+
+            // 1. Select slave device
+            request.Add(DS18B20.MATCH_ROM);
+            request.AddRange(BitConverter.GetBytes(romCode));
+
+            // 2. Read scratchpad
+            request.Add(DS18B20.READ_SCRATCHPAD);
+            for (var i = 0; i < DS18B20.ScratchpadSize; i++)
             {
-                return new DS18B20.Scratchpad(scratchpadData);
-
-                // TODO: ? check power-on state (85C) as error
-                // Errors: NoResponse, BadCrc, InitialTempValue(?), TempOutOfRange
+                request.Add(0xFF); // Buffer for receiving response (scratchpad contents)
             }
 
-            return null;
+            return request.ToArray();
         }
 
         #endregion
-
-        /// <summary>
-        /// Performs bus reset with waiting for response
-        /// </summary>
-        /// <returns>Bus reset response</returns>
-        private async Task<OneWireBusResetResponse> OneWireBusResetAsync()
-        {
-            this.ClearReceiveBuffer();
-
-            await this.TransmitRawDataAsync(new[]
-            {
-                DS2480B.SwitchToCommandMode,
-                DS2480B.CommandResetAtFlexSpeed,
-            });
-
-            if (!await this.WaitResponseAsync(BusResetResponseLength, BusResetTimeout))
-            {
-                return OneWireBusResetResponse.NoBusResetResponse;
-            }
-            else
-            {
-                return DS2480B.GetBusResetResponse(this.receiveBuffer[0]);
-            }
-        }
     }
 }

@@ -140,11 +140,29 @@ namespace DigitalThermometer.OneWire
             }
         }
 
+        /// <summary>
+        /// Thermometer resolution mode
+        /// </summary>
         public enum ThermometerResolution
         {
+            /// <summary>
+            /// 9-bit
+            /// </summary>
             Resolution9bit,
+
+            /// <summary>
+            /// 10-bit
+            /// </summary>
             Resolution10bit,
+
+            /// <summary>
+            /// 11-bit
+            /// </summary>
             Resolution11bit,
+
+            /// <summary>
+            /// 12-bit
+            /// </summary>
             Resolution12bit,
         }
 

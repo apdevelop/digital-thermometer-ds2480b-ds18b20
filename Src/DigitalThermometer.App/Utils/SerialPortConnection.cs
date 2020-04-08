@@ -101,7 +101,7 @@ namespace DigitalThermometer.App.Utils
             }
         }
 
-        public void OpenPort()
+        public async Task OpenPortAsync()
         {
             this.stopPending = false;
 
@@ -123,6 +123,8 @@ namespace DigitalThermometer.App.Utils
             };
 
             this.serialPort.DataReceived += async (s, e) => await SerialPortDataReceivedAsync(s, e);
+
+            await Task.Delay(0);
 
             this.serialPort.Open();
 
