@@ -8,3 +8,5 @@ Src/.vs/
 Src/**/StyleCop.Cache
 
 Src/packages/
+
+Src/DigitalThermometer.App/Resources/Assembly/DigitalThermometer.OneWire.dll

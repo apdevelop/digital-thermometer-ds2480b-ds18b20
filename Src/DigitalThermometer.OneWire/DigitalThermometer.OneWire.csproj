@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="mkdir                         $(SolutionDir)..\Dist\&#xD;&#xA;copy $(TargetPath)  $(SolutionDir)..\Dist\" />
+    <Exec Command="mkdir  $(SolutionDir)DigitalThermometer.App\Resources\Assembly\&#xD;&#xA;copy $(TargetPath) $(SolutionDir)DigitalThermometer.App\Resources\Assembly\  /Y" />
   </Target>
 
 </Project>

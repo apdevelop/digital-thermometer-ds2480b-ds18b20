@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -6,13 +7,33 @@ namespace DigitalThermometer.App
 {
     public partial class App : Application
     {
+        public App()
+        {
+            AppDomain.CurrentDomain.UnhandledException += this.CurrentDomainUnhandledException;
+            this.DispatcherUnhandledException += this.AppDispatcherUnhandledException;
+
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                var resourceName = "DigitalThermometer.App.Resources.Assembly." + new AssemblyName(args.Name).Name + ".dll";
+                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        var assemblyData = new byte[stream.Length];
+                        stream.Read(assemblyData, 0, assemblyData.Length);
+                        return Assembly.Load(assemblyData);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            };
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomainUnhandledException;
-            this.DispatcherUnhandledException += AppDispatcherUnhandledException;
-           
             base.OnStartup(e);
-
             (new Views.MainWindow { DataContext = new ViewModels.MainViewModel() }).Show();
         }
 
