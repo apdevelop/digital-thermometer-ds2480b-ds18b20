@@ -88,12 +88,24 @@
                   IsReadOnly="True"
                   AutoGenerateColumns="False"
                   ItemsSource="{Binding SensorsStateItems}">
+
+            <DataGrid.Resources>
+                <ContextMenu x:Key="RowMenu" 
+                              DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                    <MenuItem Header="Copy ROM Code (as little-endian hex string)"
+                              Command="{Binding CopyRomCodeHexLEStringCommand}" />
+                    <MenuItem Header="Copy ROM Code (as hex number)"
+                              Command="{Binding CopyRomCodeHexNumberCommand}" />
+                </ContextMenu>
+            </DataGrid.Resources>
+
             <DataGrid.Background>
                 <SolidColorBrush Color="{StaticResource MetroWhite}" />
             </DataGrid.Background>
 
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
+                    <Setter Property="ContextMenu" Value="{StaticResource RowMenu}" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsValidCrc}" Value="true">
                             <Setter Property="Foreground" Value="DarkGreen"></Setter>

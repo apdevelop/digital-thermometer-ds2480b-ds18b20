@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Linq;
+using System.Windows;
+using System.Windows.Input;
 
 using DigitalThermometer.App.Models;
+using DigitalThermometer.App.Utils;
 using OW = DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.App.ViewModels
@@ -12,10 +14,17 @@ namespace DigitalThermometer.App.ViewModels
 
         private readonly SensorStateModel sensorState;
 
+        public ICommand CopyRomCodeHexLEStringCommand { get; private set; }
+
+        public ICommand CopyRomCodeHexNumberCommand { get; private set; }
+
         public SensorStateViewModel(int indexNumber, SensorStateModel sensorState)
         {
             this.indexNumber = indexNumber;
             this.sensorState = sensorState;
+
+            this.CopyRomCodeHexLEStringCommand = new RelayCommand((o) => { Clipboard.SetText(this.RomCodeString); });
+            this.CopyRomCodeHexNumberCommand = new RelayCommand((o) => { Clipboard.SetText("0x" + this.sensorState.RomCode.ToString("X16")); });
         }
 
         public int IndexNumberString
