@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace DigitalThermometer.OneWire
 {
@@ -164,22 +165,18 @@ namespace DigitalThermometer.OneWire
         /// <returns>Response check result</returns>
         public static OneWireBusResetResponse GetBusResetResponse(byte response)
         {
+            // TODO: ? check bit7 == 1 ?
+
             // Table 2. COMMUNICATION COMMAND RESPONSE
-            if ((response & 0xDC) == 0xCC)
+            // The response byte includes a code for the reaction on the 1-Wire bus (bits 0 and 1) and a code for the chip revision(bits 2 to 4).
+            var bits01 = response & 0b0000_0011;
+            switch (bits01)
             {
-                var bits01 = response & 0x03;
-                switch (bits01)
-                {
-                    case 0x00: return OneWireBusResetResponse.BusShorted;
-                    case 0x01: return OneWireBusResetResponse.PresencePulse;
-                    case 0x02: return OneWireBusResetResponse.AlarmingPresencePulse;
-                    case 0x03: return OneWireBusResetResponse.NoPresencePulse;
-                    default: return OneWireBusResetResponse.InvalidResponse;
-                }
-            }
-            else
-            {
-                return OneWireBusResetResponse.InvalidResponse;
+                case 0b00: return OneWireBusResetResponse.BusShorted;
+                case 0b01: return OneWireBusResetResponse.PresencePulse;
+                case 0b10: return OneWireBusResetResponse.AlarmingPresencePulse;
+                case 0b11: return OneWireBusResetResponse.NoPresencePulse;
+                default: throw new InvalidOperationException();
             }
         }
 

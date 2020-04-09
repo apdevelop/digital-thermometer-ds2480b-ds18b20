@@ -49,7 +49,7 @@ namespace DigitalThermometer.ConsoleApp
             {
                 if (this.scratchpad.RawData != null)
                 {
-                    return String.Join(" ", this.scratchpad.RawData.Select(b => b.ToString("X2")));
+                    return OW.Utils.ByteArrayToHexSpacedString(this.scratchpad.RawData);
                 }
                 else
                 {

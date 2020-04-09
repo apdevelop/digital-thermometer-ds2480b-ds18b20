@@ -239,7 +239,7 @@ namespace DigitalThermometer.App.ViewModels
                 // Bus diagnostic
                 switch (busResult)
                 {
-                    case OW.OneWireBusResetResponse.NoResponse:
+                    case OW.OneWireBusResetResponse.NoResponseReceived:
                         {
                             this.DisplayState("Bus reset response was not received");
                             result = null;
@@ -260,12 +260,6 @@ namespace DigitalThermometer.App.ViewModels
                     case OW.OneWireBusResetResponse.PresencePulse:
                         {
                             this.DisplayState("Presence pulse OK");
-                            break;
-                        }
-                    case OW.OneWireBusResetResponse.InvalidResponse:
-                        {
-                            this.DisplayState("Invalid response received");
-                            result = null;
                             break;
                         }
                 }
@@ -289,13 +283,11 @@ namespace DigitalThermometer.App.ViewModels
                             });
                     });
 
-                    // TODO: order list of sensors
-
                     if (list != null)
                     {
                         // http://www.claassen.net/geek/blog/2007/07/inotifypropertychanged-and-cross-thread-exceptions.html
 
-                        this.DisplayState($"Totoal sensors found: {list.Count}");
+                        this.DisplayState($"Total sensors found: {list.Count}");
                         this.DisplayState("Performing measure...");
 
                         var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
@@ -327,9 +319,9 @@ namespace DigitalThermometer.App.ViewModels
                             {
                                 counter++;
                                 this.DisplayState($"Performing measure: {counter}/{list.Count}");
-                                var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
-                                if (r != null)
+                                try
                                 {
+                                    var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
                                     results.Add(romCode, r);
                                     this.MarshalToMainThread(
                                         (s) => this.UpdateSensorState(s),
@@ -345,7 +337,7 @@ namespace DigitalThermometer.App.ViewModels
                                         });
                                     this.DisplayState($"Result: {counter}/{list.Count}");
                                 }
-                                else
+                                catch (Exception)
                                 {
                                     this.MarshalToMainThread(
                                         (s) => this.UpdateSensorState(s),

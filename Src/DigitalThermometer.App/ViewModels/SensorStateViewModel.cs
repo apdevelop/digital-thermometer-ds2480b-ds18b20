@@ -83,7 +83,7 @@ namespace DigitalThermometer.App.ViewModels
             {
                 if (this.sensorState.RawData != null)
                 {
-                    return String.Join(" ", this.sensorState.RawData.Select(b => b.ToString("X2")));
+                    return OW.Utils.ByteArrayToHexSpacedString(this.sensorState.RawData);
                 }
                 else
                 {

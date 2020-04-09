@@ -8,12 +8,7 @@
         /// <summary>
         /// No bus reset response was received
         /// </summary>
-        NoResponse,
-
-        /// <summary>
-        /// Invalid bus reset response value
-        /// </summary>
-        InvalidResponse,
+        NoResponseReceived,
 
         /// <summary>
         /// 1-Wire bus shorted

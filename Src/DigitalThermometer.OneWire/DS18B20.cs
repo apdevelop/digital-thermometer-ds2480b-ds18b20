@@ -80,27 +80,58 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// The power-on reset value of the temperature register is +85°C
         /// </summary>
-        public static readonly double PowerOnTemperature = +85.0;
+        public const double PowerOnTemperature = +85.0;
 
-        public static readonly UInt16 MinTemperatureCode = 0xFC90;
+        public const UInt16 MinTemperatureCode = 0xFC90;
 
-        public static readonly double MinTemperature = -55.0;
+        public const double MinTemperature = -55.0;
 
-        public static readonly UInt16 MaxTemperatureCode = 0x07D0;
+        public const UInt16 MaxTemperatureCode = 0x07D0;
 
-        public static readonly double MaxTemperature = +125.0;
+        public const double MaxTemperature = +125.0;
 
-        public static readonly int ConversionTime12bit = 750;
+        /// <summary>
+        /// Temperature step in 12-bit resolution, Celsius degrees
+        /// </summary>
+        public const double TemperatureStep12bit = 0.0625;
+
+        #region Temperature conversion time
+
+        /// <summary>
+        /// Temperature conversion time (max) in 9-bit mode, milliseconds
+        /// </summary>
+        public const double MaxConversionTime9bit = 93.75;
+
+        /// <summary>
+        /// Temperature conversion time (max) in 10-bit mode, milliseconds
+        /// </summary>
+        public const double MaxConversionTime10bit = 187.5;
+
+        /// <summary>
+        /// Temperature conversion time (max) in 11-bit mode, milliseconds
+        /// </summary>
+        public const double MaxConversionTime11bit = 375.0;
+
+        /// <summary>
+        /// Temperature conversion time (max) in 12-bit mode, milliseconds
+        /// </summary>
+        public const double MaxConversionTime12bit = 750.0;
+
+        #endregion
 
         /// <summary>
         /// Size of SRAM scratchpad in bytes
         /// </summary>
         public const int ScratchpadSize = 9;
 
-        /// <summary>
-        /// Temperature step in 12-bit resolution, Celsius degrees
-        /// </summary>
-        public const double TemperatureStep12bit = 0.0625;
+        public static bool IsValidRomCode(UInt64 romCode)
+        {
+            var bytes = BitConverter.GetBytes(romCode);
+            var isValidFamilyCode = bytes[0] == DS18B20.FamilyCode;
+            var isValidCrc = bytes[bytes.Length - 1] == Crc8Utility.CalculateCrc8(bytes, 0, bytes.Length - 2);
+
+            return isValidCrc && isValidFamilyCode;
+        }
 
         public static bool IsValidTemperatureCode(UInt16 temperatureCode)
         {

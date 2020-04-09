@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -9,6 +10,11 @@ namespace DigitalThermometer.OneWire
     /// </summary>
     public static class Utils
     {
+        public static string ByteArrayToHexSpacedString(IEnumerable<byte> data)
+        {
+            return String.Join(" ", data.Select(b => b.ToString("X2")));
+        }
+
         /// <summary>
         /// Get ROM code from its little-endian hex string representation
         /// </summary>

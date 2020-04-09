@@ -23,10 +23,9 @@ namespace DigitalThermometer.UnitTests
             this.romCodes = romCodes.ToList();
             foreach (var romCode in this.romCodes)
             {
-                // TODO: check family code 0x28
-                if (Crc8Utility.CalculateCrc8(BitConverter.GetBytes(romCode)) != 0)
+                if (!DS18B20.IsValidRomCode(romCode))
                 {
-                    throw new ArgumentException($"CRC Error for ROM Code = {romCode:X8}");
+                    throw new ArgumentException($"Invalid DS18B20 ROM Code: {romCode:X16}");
                 }
             }
         }
@@ -98,7 +97,11 @@ namespace DigitalThermometer.UnitTests
                 {
                     var result = new List<byte>();
                     result.Add(DS18B20.MATCH_ROM); // TODO: check ROM presence in this.romCodes
-                    for (var i = 0; i < 8; i++) result.Add(this.rxBuffer[2 + i]); // Copy ROM code 
+                    for (var i = 0; i < OneWireMaster.RomCodeLength; i++)
+                    {
+                        result.Add(this.rxBuffer[2 + i]); // Copy ROM code 
+                    }
+
                     result.Add(DS18B20.READ_SCRATCHPAD);
 
                     var temperatureValue = DS18B20.Scratchpad.DecodeTemperature12bit(0x019F);
