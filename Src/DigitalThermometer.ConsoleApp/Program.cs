@@ -54,11 +54,15 @@ namespace DigitalThermometer.ConsoleApp
                 Console.WriteLine();
                 foreach (var romCode in list)
                 {
-                    var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
-                    if (r != null)
+                    try
                     {
+                        var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
                         var v = new SensorStateViewModel(r);
                         Console.WriteLine($"{OW.Utils.RomCodeToLEString(romCode)}  {v.TemperatureValueString}{(char)176}C  [{v.RawDataString}]  CRC={v.ComputedCrcString}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"{OW.Utils.RomCodeToLEString(romCode)} {ex.Message}");
                     }
                 }
             }

@@ -50,8 +50,8 @@ namespace DigitalThermometer.OneWire
         internal enum PulldownSlewRateControl : byte
         {
             // 0001 xxx1
-            ___15_Vpus = 0b0001_0001,
-            __2p2_Vpus = 0b0001_0011,
+            _15_Vpus = 0b0001_0001,
+            _2p2_Vpus = 0b0001_0011,
             _1p65_Vpus = 0b0001_0101,
             _1p37_Vpus = 0b0001_0111,
             _1p10_Vpus = 0b0001_1001,
@@ -66,14 +66,14 @@ namespace DigitalThermometer.OneWire
         internal enum ProgrammingPulseDuration : byte
         {
             // 0010 xxx1
-            ___32us = 0b0010_0001,
-            ___64us = 0b0010_0011,
-            __128us = 0b0010_0101,
-            __256us = 0b0010_0111,
-            __512us = 0b0010_1001,
+            _32us = 0b0010_0001,
+            _64us = 0b0010_0011,
+            _128us = 0b0010_0101,
+            _256us = 0b0010_0111,
+            _512us = 0b0010_1001,
             _1024us = 0b0010_1011,
             _2048us = 0b0010_1101,
-            ____Inf = 0b0010_1111,
+            _Inf = 0b0010_1111,
         }
 
         /// <summary>
@@ -84,12 +84,12 @@ namespace DigitalThermometer.OneWire
             // 0011 xxx1
             _16p4ms = 0b0011_0001,
             _65p5ms = 0b0011_0011,
-            __131ms = 0b0011_0101,
-            __262ms = 0b0011_0111,
-            __524ms = 0b0011_1001, // Default value
+            _131ms = 0b0011_0101,
+            _262ms = 0b0011_0111,
+            _524ms = 0b0011_1001, // Default value
             _1048ms = 0b0011_1011,
-            ____DYN = 0b0011_1101,
-            ____INF = 0b0011_1111,
+            _DYN = 0b0011_1101,
+            _INF = 0b0011_1111,
         }
 
         /// <summary>
@@ -98,8 +98,8 @@ namespace DigitalThermometer.OneWire
         internal enum Write1LowTime : byte
         {
             // 0100 xxx1
-            __8us = 0b0100_0001,
-            __9us = 0b0100_0011,
+            _8us = 0b0100_0001,
+            _9us = 0b0100_0011,
             _10us = 0b0100_0101,
             _11us = 0b0100_0111,
             _12us = 0b0100_1001,
@@ -114,13 +114,13 @@ namespace DigitalThermometer.OneWire
         internal enum DataSampleOffsetAndWrite0RecoveryTime : byte
         {
             // 0101 xxx1
-            __3us = 0b0101_0001,
-            __4us = 0b0101_0011,
-            __5us = 0b0101_0101,
-            __6us = 0b0101_0111,
-            __7us = 0b0101_1001,
-            __8us = 0b0101_1011,
-            __9us = 0b0101_1101,
+            _3us = 0b0101_0001,
+            _4us = 0b0101_0011,
+            _5us = 0b0101_0101,
+            _6us = 0b0101_0111,
+            _7us = 0b0101_1001,
+            _8us = 0b0101_1011,
+            _9us = 0b0101_1101,
             _10us = 0b0101_1111,
         }
 
@@ -146,13 +146,13 @@ namespace DigitalThermometer.OneWire
         internal enum RS232BaudRate : byte
         {
             // 0111 xxx1
-            ______9p6kbps = 0b0111_0001, // Default
-            _____19p2kbps = 0b0111_0011,
-            _____57p6kbps = 0b0111_0101,
-            ____115p2kbps = 0b0111_0111,
-            Inv___9p6kbps = 0b0111_1001,
-            Inv__19p2kbps = 0b0111_1011,
-            Inv__57p6kbps = 0b0111_1101,
+            _9p6kbps = 0b0111_0001, // Default
+            _19p2kbps = 0b0111_0011,
+            _57p6kbps = 0b0111_0101,
+            _115p2kbps = 0b0111_0111,
+            Inv_9p6kbps = 0b0111_1001,
+            Inv_19p2kbps = 0b0111_1011,
+            Inv_57p6kbps = 0b0111_1101,
             Inv_115p2kbps = 0b0111_1111,
         }
 

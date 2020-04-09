@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DigitalThermometer.OneWire
@@ -31,12 +30,12 @@ namespace DigitalThermometer.OneWire
         private readonly byte[] OneWireBusFlexConfiguration = new[]
         {
             (byte)DS2480B.PulldownSlewRateControl._1p37_Vpus,
-            (byte)DS2480B.ProgrammingPulseDuration.__512us,
-            (byte)DS2480B.StrongPullupDuration.__524ms,
+            (byte)DS2480B.ProgrammingPulseDuration._512us,
+            (byte)DS2480B.StrongPullupDuration._524ms,
             (byte)DS2480B.Write1LowTime._11us,
             (byte)DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us,
             (byte)DS2480B.LoadSensorThreshold._3p0mA,
-            (byte)DS2480B.RS232BaudRate.______9p6kbps,
+            (byte)DS2480B.RS232BaudRate._9p6kbps,
         };
 
         private readonly ISerialConnection port;
@@ -112,12 +111,11 @@ namespace DigitalThermometer.OneWire
                 await this.SendSearchCommandAsync();
 
                 var romCode = this.DecodeSearchResponse();
-                if (romCode != null)
+                if (romCode.HasValue)
                 {
-                    // TODO: check duplicates
-                    var code = BitConverter.ToUInt64(romCode, 0);
-                    result.Add(code);
-                    deviceFound?.Invoke(code);
+                    // TODO: ? check duplicates
+                    result.Add(romCode.Value);
+                    deviceFound?.Invoke(romCode.Value);
 
                     timeoutControl.Restart();
 
@@ -335,11 +333,11 @@ namespace DigitalThermometer.OneWire
             await this.WaitResponseAsync(1 + 17, this.BusSearchTimeout); // TODO: check response
         }
 
-        private byte[] DecodeSearchResponse()
+        private UInt64? DecodeSearchResponse()
         {
             if (this.receiveBuffer.Count < 18)
             {
-                return null;
+                return null; // TODO: ? throw exception ?
             }
 
             byte lastZero = 0;
@@ -362,7 +360,7 @@ namespace DigitalThermometer.OneWire
                 // error during search
                 this.lastDiscrepancy = 0;
                 this.lastDeviceFlag = false;
-                return null;
+                return null; // TODO: ? throw exception ?
             }
             else
             {	// successful search
@@ -373,10 +371,7 @@ namespace DigitalThermometer.OneWire
                     this.lastDeviceFlag = true;
                 }
 
-                var romCode = new byte[RomCodeLength];
-                Array.Copy(romCodeTempBuffer, romCode, RomCodeLength);
-
-                return romCode;
+                return BitConverter.ToUInt64(romCodeTempBuffer, 0);
             }
         }
 

@@ -71,36 +71,6 @@ namespace DigitalThermometer.App.Utils
             }
         }
 
-        /// <summary>
-        /// RTS output (pin 7 on DB9 RS232)
-        /// </summary>
-        /// <param name="value">(default) false = 1 = -U | true = 0 = +U</param>
-        public void SetRts(bool value)
-        {
-            if (this.serialPort != null)
-            {
-                if (this.serialPort.IsOpen)
-                {
-                    this.serialPort.RtsEnable = value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// DTR output (pin 4 on DB9 RS232)
-        /// </summary>
-        /// <param name="value">(default) false = 1 = -U | true = 0 = +U</param>
-        public void SetDtr(bool value)
-        {
-            if (this.serialPort != null)
-            {
-                if (this.serialPort.IsOpen)
-                {
-                    this.serialPort.DtrEnable = value;
-                }
-            }
-        }
-
         public async Task OpenPortAsync()
         {
             this.stopPending = false;
@@ -229,10 +199,10 @@ namespace DigitalThermometer.App.Utils
                 {
                     if ((this.serialPort != null) && this.serialPort.IsOpen)
                     {
-                        var availibleBytes = this.serialPort.BytesToRead;
-                        if (availibleBytes > 0)
+                        var availableBytes = this.serialPort.BytesToRead;
+                        if (availableBytes > 0)
                         {
-                            var bytesToRead = Math.Min(availibleBytes, inputBuffer.Length);
+                            var bytesToRead = Math.Min(availableBytes, inputBuffer.Length);
                             var readedBytes = this.serialPort.Read(inputBuffer, 0, bytesToRead);
                             if (bytesToRead != readedBytes)
                             {
