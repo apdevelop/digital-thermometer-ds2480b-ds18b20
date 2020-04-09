@@ -16,20 +16,20 @@ namespace DigitalThermometer.App.ViewModels
 {
     public class MainViewModel : BaseNotifyPropertyChanged
     {
+        public ICommand RefreshSerialPortsListCommand { get; private set; }
+
         public ICommand PerformMeasureCommand { get; private set; }
 
         public ICommand MeasureInDemoModeCommand { get; private set; }
 
         public MainViewModel()
         {
+            this.RefreshSerialPortsListCommand = new RelayCommand((o) => this.UpdateSerialPortNames());
             this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasurementsAsync());
             this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasurementsInDemoModeAsync());
 
             // TODO: config and save/restore settings
-            if (this.SerialPortNames.Count > 0)
-            {
-                this.SelectedSerialPortName = this.SerialPortNames[0];
-            }
+            this.UpdateSerialPortNames();
 
             this.measurementsTimer.Tick += async (s, e) =>
             {
@@ -40,11 +40,28 @@ namespace DigitalThermometer.App.ViewModels
             };
         }
 
-        public IList<string> SerialPortNames
+        private List<string> serialPortNames = new List<string>();
+
+        public List<string> SerialPortNames
         {
             get
             {
-                return SerialPortUtils.GetSerialPortNames();
+                return this.serialPortNames;
+            }
+
+            set
+            {
+                this.serialPortNames = value;
+                base.OnPropertyChanged(nameof(SerialPortNames));
+            }
+        }
+
+        private void UpdateSerialPortNames()
+        {
+            this.SerialPortNames = SerialPortUtils.GetSerialPortNames().ToList();
+            if (this.SerialPortNames.Count > 0)
+            {
+                this.SelectedSerialPortName = this.SerialPortNames[0];
             }
         }
 

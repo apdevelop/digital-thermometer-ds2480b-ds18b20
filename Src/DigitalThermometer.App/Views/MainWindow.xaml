@@ -43,6 +43,23 @@
                 </Path>
             </ContentControl>
 
+            <Button ToolTip="Refresh serial ports list"
+                Margin="0,0,4,0" Width="24" Height="24"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                Command="{Binding RefreshSerialPortsListCommand}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ContentControl>
+                        <Path Width="16" Height="16" Data="{Binding Source={StaticResource pathDataCommandRefresh}}"
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                              Stretch="Uniform">
+                            <Path.Fill>
+                                <SolidColorBrush Color="{StaticResource MetroDarken}"/>
+                            </Path.Fill>
+                        </Path>
+                    </ContentControl>
+                </StackPanel>
+            </Button>
+
             <ComboBox Width="80" Height="24"
                       FontSize="12"
                       ToolTip="Serial port"
@@ -74,7 +91,7 @@
             <DataGrid.Background>
                 <SolidColorBrush Color="{StaticResource MetroWhite}" />
             </DataGrid.Background>
-            
+
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Style.Triggers>
@@ -90,7 +107,7 @@
                     </Style.Triggers>
                 </Style>
             </DataGrid.RowStyle>
-            
+
             <DataGrid.Columns>
                 <DataGridTextColumn Header="№" 
                                 Binding="{Binding IndexNumberString}"
