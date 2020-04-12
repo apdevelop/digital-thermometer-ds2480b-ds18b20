@@ -5,7 +5,9 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile></DocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <OutputPath></OutputPath>
+    <DocumentationFile />
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -10,6 +10,11 @@ namespace DigitalThermometer.OneWire
     /// </summary>
     public static class Utils
     {
+        /// <summary>
+        /// Converts byte sequence to hex string representation, with spaces between bytes
+        /// </summary>
+        /// <param name="data">Byte sequence</param>
+        /// <returns>String with data hex representation</returns>
         public static string ByteArrayToHexSpacedString(IEnumerable<byte> data)
         {
             return String.Join(" ", data.Select(b => b.ToString("X2")));
@@ -18,7 +23,7 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// Get ROM code from its little-endian hex string representation
         /// </summary>
-        /// <param name="s">ROM code in HEX string format, little-endian (28xxxxxxCRC for DS18B20)</param>
+        /// <param name="s">ROM code in hex string format, little-endian (28xxxxxxCRC for DS18B20)</param>
         /// <returns>ROM code</returns>
         public static UInt64 RomCodeFromLEString(string s)
         {

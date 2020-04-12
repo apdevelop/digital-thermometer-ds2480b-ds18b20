@@ -1,5 +1,5 @@
 # Digital Thermometer using DS2480B 1-Wire bus driver with DS18B20 sensors
-Windows desktop (WPF) and console (.NET Core 2.1) applications for working with DS18B20 sensors on DS2480B 1-Wire bus controller.
+Windows desktop (WPF, .NET 4.5.2) and cross-platform console (.NET Core 2.1) applications for working with `DS18B20` 1-Wire digital thermometers connected to `DS2480B` 1-Wire bus controller.
 
 ![Demo screenshot](https://github.com/apdevelop/digital-thermometer-ds2480b-ds18b20/blob/master/Docs/DigitalThermometerScreenshot.png)
 
@@ -9,7 +9,7 @@ Developed using MS Visual Studio 2017, C#, .NET Framework 4.5.2, WPF for UI, NET
 
 ### Getting started with demo application
 * Connect any 1-Wire bus adapter, based on `DS2480B` chip to USB or serial port on PC (For example, with FT232RL USB-UART adapter).
-* Connect one or several `DS18B20` 1-Wire temperature sensors to 1-Wire bus (using tree wires, i.e. in normal power mode, not parasite mode).
+* Connect one or several `DS18B20` 1-Wire temperature sensors to 1-Wire bus (using three wires, i.e. in normal power mode, not parasite mode).
 * Run application, select serial port from list, press 'Measure' button.
 * Run console application using serial port name as first command line argument, for example:
 
@@ -55,9 +55,9 @@ Run application (file without extension):
 It will output list of serial ports in system:
 `Serial ports: /dev/ttyAMA0 /dev/ttyS0 /dev/ttyUSB0`
 
-The `/dev/ttyUSB0` is actually virtual serial port of `FT232RL` chip of USB-UART adapter in this case.
+The `/dev/ttyUSB0` in this example is virtual serial port of `FT232RL` chip of USB-UART adapter.
 
-Run application with serial port name provided:
+Run application with serial port name provided as command line argument:
 
 `./DigitalThermometer.ConsoleApp /dev/ttyUSB0`
 

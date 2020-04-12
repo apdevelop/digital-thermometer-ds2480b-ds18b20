@@ -67,9 +67,12 @@ namespace DigitalThermometer.UnitTests
         public void EncodeScratchpad12bit()
         {
             var temperatureValue = DS18B20.Scratchpad.DecodeTemperature12bit(0x0155);
-            Assert.AreEqual(
-                new byte[] { 0x55, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x0B, 0x10, 0xD0 },
-                DS18B20.Scratchpad.EncodeScratchpad12bit(temperatureValue, 0x4B, 0x46, 0xFF, 0x0B, 0x10));
+            var scratchpad = DS18B20.Scratchpad.EncodeScratchpad(temperatureValue, 0x4B, 0x46);
+            Assert.AreEqual(0x55, scratchpad[0]);
+            Assert.AreEqual(0x01, scratchpad[1]);
+            Assert.AreEqual(0x4B, scratchpad[2]);
+            Assert.AreEqual(0x46, scratchpad[3]);
+            Assert.AreEqual(0x7F, scratchpad[4]);
         }
 
         [Test]

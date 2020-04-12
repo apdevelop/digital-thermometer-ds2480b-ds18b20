@@ -180,8 +180,13 @@ namespace DigitalThermometer.OneWire
             }
         }
 
-        public static byte[] EscapeDataPacket(IList<byte> data)
+        internal static byte[] EscapeDataPacket(IList<byte> data)
         {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
             var result = new List<byte>(data.Count);
             for (var i = 0; i < data.Count; i++)
             {

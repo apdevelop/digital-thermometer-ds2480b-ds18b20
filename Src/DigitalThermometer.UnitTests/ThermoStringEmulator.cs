@@ -104,8 +104,7 @@ namespace DigitalThermometer.UnitTests
 
                     result.Add(DS18B20.READ_SCRATCHPAD);
 
-                    var temperatureValue = DS18B20.Scratchpad.DecodeTemperature12bit(0x019F);
-                    var scratchpad = DS18B20.Scratchpad.EncodeScratchpad12bit(temperatureValue, 0x4B, 0x46, 0xFF, 0x01, 0x10);
+                    var scratchpad = DS18B20.Scratchpad.EncodeScratchpad(25.9375, 0x4B, 0x46);
                     result.AddRange(scratchpad);
 
                     return result;

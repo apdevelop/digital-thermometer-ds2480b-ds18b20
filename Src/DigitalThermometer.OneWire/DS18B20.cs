@@ -21,6 +21,9 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public const byte SEARCH_ROM = 0xF0;
 
+        /// <summary>
+        /// READ ROM [33h]
+        /// </summary>
         public const byte READ_ROM = 0x33;
 
         /// <summary>
@@ -40,6 +43,9 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public const byte SKIP_ROM = 0xCC;
 
+        /// <summary>
+        /// ALARM SEARCH [ECh]
+        /// </summary>
         public const byte ALARM_SEARCH = 0xEC;
 
         #endregion
@@ -54,6 +60,9 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public const byte CONVERT_T = 0x44;
 
+        /// <summary>
+        /// WRITE SCRATCHPAD [4Eh]
+        /// </summary>
         public const byte WRITE_SCRATCHPAD = 0x4E;
 
         /// <summary>
@@ -64,10 +73,19 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public const byte READ_SCRATCHPAD = 0xBE;
 
+        /// <summary>
+        /// COPY SCRATCHPAD [48h]
+        /// </summary>
         public const byte COPY_SCRATCHPAD = 0x48;
 
+        /// <summary>
+        /// RECALL E2 [B8h]
+        /// </summary>
         public const byte RECALL_E2 = 0xB8;
 
+        /// <summary>
+        /// READ POWER SUPPLY [B4h]
+        /// </summary>
         public const byte READ_POWER_SUPPLY = 0xB4;
 
         #endregion
@@ -82,18 +100,30 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public const double PowerOnTemperature = +85.0;
 
-        public const UInt16 MinTemperatureCode = 0xFC90;
-
+        /// <summary>
+        /// Minimum supported temperature value, degrees Celsius
+        /// </summary>
         public const double MinTemperature = -55.0;
 
-        public const UInt16 MaxTemperatureCode = 0x07D0;
-
+        /// <summary>
+        /// Maximum supported temperature value, degrees Celsius
+        /// </summary>
         public const double MaxTemperature = +125.0;
 
         /// <summary>
-        /// Temperature step in 12-bit resolution, Celsius degrees
+        /// Minimum supported temperature value, raw value
         /// </summary>
-        public const double TemperatureStep12bit = 0.0625;
+        public const UInt16 MinTemperatureCode = 0xFC90;
+
+        /// <summary>
+        /// Maximum supported temperature value, raw value
+        /// </summary>
+        public const UInt16 MaxTemperatureCode = 0x07D0;
+
+        /// <summary>
+        /// Temperature step in 12-bit resolution, degrees Celsius
+        /// </summary>
+        private const double TemperatureStep12bit = 0.0625;
 
         #region Temperature conversion time
 
@@ -124,6 +154,11 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public const int ScratchpadSize = 9;
 
+        /// <summary>
+        /// Checks the validity of ROM code of DS18B20 (Family code, CRC)
+        /// </summary>
+        /// <param name="romCode">Rom code</param>
+        /// <returns></returns>
         public static bool IsValidRomCode(UInt64 romCode)
         {
             var bytes = BitConverter.GetBytes(romCode);
@@ -133,6 +168,11 @@ namespace DigitalThermometer.OneWire
             return isValidCrc && isValidFamilyCode;
         }
 
+        /// <summary>
+        /// Checks the validity of raw value temperature code
+        /// </summary>
+        /// <param name="temperatureCode">Raw value of temperature</param>
+        /// <returns></returns>
         public static bool IsValidTemperatureCode(UInt16 temperatureCode)
         {
             if ((temperatureCode >= 0x0000) && (temperatureCode <= DS18B20.MaxTemperatureCode))
@@ -152,7 +192,7 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// Convert temperature value to temperature code (12-bit resolution)
         /// </summary>
-        /// <param name="temperature">Temperature value in Celsius degrees</param>
+        /// <param name="temperature">Temperature value in degrees Celsius</param>
         /// <returns>Temperature code</returns>
         public static UInt16 EncodeTemperature12bit(double temperature)
         {
@@ -282,7 +322,7 @@ namespace DigitalThermometer.OneWire
             }
 
             /// <summary>
-            /// Computes and checks CRC of entire scratchpad
+            /// The computed value of scratchpad contents CRC is correct
             /// </summary>
             public bool IsValidCrc
             {
@@ -292,24 +332,37 @@ namespace DigitalThermometer.OneWire
                 }
             }
 
+            /// <summary>
+            /// Temperature value raw data
+            /// </summary>
             public UInt16? TemperatureRawData
             {
                 get
                 {
-                    return this.IsValidCrc ? (UInt16)((this.scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | this.scratchpad[MemoryMapOffsetTemperatureLsb]) : (UInt16?)null;
+                    return this.IsValidCrc ?
+                        (UInt16)((this.scratchpad[MemoryMapOffsetTemperatureMsb] << 8) | this.scratchpad[MemoryMapOffsetTemperatureLsb]) :
+                        (UInt16?)null;
                 }
             }
 
+            /// <summary>
+            /// Temperature value, in degrees Celsius
+            /// </summary>
             public double? Temperature
             {
                 get
                 {
-                    // TODO: check config register for using actual resolution
+                    // TODO: use actual resolution
                     // TODO: ? IsValidTemperatureCode(temperatureCode)
-                    return this.IsValidCrc ? DS18B20.Scratchpad.DecodeTemperature12bit(this.TemperatureRawData.Value) : (double?)null;
+                    return (this.IsValidCrc && (this.ThermometerActualResolution == ThermometerResolution.Resolution12bit)) ?
+                        DS18B20.Scratchpad.DecodeTemperature12bit(this.TemperatureRawData.Value) :
+                        (double?)null;
                 }
             }
 
+            /// <summary>
+            /// Temperature value is equal to power-on value (+85°C)
+            /// </summary>
             public bool IsPowerOnTemperature
             {
                 get
@@ -318,8 +371,9 @@ namespace DigitalThermometer.OneWire
                 }
             }
 
-            // TODO: add Th, Tl
-
+            /// <summary>
+            /// Actual resolution, according to configuration register contents
+            /// </summary>
             public ThermometerResolution? ThermometerActualResolution
             {
                 get
@@ -346,11 +400,13 @@ namespace DigitalThermometer.OneWire
                 }
             }
 
+            // TODO: add Th, Tl registers interpretation
+
             /// <summary>
             /// Convert temperature code to value (12-bit resolution)
             /// </summary>
             /// <param name="temperatureCode">Temperature code</param>
-            /// <returns>Temperature value in Celsius degrees</returns>
+            /// <returns>Temperature value in degrees Celsius</returns>
             public static double DecodeTemperature12bit(UInt16 temperatureCode)
             {
                 if ((temperatureCode >= 0x0000) && (temperatureCode <= DS18B20.MaxTemperatureCode))
@@ -369,23 +425,34 @@ namespace DigitalThermometer.OneWire
 
             // TODO: ? add set {} for using in device emulator scenario
 
-            public static byte[] EncodeScratchpad12bit(double temperatureValue, byte thCode, byte tlCode, byte reserved1, byte reserved2, byte reserved3)
+            /// <summary>
+            /// Creating scratchpad contents (with computed CRC), simulating real DS18B20
+            /// </summary>
+            /// <param name="temperatureValue">Temperature value, in degrees Celsius</param>
+            /// <param name="thCode">Alarm high trigger raw value</param>
+            /// <param name="tlCode">Alarm high trigger raw value</param>
+            /// <param name="thermometerResolution">Thermometer resolution</param>
+            /// <returns>Scratchpad contents</returns>
+            public static byte[] EncodeScratchpad(double temperatureValue, byte thCode, byte tlCode, ThermometerResolution thermometerResolution = ThermometerResolution.Resolution12bit)
             {
+                if (thermometerResolution != ThermometerResolution.Resolution12bit)
+                {
+                    throw new NotSupportedException(); // TODO: other resolutions
+                }
+
                 var temperatureCode = EncodeTemperature12bit(temperatureValue);
 
-                var scratchpad = new List<byte>(ScratchpadSize);
-
-                scratchpad.Add((byte)(temperatureCode & 0x00FF));
-                scratchpad.Add((byte)((temperatureCode & 0xFF00) >> 8));
-
-                scratchpad.Add(thCode); // Th
-                scratchpad.Add(tlCode); // Tl
-                scratchpad.Add(0x7F); // Configuration
-
-                // Reserved
-                scratchpad.Add(reserved1);
-                scratchpad.Add(reserved2);
-                scratchpad.Add(reserved3);
+                var scratchpad = new List<byte>(ScratchpadSize)
+                {
+                    (byte)(temperatureCode & 0x00FF),
+                    (byte)((temperatureCode & 0xFF00) >> 8),
+                    thCode, // Th
+                    tlCode, // Tl
+                    0x7F, // Configuration
+                    0xFF, // Reserved
+                    0x0C, // Reserved
+                    0x10, // Reserved
+                };
 
                 var crc = Crc8Utility.CalculateCrc8(scratchpad, 0, ScratchpadSize - 1 - 1);
                 scratchpad.Add(crc);
