@@ -38,6 +38,11 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public const byte CommandSearchAcceleratorControlOnAtFlexSpeed = 0xB5;
 
+        /// <summary>
+        /// Generate Read Data time slot at flex speed without strong pullup
+        /// </summary>
+        public const byte CommandSingleBitReadDataAtFlexSpeed = 0b10010101;
+
         #region Configuration commands
 
         // See Table 3. CONFIGURATION PARAMETER OVERVIEW

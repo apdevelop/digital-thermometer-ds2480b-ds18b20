@@ -67,9 +67,22 @@
                       ItemsSource="{Binding SerialPortNames}"
                       SelectedItem="{Binding SelectedSerialPortName}" />
 
+            <ContentControl 
+                ToolTip="Parasite powered DS18B20 are on bus"
+                Visibility="{Binding ParasitePowerVisibility}">
+                <Path Width="16" Height="16" Margin="40,0,8,0"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Stretch="Uniform"
+                      Data="{Binding Source={StaticResource pathDataShapeLightingWF}}">
+                    <Path.Fill>
+                        <SolidColorBrush Color="{StaticResource MetroOrange}"/>
+                    </Path.Fill>
+                </Path>
+            </ContentControl>
+            
             <CheckBox Content="Simultaneous" 
                       VerticalAlignment="Center"
-                      Margin="120,0,0,0"
+                      Margin="60,0,0,0"
                       ToolTip="Simultaneous measurements on all connected sensors"
                       IsEnabled="{Binding IsMeasuresEnabled}" 
                       IsChecked="{Binding IsSimultaneousMeasurementsMode, Mode=TwoWay}" />

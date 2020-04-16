@@ -85,6 +85,9 @@ namespace DigitalThermometer.OneWire
 
         /// <summary>
         /// READ POWER SUPPLY [B4h]
+        /// The master device issues this command followed by a read time slot to determine if any DS18B20s on the
+        /// bus are using parasite power.During the read time slot, parasite powered DS18B20s will pull the bus
+        /// low, and externally powered DS18B20s will let the bus remain high.
         /// </summary>
         public const byte READ_POWER_SUPPLY = 0xB4;
 
@@ -208,6 +211,21 @@ namespace DigitalThermometer.OneWire
             else
             {
                 return (UInt16)(0xFFFF - (UInt16)(-temperature / TemperatureStep12bit) + 1);
+            }
+        }
+
+        /// <summary>
+        /// Interprets Read Power Supply command response
+        /// </summary>
+        /// <param name="readPowerSupplyResponse">Read Power Supply command response</param>
+        /// <returns>Parasite powered DS18B20 are on bus</returns>
+        public static bool IsParasitePowerMode(byte readPowerSupplyResponse)
+        {
+            switch (readPowerSupplyResponse)
+            {
+                case 0: return true;
+                case 1: return false;
+                default: throw new ArgumentOutOfRangeException(nameof(readPowerSupplyResponse));
             }
         }
 

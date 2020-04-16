@@ -131,6 +131,39 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
+        private bool? isParasitePower = null;
+
+        private bool? IsParasitePower
+        {
+            get
+            {
+                return this.isParasitePower;
+            }
+
+            set
+            {
+                if (this.isParasitePower != value)
+                {
+                    this.isParasitePower = value;
+                    base.OnPropertyChanged(nameof(ParasitePowerVisibility));
+                }
+            }
+        }
+
+        public Visibility ParasitePowerVisibility
+        {
+            get
+            {
+                switch (this.IsParasitePower)
+                {
+                    case null: return Visibility.Hidden;
+                    case true: return Visibility.Visible;
+                    case false: return Visibility.Hidden;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
         private readonly DispatcherTimer measurementsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15), IsEnabled = false, };
 
         private bool isTimerMeasurementsMode = false;
@@ -238,6 +271,7 @@ namespace DigitalThermometer.App.ViewModels
             this.BusState = String.Empty;
             this.IsBusy = true;
             this.SensorsState = new List<SensorStateModel>();
+            this.IsParasitePower = null;
 
             this.measuresRuns++;
             var stopwatch = Stopwatch.StartNew();
@@ -305,8 +339,10 @@ namespace DigitalThermometer.App.ViewModels
                         // http://www.claassen.net/geek/blog/2007/07/inotifypropertychanged-and-cross-thread-exceptions.html
 
                         this.DisplayState($"Total sensors found: {list.Count}");
-                        this.DisplayState("Performing measure...");
 
+                        this.IsParasitePower = OW.DS18B20.IsParasitePowerMode(await busMaster.ReadDS18B20PowerSupplyAsync());
+
+                        this.DisplayState("Performing measure...");
                         var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
                         if (this.IsSimultaneousMeasurementsMode)
                         {
