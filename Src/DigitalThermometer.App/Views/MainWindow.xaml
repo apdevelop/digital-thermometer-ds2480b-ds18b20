@@ -1,22 +1,23 @@
 ﻿<Window x:Class="DigitalThermometer.App.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Digital Thermometer Demo App (DS2480B + DS18B20)" 
-        Width="620" Height="300"
-        MinWidth="620" MinHeight="300"
+        Title="{DynamicResource MainWindowTitle}" 
+        Width="700" Height="300"
+        MinWidth="700" MinHeight="300"
         ResizeMode="CanResizeWithGrip"
         FontFamily="Segoe UI">
 
-    <Grid>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DigitalThermometer.App;component/Resources/i18n/MainWindow.en-US.xaml" />
+                <ResourceDictionary Source="/DigitalThermometer.App;component/Assets/PathData.xaml" />
+                <ResourceDictionary Source="/DigitalThermometer.App;component/Assets/MetroColors.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
 
-        <Grid.Resources>
-            <ResourceDictionary>
-                <ResourceDictionary.MergedDictionaries>
-                    <ResourceDictionary Source="/DigitalThermometer.App;component/Assets/PathData.xaml" />
-                    <ResourceDictionary Source="/DigitalThermometer.App;component/Assets/MetroColors.xaml" />
-                </ResourceDictionary.MergedDictionaries>
-            </ResourceDictionary>
-        </Grid.Resources>
+    <Grid>
 
         <Grid.Background>
             <SolidColorBrush Color="{StaticResource MetroWhite}"/>
@@ -43,13 +44,14 @@
                 </Path>
             </ContentControl>
 
-            <Button ToolTip="Refresh serial ports list"
-                Margin="0,0,4,0" Width="24" Height="24"
+            <Button Margin="0,0,4,0" Width="24" Height="24"
+                ToolTip="{DynamicResource RefreshSerialPortsListTooltip}"
                 IsEnabled="{Binding IsMeasuresEnabled}"
                 Command="{Binding RefreshSerialPortsListCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <ContentControl>
-                        <Path Width="16" Height="16" Data="{Binding Source={StaticResource pathDataCommandRefresh}}"
+                        <Path Width="16" Height="16"
+                              Data="{Binding Source={StaticResource pathDataCommandRefresh}}"
                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                               Stretch="Uniform">
                             <Path.Fill>
@@ -62,13 +64,13 @@
 
             <ComboBox Width="80" Height="24"
                       FontSize="12"
-                      ToolTip="Serial port"
+                      ToolTip="{DynamicResource SelectedSerialPortNameTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}"
                       ItemsSource="{Binding SerialPortNames}"
                       SelectedItem="{Binding SelectedSerialPortName}" />
 
             <ContentControl 
-                ToolTip="Parasite powered DS18B20 are on bus"
+                ToolTip="{DynamicResource ParasitePowerTooltip}"
                 Visibility="{Binding ParasitePowerVisibility}">
                 <Path Width="16" Height="16" Margin="40,0,8,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -79,36 +81,43 @@
                     </Path.Fill>
                 </Path>
             </ContentControl>
-            
-            <CheckBox Content="Simultaneous" 
+
+            <CheckBox Content="{DynamicResource IsSimultaneousMeasurementsModeText}" 
                       VerticalAlignment="Center"
                       Margin="60,0,0,0"
-                      ToolTip="Simultaneous measurements on all connected sensors"
+                      ToolTip="{DynamicResource IsSimultaneousMeasurementsModeTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}" 
                       IsChecked="{Binding IsSimultaneousMeasurementsMode, Mode=TwoWay}" />
 
-            <CheckBox Content="Timer" 
+            <CheckBox Content="{DynamicResource IsTimerMeasurementsModeText}" 
                       VerticalAlignment="Center"
                       Margin="20,0,0,0"
-                      ToolTip="Periodic measurements using timer"
+                      ToolTip="{DynamicResource IsTimerMeasurementsModeTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}" 
                       IsChecked="{Binding IsTimerMeasurementsMode, Mode=TwoWay}" />
         </StackPanel>
 
         <DataGrid Grid.Row="1" Margin="4,0,4,0"
-                  FontSize="12"
+                  FontSize="14"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   IsReadOnly="True"
                   AutoGenerateColumns="False"
                   ItemsSource="{Binding SensorsStateItems}">
 
             <DataGrid.Resources>
+                <!-- TODO: unstable menu opening -->
                 <ContextMenu x:Key="RowMenu" 
                               DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                    <MenuItem Header="Copy ROM Code (as little-endian hex string)"
-                              Command="{Binding CopyRomCodeHexLEStringCommand}" />
-                    <MenuItem Header="Copy ROM Code (as hex number)"
-                              Command="{Binding CopyRomCodeHexNumberCommand}" />
+                    <MenuItem Command="{Binding CopyRomCodeHexLEStringCommand}">
+                        <MenuItem.Header>
+                            <TextBlock Text="{DynamicResource CopyRomCodeHexLEStringMenuItemText}" />
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding CopyRomCodeHexNumberCommand}">
+                        <MenuItem.Header>
+                            <TextBlock Text="{DynamicResource CopyRomCodeHexNumberMenuItemText}" />
+                        </MenuItem.Header>
+                    </MenuItem>
                 </ContextMenu>
             </DataGrid.Resources>
 
@@ -134,40 +143,58 @@
             </DataGrid.RowStyle>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="№" 
+                <DataGridTextColumn Header="№"
                                 Binding="{Binding IndexNumberString}"
                                 CanUserSort="False"
                                 Width="35" />
-                <DataGridTextColumn Header="ROM Code" 
+                <DataGridTextColumn
                                 Binding="{Binding RomCodeString}"
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="125" />
-                <DataGridTextColumn Header="T, &#186;C" 
+                                FontWeight="Bold"
+                                Width="140">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{DynamicResource DataGridRomCodeHeader}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="T, &#186;C"
                                 Binding="{Binding TemperatureValueString}"
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="70" />
-                <DataGridTextColumn Header="Code" 
+                                FontWeight="Bold"
+                                Width="80" />
+                <DataGridTextColumn
                                 Binding="{Binding TemperatureRawCodeString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="50" />
-                <DataGridTextColumn Header="Mode" 
+                                Width="60">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{DynamicResource DataGridCodeHeader}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn
                                 Binding="{Binding ThermometerResolutionString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="50" />
-                <DataGridTextColumn Header="CRC" 
+                                Width="60">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{DynamicResource DataGridModeHeader}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="CRC"
                                 Binding="{Binding ComputedCrcString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="75" />
-                <DataGridTextColumn Header="Scratchpad Raw Data" 
+                                Width="80" />
+                <DataGridTextColumn
                                 Binding="{Binding RawDataString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="190" />
+                                Width="220">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{DynamicResource DataGridRawDataHeader}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -207,7 +234,7 @@
                 </TextBlock.Foreground>
             </TextBlock>
 
-            <Button ToolTip="Demo mode"
+            <Button ToolTip="{DynamicResource MeasureInDemoModeButtonText}"
                 Margin="0,0,0,0"
                 IsEnabled="{Binding IsMeasuresEnabled}"
                 Command="{Binding MeasureInDemoModeCommand}">
@@ -219,12 +246,13 @@
                             </Path.Fill>
                         </Path>
                     </ContentControl>
-                    <TextBlock Text="Demo" Margin="12,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{DynamicResource MeasureInDemoModeButtonText}"
+                               Margin="12,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
 
-            <Button ToolTip="Perform measurements on connected sensors"
-                     Margin="240,0,0,0"
+            <Button Margin="240,0,0,0"
+                ToolTip="{DynamicResource PerformMeasureButtonToolTip}"
                 IsEnabled="{Binding IsMeasuresEnabled}"
                 Command="{Binding PerformMeasureCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -235,7 +263,8 @@
                             </Path.Fill>
                         </Path>
                     </ContentControl>
-                    <TextBlock Text="Measure" Margin="12,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
+                               Text="{DynamicResource PerformMeasureButtonText}" />
                 </StackPanel>
             </Button>
 

@@ -164,7 +164,7 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private readonly DispatcherTimer measurementsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15), IsEnabled = false, };
+        private readonly DispatcherTimer measurementsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60), IsEnabled = false, };
 
         private bool isTimerMeasurementsMode = false;
 
@@ -263,6 +263,7 @@ namespace DigitalThermometer.App.ViewModels
 
         private void DisplayState(string state)
         {
+            // http://www.claassen.net/geek/blog/2007/07/inotifypropertychanged-and-cross-thread-exceptions.html
             this.MarshalToMainThread(s => this.BusState = s, state);
         }
 
@@ -276,7 +277,7 @@ namespace DigitalThermometer.App.ViewModels
             this.measuresRuns++;
             var stopwatch = Stopwatch.StartNew();
 
-            this.DisplayState("Initializing...");
+            this.DisplayState(App.Locale["MessageInitializing"]);
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
             var busMaster = new OW.OneWireMaster(portConnection);
 
@@ -284,33 +285,31 @@ namespace DigitalThermometer.App.ViewModels
 
             try
             {
-                this.DisplayState("Performing bus reset...");
+                this.DisplayState(App.Locale["MessagePerformingBusReset"]);
                 var busResult = await busMaster.OpenAsync();
-
-                // Bus diagnostic
                 switch (busResult)
                 {
                     case OW.OneWireBusResetResponse.NoResponseReceived:
                         {
-                            this.DisplayState("Bus reset response was not received");
+                            this.DisplayState(App.Locale["MessageNoResponseReceived"]);
                             result = null;
                             break;
                         }
                     case OW.OneWireBusResetResponse.NoPresencePulse:
                         {
-                            this.DisplayState("No presence pulse");
+                            this.DisplayState(App.Locale["MessageNoPresencePulse"]);
                             result = null;
                             break;
                         }
                     case OW.OneWireBusResetResponse.BusShorted:
                         {
-                            this.DisplayState("Bus is shorted");
+                            this.DisplayState(App.Locale["MessageBusShorted"]);
                             result = null;
                             break;
                         }
                     case OW.OneWireBusResetResponse.PresencePulse:
                         {
-                            this.DisplayState("Presence pulse OK");
+                            this.DisplayState(App.Locale["MessagePresencePulseOk"]);
                             break;
                         }
                 }
@@ -318,11 +317,11 @@ namespace DigitalThermometer.App.ViewModels
                 if (result != null)
                 {
                     var count = 0;
-                    this.DisplayState("Searching devices on bus...");
+                    this.DisplayState(App.Locale["MessageSearchingDevicesOnBus"]);
                     var list = await busMaster.SearchDevicesOnBusAsync((romCode) =>
                     {
                         count++;
-                        this.DisplayState($"Sensor found: {count} <{OW.Utils.RomCodeToLEString(romCode)}>");
+                        this.DisplayState($"{App.Locale["MessageSensorFound"]}: {count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
                         this.MarshalToMainThread(
                             (s) => this.AddFoundSensor(s),
                             new SensorStateModel
@@ -336,13 +335,11 @@ namespace DigitalThermometer.App.ViewModels
 
                     if (list != null)
                     {
-                        // http://www.claassen.net/geek/blog/2007/07/inotifypropertychanged-and-cross-thread-exceptions.html
-
-                        this.DisplayState($"Total sensors found: {list.Count}");
+                        this.DisplayState($"{App.Locale["MessageTotalSensorsFound"]}: {list.Count}");
 
                         this.IsParasitePower = OW.DS18B20.IsParasitePowerMode(await busMaster.ReadDS18B20PowerSupplyAsync());
 
-                        this.DisplayState("Performing measure...");
+                        this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}...");
                         var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
                         if (this.IsSimultaneousMeasurementsMode)
                         {
@@ -362,7 +359,7 @@ namespace DigitalThermometer.App.ViewModels
                                             ComputedCrc = r.Item2.ComputedCrc,
                                             IsValidCrc = r.Item2.IsValidCrc,
                                         });
-                                    this.DisplayState($"Result: {counter}/{list.Count}");
+                                    this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{list.Count}");
                                 }));
                         }
                         else
@@ -371,7 +368,7 @@ namespace DigitalThermometer.App.ViewModels
                             foreach (var romCode in list)
                             {
                                 counter++;
-                                this.DisplayState($"Performing measure: {counter}/{list.Count}");
+                                this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}: {counter}/{list.Count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
                                 try
                                 {
                                     var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
@@ -388,7 +385,7 @@ namespace DigitalThermometer.App.ViewModels
                                             ComputedCrc = r.ComputedCrc,
                                             IsValidCrc = r.IsValidCrc,
                                         });
-                                    this.DisplayState($"Result: {counter}/{list.Count}");
+                                    this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{list.Count}");
                                 }
                                 catch (Exception)
                                 {
@@ -401,12 +398,12 @@ namespace DigitalThermometer.App.ViewModels
                                             TemperatureRawCode = null,
                                             ThermometerResolution = null,
                                         });
-                                    this.DisplayState($"Error: {counter}/{list.Count}");
+                                    this.DisplayState($"{App.Locale["MessageError"]}: {counter}/{list.Count}");
                                 }
                             }
                         }
 
-                        this.DisplayState($"Completed ({stopwatch.Elapsed})");
+                        this.DisplayState($"{App.Locale["MessageCompleted"]} ({stopwatch.Elapsed})");
                         result = results;
                     }
                     else
@@ -417,7 +414,7 @@ namespace DigitalThermometer.App.ViewModels
             }
             catch (Exception ex)
             {
-                this.DisplayState($"Fatal error: {ex.Message}");
+                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message}");
                 result = null;
             }
             finally

@@ -61,6 +61,12 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Resource>
+    <Resource Include="Resources\i18n\MainWindow.ru-RU.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
+    <Resource Include="Resources\i18n\MainWindow.en-US.xaml">
+      <SubType>Designer</SubType>
+    </Resource>
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -70,6 +76,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Models\SensorStateModel.cs" />
+    <Compile Include="Utils\LocalizationUtil.cs" />
     <Compile Include="Utils\SerialPortConnection.cs" />
     <Compile Include="Utils\BaseNotifyPropertyChanged.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
@@ -100,7 +107,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

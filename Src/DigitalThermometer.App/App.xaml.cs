@@ -5,8 +5,10 @@ using System.Windows.Threading;
 
 namespace DigitalThermometer.App
 {
-    public partial class App : Application
+    partial class App : Application
     {
+        internal static readonly Utils.LocalizationUtil Locale = new Utils.LocalizationUtil(); // TODO: remove global variable
+
         public App()
         {
             AppDomain.CurrentDomain.UnhandledException += this.CurrentDomainUnhandledException;
@@ -34,7 +36,10 @@ namespace DigitalThermometer.App
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            (new Views.MainWindow { DataContext = new ViewModels.MainViewModel() }).Show();
+
+            var mainWindow = new Views.MainWindow { DataContext = new ViewModels.MainViewModel() };
+            App.Locale.SetDefaultLanguage(mainWindow, "en-US");   // TODO: dynamically switch from UI 
+            mainWindow.Show();
         }
 
         private void CurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)

@@ -1,0 +1,44 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <sys:String x:Key="ResourceDictionaryName">ru-RU</sys:String>
+
+    <sys:String x:Key="MainWindowTitle">Цифровой термометр 1-Wire (DS2480B + DS18B20)</sys:String>
+    <sys:String x:Key="RefreshSerialPortsListTooltip">Обновить список последовательных портов</sys:String>
+    <sys:String x:Key="SelectedSerialPortNameTooltip">Последовательный порт</sys:String>
+    <sys:String x:Key="ParasitePowerTooltip">На шине 1-Wire найдены DS18B20 с паразитным питанием</sys:String>
+    <sys:String x:Key="IsSimultaneousMeasurementsModeText">Одновременно</sys:String>
+    <sys:String x:Key="IsSimultaneousMeasurementsModeTooltip">Одновременное измерение температуры по всем датчикам</sys:String>
+    <sys:String x:Key="IsTimerMeasurementsModeText">Таймер</sys:String>
+    <sys:String x:Key="IsTimerMeasurementsModeTooltip">Периодическое выполнение измерений по таймеру (60 с)</sys:String>
+
+    <sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Копировать код (как LE-строку)</sys:String>
+    <sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Копировать код (как 16-ричное число)</sys:String>
+
+    <sys:String x:Key="DataGridRomCodeHeader">ROM код</sys:String>
+    <sys:String x:Key="DataGridCodeHeader">Код</sys:String>
+    <sys:String x:Key="DataGridModeHeader">Режим</sys:String>
+    <sys:String x:Key="DataGridRawDataHeader">Содержимое ОЗУ</sys:String>
+
+    <sys:String x:Key="MeasureInDemoModeButtonText">Демо режим</sys:String>
+    <sys:String x:Key="PerformMeasureButtonText">Измерение</sys:String>
+    <sys:String x:Key="PerformMeasureButtonToolTip">Выполнить измерение температуры по всем датчикам</sys:String>
+
+    <!-- Messages text -->
+    <sys:String x:Key="MessageInitializing">Инициализация...</sys:String>
+    <sys:String x:Key="MessagePerformingBusReset">Сброс шины...</sys:String>
+    <sys:String x:Key="MessageNoResponseReceived">Ответ на сброс шины не был получен</sys:String>
+    <sys:String x:Key="MessageNoPresencePulse">Импульс присутствия не получен</sys:String>
+    <sys:String x:Key="MessageBusShorted">Короткое замыкание на шине</sys:String>
+    <sys:String x:Key="MessagePresencePulseOk">Получен импульс присутствия</sys:String>
+    <sys:String x:Key="MessageSearchingDevicesOnBus">Поиск устройств на шине...</sys:String>
+    <sys:String x:Key="MessageSensorFound">Найден датчик</sys:String>
+    <sys:String x:Key="MessageTotalSensorsFound">Всего найдено датчиков</sys:String>
+    <sys:String x:Key="MessagePerformingMeasure">Выполнение измерения</sys:String>
+    <sys:String x:Key="MessageResult">Результат</sys:String>
+    <sys:String x:Key="MessageError">Ошибка</sys:String>
+    <sys:String x:Key="MessageCompleted">Завершено</sys:String>
+    <sys:String x:Key="MessageFatalError">Критическая ошибка</sys:String>
+
+</ResourceDictionary>
