@@ -72,12 +72,38 @@
             <ContentControl 
                 ToolTip="{DynamicResource ParasitePowerTooltip}"
                 Visibility="{Binding ParasitePowerVisibility}">
-                <Path Width="16" Height="16" Margin="40,0,8,0"
+                <Path Width="16" Height="16" Margin="40,0,0,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataShapeLightingWF}}">
                     <Path.Fill>
                         <SolidColorBrush Color="{StaticResource MetroOrange}"/>
+                    </Path.Fill>
+                </Path>
+            </ContentControl>
+
+            <ContentControl 
+                ToolTip="{DynamicResource PowerUpTemperatureTooltip}"
+                Visibility="{Binding PowerUpTemperatureVisibility}">
+                <Path Width="12" Height="16" Margin="30,0,0,0"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Stretch="Uniform"
+                      Data="{Binding Source={StaticResource pathDataDigitalEight}}">
+                    <Path.Fill>
+                        <SolidColorBrush Color="{StaticResource MetroRed}"/>
+                    </Path.Fill>
+                </Path>
+            </ContentControl>
+
+            <ContentControl 
+                ToolTip="{DynamicResource PowerUpTemperatureTooltip}"
+                Visibility="{Binding PowerUpTemperatureVisibility}">
+                <Path Width="12" Height="16" Margin="0,0,0,0"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Stretch="Uniform"
+                      Data="{Binding Source={StaticResource pathDataDigitalFive}}">
+                    <Path.Fill>
+                        <SolidColorBrush Color="{StaticResource MetroRed}"/>
                     </Path.Fill>
                 </Path>
             </ContentControl>

@@ -7,7 +7,10 @@
     <sys:String x:Key="MainWindowTitle">Цифровой термометр 1-Wire (DS2480B + DS18B20)</sys:String>
     <sys:String x:Key="RefreshSerialPortsListTooltip">Обновить список последовательных портов</sys:String>
     <sys:String x:Key="SelectedSerialPortNameTooltip">Последовательный порт</sys:String>
+    
     <sys:String x:Key="ParasitePowerTooltip">На шине 1-Wire найдены DS18B20 с паразитным питанием</sys:String>
+    <sys:String x:Key="PowerUpTemperatureTooltip">Начальное значение температуры (+85 C) на отдельных датчиках</sys:String>
+
     <sys:String x:Key="IsSimultaneousMeasurementsModeText">Одновременно</sys:String>
     <sys:String x:Key="IsSimultaneousMeasurementsModeTooltip">Одновременное измерение температуры по всем датчикам</sys:String>
     <sys:String x:Key="IsTimerMeasurementsModeText">Таймер</sys:String>

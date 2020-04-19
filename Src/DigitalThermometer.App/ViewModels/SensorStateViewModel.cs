@@ -64,6 +64,16 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
+        public bool? IsPowerUpTemperatureValue
+        {
+            get
+            {
+                return this.sensorState.TemperatureRawCode.HasValue ?
+                    (bool?)(this.sensorState.TemperatureRawCode.Value == OW.DS18B20.PowerOnTemperatureCode) :
+                    null;
+            }
+        }
+
         public string ThermometerResolutionString
         {
             get
