@@ -49,54 +49,54 @@ namespace DigitalThermometer.OneWire
         // See Table 4. CONFIGURATION PARAMETER VALUE CODES
 
         /// <summary>
-        /// (PDSRC) Pulldown Slew Rate Control, V/mks
+        /// (PDSRC) Pulldown Slew Rate Control, V/μs
         /// Flexible mode only
         /// </summary>
         public enum PulldownSlewRateControl : byte // 0001 xxx1
         {
             /// <summary>
-            /// 15 V/mks
+            /// 15 V/μs
             /// </summary>
             _15_Vpus = 0b0001_0001,
 
             /// <summary>
-            /// 2.2 V/mks
+            /// 2.2 V/μs
             /// </summary>
             _2p2_Vpus = 0b0001_0011,
 
             /// <summary>
-            /// 1.65 V/mks
+            /// 1.65 V/μs
             /// </summary>
             _1p65_Vpus = 0b0001_0101,
 
             /// <summary>
-            /// 1.37 V/mks
+            /// 1.37 V/μs
             /// </summary>
             _1p37_Vpus = 0b0001_0111,
 
             /// <summary>
-            /// 1.1 V/mks
+            /// 1.1 V/μs
             /// </summary>
             _1p1_Vpus = 0b0001_1001,
 
             /// <summary>
-            /// 0.83 V/mks
+            /// 0.83 V/μs
             /// </summary>
             _0p83_Vpus = 0b0001_1011,
 
             /// <summary>
-            /// 0.7 V/mks
+            /// 0.7 V/μs
             /// </summary>
             _0p7_Vpus = 0b0001_1101,
 
             /// <summary>
-            /// 0.55 V/mks
+            /// 0.55 V/μs
             /// </summary>
             _0p55_Vpus = 0b0001_1111,
         }
 
         /// <summary>
-        /// (PPD) Programming Pulse Duration, mks
+        /// (PPD) Programming Pulse Duration, μs
         /// </summary>
         internal enum ProgrammingPulseDuration : byte
         {
@@ -128,34 +128,96 @@ namespace DigitalThermometer.OneWire
         }
 
         /// <summary>
-        /// (W1LT) Write-1 Low Time, mks
+        /// (W1LT) Write-1 Low Time, μs
         /// </summary>
-        internal enum Write1LowTime : byte
+        public enum Write1LowTime : byte // 0100 xxx1
         {
-            // 0100 xxx1
+            /// <summary>
+            /// 8 μs
+            /// </summary>
             _8us = 0b0100_0001,
+
+            /// <summary>
+            /// 9 μs
+            /// </summary>
             _9us = 0b0100_0011,
+
+            /// <summary>
+            /// 10 μs
+            /// </summary>
             _10us = 0b0100_0101,
+
+            /// <summary>
+            /// 11 μs
+            /// </summary>
             _11us = 0b0100_0111,
+
+            /// <summary>
+            /// 12 μs
+            /// </summary>
             _12us = 0b0100_1001,
+
+            /// <summary>
+            /// 13 μs
+            /// </summary>
             _13us = 0b0100_1011,
+
+            /// <summary>
+            /// 14 μs
+            /// </summary>
             _14us = 0b0100_1101,
+
+            /// <summary>
+            /// 15 μs
+            /// </summary>
             _15us = 0b0100_1111,
         }
 
         /// <summary>
-        /// (DSO/W0RT) Data Sample Offset and Write 0 Recovery Time, mks
+        /// (DSO/W0RT) Data Sample Offset and Write 0 Recovery Time, μs
         /// </summary>
-        internal enum DataSampleOffsetAndWrite0RecoveryTime : byte
+        public enum DataSampleOffsetAndWrite0RecoveryTime : byte
         {
             // 0101 xxx1
+
+            /// <summary>
+            /// 3 μs
+            /// </summary>
             _3us = 0b0101_0001,
+
+            /// <summary>
+            /// 4 μs
+            /// </summary>
             _4us = 0b0101_0011,
+
+            /// <summary>
+            /// 5 μs
+            /// </summary>
             _5us = 0b0101_0101,
+
+            /// <summary>
+            /// 6 μs
+            /// </summary>
             _6us = 0b0101_0111,
+
+            /// <summary>
+            /// 7 μs
+            /// </summary>
             _7us = 0b0101_1001,
+
+            /// <summary>
+            /// 8 μs
+            /// </summary>
             _8us = 0b0101_1011,
+
+            /// <summary>
+            /// 9 μs
+            /// </summary>
             _9us = 0b0101_1101,
+
+            /// <summary>
+            /// 10 μs
+            /// </summary>
             _10us = 0b0101_1111,
         }
 

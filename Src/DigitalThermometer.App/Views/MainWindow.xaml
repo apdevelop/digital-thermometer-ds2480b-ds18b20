@@ -137,7 +137,7 @@
                     Margin="4">
 
             <Label Content="PDSRC"/>
-            <ComboBox Width="100" Height="24" FontSize="12"
+            <ComboBox Width="80" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedPulldownSlewRateControlTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}"
                       SelectedValuePath="Item1"
@@ -145,6 +145,23 @@
                       ItemsSource="{Binding PulldownSlewRateControlItems}"
                       SelectedValue="{Binding SelectedPulldownSlewRateControl}" />
 
+            <Label Content="W1LT" Margin="8,0,0,0"/>
+            <ComboBox Width="60" Height="24" FontSize="12"
+                      ToolTip="{DynamicResource SelectedWrite1LowTimeTooltip}"
+                      IsEnabled="{Binding IsMeasuresEnabled}"
+                      SelectedValuePath="Item1"
+                      DisplayMemberPath="Item2"
+                      ItemsSource="{Binding Write1LowTimeItems}"
+                      SelectedValue="{Binding SelectedWrite1LowTime}" />
+
+            <Label Content="DSO/W0RT" Margin="8,0,0,0"/>
+            <ComboBox Width="60" Height="24" FontSize="12"
+                      ToolTip="{DynamicResource SelectedDataSampleOffsetAndWrite0RecoveryTimeTooltip}"
+                      IsEnabled="{Binding IsMeasuresEnabled}"
+                      SelectedValuePath="Item1"
+                      DisplayMemberPath="Item2"
+                      ItemsSource="{Binding DataSampleOffsetAndWrite0RecoveryTimeItems}"
+                      SelectedValue="{Binding SelectedDataSampleOffsetAndWrite0RecoveryTime}" />
         </StackPanel>
 
         <DataGrid Grid.Row="2" Margin="4,0,4,0"

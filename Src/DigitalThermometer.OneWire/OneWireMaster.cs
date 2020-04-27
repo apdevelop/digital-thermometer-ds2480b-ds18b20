@@ -76,11 +76,11 @@ namespace DigitalThermometer.OneWire
                 this.OneWireBusFlexibleConfiguration = new[]
                 {
                     (byte)config.PulldownSlewRateControl,
-                    // TODO: ! all other params
+                    // TODO: other params
                     (byte)DS2480B.ProgrammingPulseDuration._512us,
                     (byte)DS2480B.StrongPullupDuration._524ms,
-                    (byte)DS2480B.Write1LowTime._11us,
-                    (byte)DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us,
+                    (byte)config.Write1LowTime,
+                    (byte)config.DataSampleOffsetAndWrite0RecoveryTime,
                     (byte)DS2480B.LoadSensorThreshold._3p0mA,
                     (byte)DS2480B.RS232BaudRate._9p6kbps,
                 };

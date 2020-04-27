@@ -394,7 +394,45 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.selectedPulldownSlewRateControl != value)
                 {
                     this.selectedPulldownSlewRateControl = value;
-                    base.OnPropertyChanged(nameof(SelectedPulldownSlewRateControl));
+                    base.OnPropertyChanged(nameof(this.SelectedPulldownSlewRateControl));
+                }
+            }
+        }
+
+        private OW.DS2480B.Write1LowTime selectedWrite1LowTime = OW.DS2480B.Write1LowTime._11us;
+
+        public OW.DS2480B.Write1LowTime SelectedWrite1LowTime
+        {
+            get
+            {
+                return this.selectedWrite1LowTime;
+            }
+
+            set
+            {
+                if (this.selectedWrite1LowTime != value)
+                {
+                    this.selectedWrite1LowTime = value;
+                    base.OnPropertyChanged(nameof(this.SelectedWrite1LowTime));
+                }
+            }
+        }
+
+        private OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime selectedDataSampleOffsetAndWrite0RecoveryTime = OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us;
+
+        public OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime SelectedDataSampleOffsetAndWrite0RecoveryTime
+        {
+            get
+            {
+                return this.selectedDataSampleOffsetAndWrite0RecoveryTime;
+            }
+
+            set
+            {
+                if (this.selectedDataSampleOffsetAndWrite0RecoveryTime != value)
+                {
+                    this.selectedDataSampleOffsetAndWrite0RecoveryTime = value;
+                    base.OnPropertyChanged(nameof(this.SelectedDataSampleOffsetAndWrite0RecoveryTime));
                 }
             }
         }
@@ -405,14 +443,50 @@ namespace DigitalThermometer.App.ViewModels
             {
                 return new List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>>(new[]
                 {
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._15_Vpus, "15 V/mks"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._2p2_Vpus, "2.2 V/mks"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p65_Vpus, "1.65 V/mks"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p37_Vpus, "1.37 V/mks"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p1_Vpus, "1.1 V/mks"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p83_Vpus, "0.83 V/mks"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p7_Vpus, "0.7 V/mks"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p55_Vpus, "0.55 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._15_Vpus, "15 V/μs"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._2p2_Vpus, "2.2 V/μs"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p65_Vpus, "1.65 V/μs"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p37_Vpus, "1.37 V/μs"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p1_Vpus, "1.1 V/μs"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p83_Vpus, "0.83 V/μs"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p7_Vpus, "0.7 V/μs"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p55_Vpus, "0.55 V/μs"),
+                });
+            }
+        }
+
+        public List<Tuple<OW.DS2480B.Write1LowTime, string>> Write1LowTimeItems
+        {
+            get
+            {
+                return new List<Tuple<OW.DS2480B.Write1LowTime, string>>(new[]
+                {
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._8us, "8 μs"),
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._9us, "9 μs"),
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._10us, "10 μs"),
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._11us, "11 μs"),
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._12us, "12 μs"),
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._13us, "13 μs"),
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._14us, "14 μs"),
+                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._15us, "15 μs"),
+                });
+            }
+        }
+
+        public List<Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>> DataSampleOffsetAndWrite0RecoveryTimeItems
+        {
+            get
+            {
+                return new List<Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>>(new[]
+                {
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._3us, "3 μs"),
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._4us, "4 μs"),
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._5us, "5 μs"),
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._6us, "6 μs"),
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._7us, "7 μs"),
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._8us, "8 μs"),
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._9us, "9 μs"),
+                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us, "10 μs"),
                 });
             }
         }
@@ -424,6 +498,8 @@ namespace DigitalThermometer.App.ViewModels
                 return new OW.FlexibleSpeedConfiguration
                 {
                     PulldownSlewRateControl = this.SelectedPulldownSlewRateControl,
+                    Write1LowTime = this.SelectedWrite1LowTime,
+                    DataSampleOffsetAndWrite0RecoveryTime = this.SelectedDataSampleOffsetAndWrite0RecoveryTime,
                 };
             }
         }

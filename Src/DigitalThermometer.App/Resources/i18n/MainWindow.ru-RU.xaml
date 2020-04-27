@@ -18,6 +18,8 @@
     <sys:String x:Key="IsTimerMeasurementsModeTooltip">Периодическое выполнение измерений по таймеру (60 с)</sys:String>
 
     <sys:String x:Key="SelectedPulldownSlewRateControlTooltip">(PDSRC) Крутизна спада сигнала (В/мкс)</sys:String>
+    <sys:String x:Key="SelectedWrite1LowTimeTooltip">(W1LT) Низкий уровень при записи 1, мкс</sys:String>
+    <sys:String x:Key="SelectedDataSampleOffsetAndWrite0RecoveryTimeTooltip">(DSO/W0RT) Смещение момента выборки и время восстановления при записи 0, мкс</sys:String>
 
     <sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Копировать код (как LE-строку)</sys:String>
     <sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Копировать код (как 16-ричное число)</sys:String>
