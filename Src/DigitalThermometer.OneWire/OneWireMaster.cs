@@ -26,8 +26,10 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         public int BusSearchTimeout { get; set; } = 1000;
 
-        // TODO: ? pass 1-Wire config as parameter ?
-        private readonly byte[] OneWireBusFlexConfiguration = new[]
+        /// <summary>
+        /// Default settings for Flexible Speed
+        /// </summary>
+        private readonly byte[] OneWireBusFlexibleConfiguration = new[]
         {
             (byte)DS2480B.PulldownSlewRateControl._1p37_Vpus,
             (byte)DS2480B.ProgrammingPulseDuration._512us,
@@ -63,10 +65,26 @@ namespace DigitalThermometer.OneWire
         /// Constructor
         /// </summary>
         /// <param name="portConnection">Serial port connection which implements ISerialConnection</param>
-        public OneWireMaster(ISerialConnection portConnection)
+        /// <param name="config">Flexible Speed custom configuration</param>
+        public OneWireMaster(ISerialConnection portConnection, FlexibleSpeedConfiguration config = null)
         {
             this.port = portConnection;
             this.port.OnDataReceived += this.PortDataReceived;
+
+            if (config != null)
+            {
+                this.OneWireBusFlexibleConfiguration = new[]
+                {
+                    (byte)config.PulldownSlewRateControl,
+                    // TODO: ! all other params
+                    (byte)DS2480B.ProgrammingPulseDuration._512us,
+                    (byte)DS2480B.StrongPullupDuration._524ms,
+                    (byte)DS2480B.Write1LowTime._11us,
+                    (byte)DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us,
+                    (byte)DS2480B.LoadSensorThreshold._3p0mA,
+                    (byte)DS2480B.RS232BaudRate._9p6kbps,
+                };
+            }
         }
 
         #region Application-level public methods
@@ -211,14 +229,14 @@ namespace DigitalThermometer.OneWire
             var busResetResponse = await this.OneWireBusResetAsync();
             if ((busResetResponse == OneWireBusResetResponse.PresencePulse) || (busResetResponse == OneWireBusResetResponse.NoPresencePulse))
             {
-                await this.TransmitRawDataAsync(this.OneWireBusFlexConfiguration);
-                var response = await this.WaitResponseAsync(BusResetResponseLength + this.OneWireBusFlexConfiguration.Length, this.BusResponseTimeout);
+                await this.TransmitRawDataAsync(this.OneWireBusFlexibleConfiguration);
+                var response = await this.WaitResponseAsync(BusResetResponseLength + this.OneWireBusFlexibleConfiguration.Length, this.BusResponseTimeout);
                 if (response)
                 {
-                    for (var i = 0; i < this.OneWireBusFlexConfiguration.Length; i++)
+                    for (var i = 0; i < this.OneWireBusFlexibleConfiguration.Length; i++)
                     {
                         // Table 6. CONFIGURATION COMMAND RESPONSE BYTE
-                        if (this.receiveBuffer[i + 1] != (this.OneWireBusFlexConfiguration[i] & 0b11111110))
+                        if (this.receiveBuffer[i + 1] != (this.OneWireBusFlexibleConfiguration[i] & 0b11111110))
                         {
                             throw new IOException($"Malformed response on bus configuration commands was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
                         }

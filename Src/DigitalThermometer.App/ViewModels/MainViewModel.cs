@@ -378,6 +378,58 @@ namespace DigitalThermometer.App.ViewModels
             this.MarshalToMainThread(s => this.BusState = s, state);
         }
 
+        #region Flexible Speed options
+
+        private OW.DS2480B.PulldownSlewRateControl selectedPulldownSlewRateControl = OW.DS2480B.PulldownSlewRateControl._1p37_Vpus;
+
+        public OW.DS2480B.PulldownSlewRateControl SelectedPulldownSlewRateControl
+        {
+            get
+            {
+                return this.selectedPulldownSlewRateControl;
+            }
+
+            set
+            {
+                if (this.selectedPulldownSlewRateControl != value)
+                {
+                    this.selectedPulldownSlewRateControl = value;
+                    base.OnPropertyChanged(nameof(SelectedPulldownSlewRateControl));
+                }
+            }
+        }
+
+        public List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>> PulldownSlewRateControlItems
+        {
+            get
+            {
+                return new List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>>(new[]
+                {
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._15_Vpus, "15 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._2p2_Vpus, "2.2 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p65_Vpus, "1.65 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p37_Vpus, "1.37 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p1_Vpus, "1.1 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p83_Vpus, "0.83 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p7_Vpus, "0.7 V/mks"),
+                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p55_Vpus, "0.55 V/mks"),
+                });
+            }
+        }
+
+        private OW.FlexibleSpeedConfiguration FlexibleSpeedConfiguration
+        {
+            get
+            {
+                return new OW.FlexibleSpeedConfiguration
+                {
+                    PulldownSlewRateControl = this.SelectedPulldownSlewRateControl,
+                };
+            }
+        }
+
+        #endregion
+
         private async Task PerformMeasurementsAsync()
         {
             this.BusState = String.Empty;
@@ -390,7 +442,7 @@ namespace DigitalThermometer.App.ViewModels
 
             this.DisplayState(App.Locale["MessageInitializing"]);
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
-            var busMaster = new OW.OneWireMaster(portConnection);
+            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
 
             var result = new Dictionary<UInt64, OW.DS18B20.Scratchpad>();
 
@@ -571,7 +623,7 @@ namespace DigitalThermometer.App.ViewModels
                 base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
                 base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
                 base.OnPropertyChanged(nameof(this.CrcErrorColor));
-           }
+            }
         }
 
         public void AddFoundSensor(SensorStateModel state)

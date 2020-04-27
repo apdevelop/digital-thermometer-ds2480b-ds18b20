@@ -50,18 +50,48 @@ namespace DigitalThermometer.OneWire
 
         /// <summary>
         /// (PDSRC) Pulldown Slew Rate Control, V/mks
-        /// Only Flex mode
+        /// Flexible mode only
         /// </summary>
-        internal enum PulldownSlewRateControl : byte
+        public enum PulldownSlewRateControl : byte // 0001 xxx1
         {
-            // 0001 xxx1
+            /// <summary>
+            /// 15 V/mks
+            /// </summary>
             _15_Vpus = 0b0001_0001,
+
+            /// <summary>
+            /// 2.2 V/mks
+            /// </summary>
             _2p2_Vpus = 0b0001_0011,
+
+            /// <summary>
+            /// 1.65 V/mks
+            /// </summary>
             _1p65_Vpus = 0b0001_0101,
+
+            /// <summary>
+            /// 1.37 V/mks
+            /// </summary>
             _1p37_Vpus = 0b0001_0111,
-            _1p10_Vpus = 0b0001_1001,
+
+            /// <summary>
+            /// 1.1 V/mks
+            /// </summary>
+            _1p1_Vpus = 0b0001_1001,
+
+            /// <summary>
+            /// 0.83 V/mks
+            /// </summary>
             _0p83_Vpus = 0b0001_1011,
-            _0p70_Vpus = 0b0001_1101,
+
+            /// <summary>
+            /// 0.7 V/mks
+            /// </summary>
+            _0p7_Vpus = 0b0001_1101,
+
+            /// <summary>
+            /// 0.55 V/mks
+            /// </summary>
             _0p55_Vpus = 0b0001_1111,
         }
 

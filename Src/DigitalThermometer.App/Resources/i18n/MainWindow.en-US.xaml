@@ -17,6 +17,8 @@
     <sys:String x:Key="IsTimerMeasurementsModeText">Timer</sys:String>
     <sys:String x:Key="IsTimerMeasurementsModeTooltip">Periodic measurements using timer (60 seconds)</sys:String>
 
+    <sys:String x:Key="SelectedPulldownSlewRateControlTooltip">(PDSRC) Pulldown Slew Rate Control (V/mks)</sys:String>
+
     <sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Copy ROM Code (as little-endian hex string)</sys:String>
     <sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Copy ROM Code (as hex number)</sys:String>
 

@@ -25,6 +25,7 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="32" />
+            <RowDefinition Height="32" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -62,8 +63,7 @@
                 </StackPanel>
             </Button>
 
-            <ComboBox Width="80" Height="24"
-                      FontSize="12"
+            <ComboBox Width="80" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedSerialPortNameTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}"
                       ItemsSource="{Binding SerialPortNames}"
@@ -132,7 +132,22 @@
                       IsChecked="{Binding IsTimerMeasurementsMode, Mode=TwoWay}" />
         </StackPanel>
 
-        <DataGrid Grid.Row="1" Margin="4,0,4,0"
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="4">
+
+            <Label Content="PDSRC"/>
+            <ComboBox Width="100" Height="24" FontSize="12"
+                      ToolTip="{DynamicResource SelectedPulldownSlewRateControlTooltip}"
+                      IsEnabled="{Binding IsMeasuresEnabled}"
+                      SelectedValuePath="Item1"
+                      DisplayMemberPath="Item2"
+                      ItemsSource="{Binding PulldownSlewRateControlItems}"
+                      SelectedValue="{Binding SelectedPulldownSlewRateControl}" />
+
+        </StackPanel>
+
+        <DataGrid Grid.Row="2" Margin="4,0,4,0"
                   FontSize="14"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   IsReadOnly="True"
@@ -233,7 +248,9 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="8,8,8,8" VerticalAlignment="Bottom">
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    Margin="8,8,8,8" VerticalAlignment="Bottom">
             <StackPanel.Resources>
                 <Style TargetType="Button">
                     <Setter Property="Width" Value="120" />
@@ -312,7 +329,7 @@
 
         </StackPanel>
 
-        <StatusBar Grid.Row="3"
+        <StatusBar Grid.Row="4"
                    Height="24">
             <TextBlock FontSize="12" Text="{Binding BusState}" />
         </StatusBar>

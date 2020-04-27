@@ -17,6 +17,8 @@
     <sys:String x:Key="IsTimerMeasurementsModeText">Таймер</sys:String>
     <sys:String x:Key="IsTimerMeasurementsModeTooltip">Периодическое выполнение измерений по таймеру (60 с)</sys:String>
 
+    <sys:String x:Key="SelectedPulldownSlewRateControlTooltip">(PDSRC) Крутизна спада сигнала (В/мкс)</sys:String>
+
     <sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Копировать код (как LE-строку)</sys:String>
     <sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Копировать код (как 16-ричное число)</sys:String>
 

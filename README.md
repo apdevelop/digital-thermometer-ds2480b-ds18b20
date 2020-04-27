@@ -1,5 +1,5 @@
 # Digital Thermometer using DS2480B 1-Wire bus driver with DS18B20 sensors
-Windows desktop (WPF, .NET 4.5.2) and cross-platform console (.NET Core 2.1) applications for working with `DS18B20` 1-Wire digital thermometers connected to `DS2480B` 1-Wire bus controller.
+Windows desktop (WPF, .NET 4.5.2) and cross-platform console (.NET Core 2.1) applications for working with `DS18B20` 1-Wire digital thermometers connected to `DS2480B` 1-Wire bus controller (using "Flexible Speed" mode).
 
 ![Demo screenshot](https://github.com/apdevelop/digital-thermometer-ds2480b-ds18b20/blob/master/Docs/DigitalThermometerScreenshot.png)
 
