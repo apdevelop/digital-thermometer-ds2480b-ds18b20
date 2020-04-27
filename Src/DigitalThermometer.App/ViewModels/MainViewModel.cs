@@ -193,6 +193,35 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
+        private bool? IsCrcError
+        {
+            get
+            {
+                if ((this.SensorsStateItems != null) && (this.SensorsStateItems.Count > 0))
+                {
+                    return this.SensorsStateItems.Any(s => s.IsValidCrc == false);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        public Visibility CrcErrorVisibility
+        {
+            get
+            {
+                switch (this.IsCrcError)
+                {
+                    case null: return Visibility.Hidden;
+                    case true: return Visibility.Visible;
+                    case false: return Visibility.Hidden;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
         private readonly DispatcherTimer measurementsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60), IsEnabled = false, };
 
         private bool isTimerMeasurementsMode = false;
@@ -486,15 +515,17 @@ namespace DigitalThermometer.App.ViewModels
             {
                 this.sensorsState = value;
                 base.OnPropertyChanged("SensorsStateItems");
-                base.OnPropertyChanged("PowerUpTemperatureVisibility");
-            }
+                base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+                base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
+           }
         }
 
         public void AddFoundSensor(SensorStateModel state)
         {
             this.SensorsState.Add(state);
             base.OnPropertyChanged("SensorsStateItems");
-            base.OnPropertyChanged("PowerUpTemperatureVisibility");
+            base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+            base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
         }
 
         public void UpdateSensorState(SensorStateModel state)
@@ -505,7 +536,8 @@ namespace DigitalThermometer.App.ViewModels
                 {
                     this.SensorsState[i] = state;
                     base.OnPropertyChanged("SensorsStateItems");
-                    base.OnPropertyChanged("PowerUpTemperatureVisibility");
+                    base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+                    base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
                     return;
                 }
             }

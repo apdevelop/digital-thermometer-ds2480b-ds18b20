@@ -72,7 +72,7 @@
             <ContentControl 
                 ToolTip="{DynamicResource ParasitePowerTooltip}"
                 Visibility="{Binding ParasitePowerVisibility}">
-                <Path Width="16" Height="16" Margin="40,0,0,0"
+                <Path Width="16" Height="16" Margin="32,0,0,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataShapeLightingWF}}">
@@ -85,7 +85,7 @@
             <ContentControl 
                 ToolTip="{DynamicResource PowerUpTemperatureTooltip}"
                 Visibility="{Binding PowerUpTemperatureVisibility}">
-                <Path Width="12" Height="16" Margin="30,0,0,0"
+                <Path Width="12" Height="16" Margin="16,0,0,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataDigitalEight}}">
@@ -98,10 +98,23 @@
             <ContentControl 
                 ToolTip="{DynamicResource PowerUpTemperatureTooltip}"
                 Visibility="{Binding PowerUpTemperatureVisibility}">
-                <Path Width="12" Height="16" Margin="0,0,0,0"
+                <Path Width="12" Height="16"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataDigitalFive}}">
+                    <Path.Fill>
+                        <SolidColorBrush Color="{StaticResource MetroRed}"/>
+                    </Path.Fill>
+                </Path>
+            </ContentControl>
+
+            <ContentControl 
+                ToolTip="{DynamicResource CrcErrorTooltip}"
+                Visibility="{Binding CrcErrorVisibility}">
+                <Path Width="24" Height="16" Margin="8,0,0,0"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Stretch="Uniform"
+                      Data="{Binding Source={StaticResource pathDataWarningMessage}}">
                     <Path.Fill>
                         <SolidColorBrush Color="{StaticResource MetroRed}"/>
                     </Path.Fill>
