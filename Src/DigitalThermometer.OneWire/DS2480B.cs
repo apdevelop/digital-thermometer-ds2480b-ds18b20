@@ -98,32 +98,92 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// (PPD) Programming Pulse Duration, μs
         /// </summary>
-        internal enum ProgrammingPulseDuration : byte
+        internal enum ProgrammingPulseDuration : byte // 0010 xxx1
         {
-            // 0010 xxx1
+            /// <summary>
+            /// 32 μs
+            /// </summary>
             _32us = 0b0010_0001,
+
+            /// <summary>
+            /// 64 μs
+            /// </summary>
             _64us = 0b0010_0011,
+
+            /// <summary>
+            /// 128 μs
+            /// </summary>
             _128us = 0b0010_0101,
+
+            /// <summary>
+            /// 256 μs
+            /// </summary>
             _256us = 0b0010_0111,
+
+            /// <summary>
+            /// 512 μs
+            /// </summary>
             _512us = 0b0010_1001,
+
+            /// <summary>
+            /// 1024 μs
+            /// </summary>
             _1024us = 0b0010_1011,
+
+            /// <summary>
+            /// 2048 μs
+            /// </summary>
             _2048us = 0b0010_1101,
+
+            /// <summary>
+            /// Infinite
+            /// </summary>
             _Inf = 0b0010_1111,
         }
 
         /// <summary>
         /// (SPUD) Strong Pullup Duration, ms
         /// </summary>
-        internal enum StrongPullupDuration : byte
+        internal enum StrongPullupDuration : byte // 0011 xxx1
         {
-            // 0011 xxx1
+            /// <summary>
+            /// 16.4 ms
+            /// </summary>
             _16p4ms = 0b0011_0001,
+
+            /// <summary>
+            /// 65.5 ms
+            /// </summary>
             _65p5ms = 0b0011_0011,
+
+            /// <summary>
+            /// 131 ms
+            /// </summary>
             _131ms = 0b0011_0101,
+
+            /// <summary>
+            /// 262 ms
+            /// </summary>
             _262ms = 0b0011_0111,
-            _524ms = 0b0011_1001, // Default value
+
+            /// <summary>
+            /// 524 ms (Default value)
+            /// </summary>
+            _524ms = 0b0011_1001,
+
+            /// <summary>
+            /// 1048 ms
+            /// </summary>
             _1048ms = 0b0011_1011,
+
+            /// <summary>
+            /// Dynamic
+            /// </summary>
             _DYN = 0b0011_1101,
+
+            /// <summary>
+            /// Infinite
+            /// </summary>
             _INF = 0b0011_1111,
         }
 
@@ -224,32 +284,92 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// (LOAD) Load Sensor Threshold, mA
         /// </summary>
-        internal enum LoadSensorThreshold : byte
+        internal enum LoadSensorThreshold : byte // 0110 xxx1
         {
-            // 0110 xxx1
+            /// <summary>
+            /// 1.8 mA
+            /// </summary>
             _1p8mA = 0b0110_0001,
+
+            /// <summary>
+            /// 2.1 mA
+            /// </summary>
             _2p1mA = 0b0110_0011,
+
+            /// <summary>
+            /// 2.4 mA
+            /// </summary>
             _2p4mA = 0b0110_0101,
+
+            /// <summary>
+            /// 2.7 mA
+            /// </summary>
             _2p7mA = 0b0110_0111,
-            _3p0mA = 0b0110_1001, // Default
+
+            /// <summary>
+            /// 3.0 mA (Default value)
+            /// </summary>
+            _3p0mA = 0b0110_1001,
+
+            /// <summary>
+            /// 3.3 mA
+            /// </summary>
             _3p3mA = 0b0110_1011,
+
+            /// <summary>
+            /// 3.6 mA
+            /// </summary>
             _3p6mA = 0b0110_1101,
+            
+            /// <summary>
+            /// 3.9 mA
+            /// </summary>
             _3p9mA = 0b0110_1111,
         }
 
         /// <summary>
         /// (RBR) RS232 Baud Rate, kbps
         /// </summary>
-        internal enum RS232BaudRate : byte
+        internal enum RS232BaudRate : byte // 0111 xxx1
         {
-            // 0111 xxx1
-            _9p6kbps = 0b0111_0001, // Default
+            /// <summary>
+            /// 9.6 kbps (Default)
+            /// </summary>
+            _9p6kbps = 0b0111_0001,
+
+            /// <summary>
+            /// 19.2 kbps
+            /// </summary>
             _19p2kbps = 0b0111_0011,
+
+            /// <summary>
+            /// 57.6 kbps
+            /// </summary>
             _57p6kbps = 0b0111_0101,
+
+            /// <summary>
+            /// 115.2 kbps
+            /// </summary>
             _115p2kbps = 0b0111_0111,
+
+            /// <summary>
+            /// 9.6 kbps (inverted)
+            /// </summary>
             Inv_9p6kbps = 0b0111_1001,
+
+            /// <summary>
+            /// 19.2 kbps (inverted)
+            /// </summary>
             Inv_19p2kbps = 0b0111_1011,
+
+            /// <summary>
+            /// 57.6 kbps (inverted)
+            /// </summary>
             Inv_57p6kbps = 0b0111_1101,
+
+            /// <summary>
+            /// 115.2 kbps (inverted)
+            /// </summary>
             Inv_115p2kbps = 0b0111_1111,
         }
 
