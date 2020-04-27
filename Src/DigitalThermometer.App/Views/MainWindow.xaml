@@ -70,53 +70,49 @@
                       SelectedItem="{Binding SelectedSerialPortName}" />
 
             <ContentControl 
-                ToolTip="{DynamicResource ParasitePowerTooltip}"
-                Visibility="{Binding ParasitePowerVisibility}">
+                ToolTip="{DynamicResource ParasitePowerTooltip}">
                 <Path Width="16" Height="16" Margin="32,0,0,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataShapeLightingWF}}">
                     <Path.Fill>
-                        <SolidColorBrush Color="{StaticResource MetroOrange}"/>
+                        <SolidColorBrush Color="{Binding ParasitePowerColor}"/>
                     </Path.Fill>
                 </Path>
             </ContentControl>
 
             <ContentControl 
-                ToolTip="{DynamicResource PowerUpTemperatureTooltip}"
-                Visibility="{Binding PowerUpTemperatureVisibility}">
+                ToolTip="{DynamicResource PowerUpTemperatureTooltip}">
                 <Path Width="12" Height="16" Margin="16,0,0,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataDigitalEight}}">
                     <Path.Fill>
-                        <SolidColorBrush Color="{StaticResource MetroRed}"/>
+                        <SolidColorBrush Color="{Binding PowerUpTemperatureColor}"/>
                     </Path.Fill>
                 </Path>
             </ContentControl>
 
             <ContentControl 
-                ToolTip="{DynamicResource PowerUpTemperatureTooltip}"
-                Visibility="{Binding PowerUpTemperatureVisibility}">
+                ToolTip="{DynamicResource PowerUpTemperatureTooltip}">
                 <Path Width="12" Height="16"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataDigitalFive}}">
                     <Path.Fill>
-                        <SolidColorBrush Color="{StaticResource MetroRed}"/>
+                        <SolidColorBrush  Color="{Binding PowerUpTemperatureColor}"/>
                     </Path.Fill>
                 </Path>
             </ContentControl>
 
             <ContentControl 
-                ToolTip="{DynamicResource CrcErrorTooltip}"
-                Visibility="{Binding CrcErrorVisibility}">
+                ToolTip="{DynamicResource CrcErrorTooltip}">
                 <Path Width="24" Height="16" Margin="8,0,0,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataWarningMessage}}">
                     <Path.Fill>
-                        <SolidColorBrush Color="{StaticResource MetroRed}"/>
+                        <SolidColorBrush Color="{Binding CrcErrorColor}"/>
                     </Path.Fill>
                 </Path>
             </ContentControl>

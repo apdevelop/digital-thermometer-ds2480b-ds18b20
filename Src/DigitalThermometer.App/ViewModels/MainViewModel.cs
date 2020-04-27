@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 using DigitalThermometer.App.Models;
@@ -145,7 +146,8 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.isParasitePower != value)
                 {
                     this.isParasitePower = value;
-                    base.OnPropertyChanged(nameof(ParasitePowerVisibility));
+                    base.OnPropertyChanged(nameof(this.ParasitePowerVisibility));
+                    base.OnPropertyChanged(nameof(this.ParasitePowerColor));
                 }
             }
         }
@@ -159,6 +161,20 @@ namespace DigitalThermometer.App.ViewModels
                     case null: return Visibility.Hidden;
                     case true: return Visibility.Visible;
                     case false: return Visibility.Hidden;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        public Color ParasitePowerColor
+        {
+            get
+            {
+                switch (this.IsParasitePower)
+                {
+                    case null: return StateOffColor;
+                    case true: return Color.FromArgb(0xFF, 0xE3, 0xA2, 0x1A); // TODO: from ResourceDictionary
+                    case false: return StateOffColor;
                     default: throw new ArgumentOutOfRangeException();
                 }
             }
@@ -193,7 +209,21 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private bool? IsCrcError
+        public Color PowerUpTemperatureColor
+        {
+            get
+            {
+                switch (this.IsPowerUpTemperatureValue)
+                {
+                    case null: return StateOffColor;
+                    case true: return Color.FromArgb(0xFF, 0xEE, 0x11, 0x11); // TODO: from ResourceDictionary
+                    case false: return StateOffColor;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        public bool? IsCrcError
         {
             get
             {
@@ -217,6 +247,28 @@ namespace DigitalThermometer.App.ViewModels
                     case null: return Visibility.Hidden;
                     case true: return Visibility.Visible;
                     case false: return Visibility.Hidden;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        private static Color StateOffColor
+        {
+            get
+            {
+                return Color.FromArgb(0xFF, 0xF0, 0xF0, 0xF0);
+            }
+        }
+
+        public Color CrcErrorColor
+        {
+            get
+            {
+                switch (this.IsCrcError)
+                {
+                    case null: return StateOffColor;
+                    case true: return Color.FromArgb(0xFF, 0xEE, 0x11, 0x11); // TODO: from ResourceDictionary
+                    case false: return StateOffColor;
                     default: throw new ArgumentOutOfRangeException();
                 }
             }
@@ -516,7 +568,9 @@ namespace DigitalThermometer.App.ViewModels
                 this.sensorsState = value;
                 base.OnPropertyChanged("SensorsStateItems");
                 base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+                base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
                 base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
+                base.OnPropertyChanged(nameof(this.CrcErrorColor));
            }
         }
 
@@ -525,7 +579,9 @@ namespace DigitalThermometer.App.ViewModels
             this.SensorsState.Add(state);
             base.OnPropertyChanged("SensorsStateItems");
             base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+            base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
             base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
+            base.OnPropertyChanged(nameof(this.CrcErrorColor));
         }
 
         public void UpdateSensorState(SensorStateModel state)
@@ -537,7 +593,9 @@ namespace DigitalThermometer.App.ViewModels
                     this.SensorsState[i] = state;
                     base.OnPropertyChanged("SensorsStateItems");
                     base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+                    base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
                     base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
+                    base.OnPropertyChanged(nameof(this.CrcErrorColor));
                     return;
                 }
             }
