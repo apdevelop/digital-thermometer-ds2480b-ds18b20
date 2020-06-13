@@ -461,10 +461,7 @@ namespace DigitalThermometer.OneWire
         /// <param name="romCode">ROM code of DS18B20</param>
         private async Task PerformDS18B20TemperatureConversionAsync(UInt64 romCode)
         {
-            if (!DS18B20.IsValidRomCode(romCode))
-            {
-                throw new FormatException($"Invalid ROM code of DS18B20: {Utils.RomCodeToLEString(romCode)}");
-            }
+            ValidateDS18B20RomCode(romCode);
 
             var busResetResponse = await this.OneWireBusResetAsync();
             if (busResetResponse != OneWireBusResetResponse.PresencePulse)
@@ -489,10 +486,7 @@ namespace DigitalThermometer.OneWire
         ///<returns>Scratchpad contents</returns>
         private async Task<byte[]> ReadDS18B20ScratchpadDataAsync(UInt64 romCode)
         {
-            if (!DS18B20.IsValidRomCode(romCode))
-            {
-                throw new FormatException($"Invalid ROM code of DS18B20: {Utils.RomCodeToLEString(romCode)}");
-            }
+            ValidateDS18B20RomCode(romCode);
 
             var busResetResponse = await this.OneWireBusResetAsync();
             if (busResetResponse != OneWireBusResetResponse.PresencePulse)
@@ -500,17 +494,67 @@ namespace DigitalThermometer.OneWire
                 throw new IOException($"No proper bus reset response was received ({busResetResponse})");
             }
 
-            var request = CreateReadDS18B20ScratchpadRequest(romCode);
-            await this.TransmitDataPacketAsync(request);
-            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Length - 1, this.BusResponseTimeout);
+            var readScratchpadRequest = CreateReadDS18B20ScratchpadRequest(romCode);
+            await this.TransmitDataPacketAsync(readScratchpadRequest);
+            var response = await this.WaitResponseAsync(BusResetResponseLength + readScratchpadRequest.Length - 1, this.BusResponseTimeout);
             if (!response)
             {
                 throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
             }
 
-            // Check response format
-            // <Reset> [55] <ROM code> [BE] <Scratchpad>
+            var result = GetDS18B20ScratchpadContentsFromBuffer(romCode);
 
+            return result;
+        }
+
+        ///<summary>
+        /// Read scratchpad data of specified DS18B20 slave device
+        ///</summary> 
+        ///<param name="romCode">ROM code of DS18B20</param>
+        ///<returns>Scratchpad contents</returns>
+        private async Task<byte[]> ReadDS18B20ScratchpadDataMergedRequestAsync(UInt64 romCode)
+        {
+            ValidateDS18B20RomCode(romCode);
+
+            var busResetRequest = new[]
+            {
+                DS2480B.SwitchToCommandMode,
+                DS2480B.CommandResetAtFlexSpeed,
+            };
+
+            var readScratchpadRequest = CreateReadDS18B20ScratchpadRequest(romCode);
+
+            var request = new List<byte>();
+            request.AddRange(busResetRequest);
+            request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
+            request.AddRange(DS2480B.EscapeDataPacket(readScratchpadRequest));
+
+            this.ClearReceiveBuffer();
+            await this.TransmitRawDataAsync(request.ToArray());
+
+            var response = await this.WaitResponseAsync(BusResetResponseLength + readScratchpadRequest.Length - 1, this.BusResponseTimeout);
+            if (!response)
+            {
+                throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+            }
+
+            var result = GetDS18B20ScratchpadContentsFromBuffer(romCode);
+
+            return result;
+        }
+
+        private byte[] GetDS18B20ScratchpadContentsFromBuffer(UInt64 romCode)
+        {
+            // Check receive buffer contents:
+            // <Reset response code> [55] <ROM code> [BE] <Scratchpad contents>
+
+            var busResetResponse = DS2480B.GetBusResetResponse(this.receiveBuffer[0]);
+            if (busResetResponse != OneWireBusResetResponse.PresencePulse)
+            {
+                throw new IOException($"No proper bus reset response was received ({busResetResponse})");
+            }
+
+            // Check presence of DS18B20 commands
             if ((this.receiveBuffer[1] != DS18B20.MATCH_ROM) || (this.receiveBuffer[10] != DS18B20.READ_SCRATCHPAD))
             {
                 throw new IOException($"Malformed response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
@@ -522,7 +566,7 @@ namespace DigitalThermometer.OneWire
             {
                 if (this.receiveBuffer[i + 2] != romCodeBytes[i])
                 {
-                    throw new IOException($"Malformed response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+                    throw new IOException($"ROM code mismatch in response [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
                 }
             }
 
@@ -535,6 +579,14 @@ namespace DigitalThermometer.OneWire
         #endregion
 
         #region DS18B20 specific methods requests creating
+
+        private static void ValidateDS18B20RomCode(UInt64 romCode)
+        {
+            if (!DS18B20.IsValidRomCode(romCode))
+            {
+                throw new ArgumentException($"Invalid ROM code of DS18B20: {Utils.RomCodeToLEString(romCode)}");
+            }
+        }
 
         private static byte[] CreateReadDS18B20PowerSupplyRequest()
         {
@@ -581,11 +633,11 @@ namespace DigitalThermometer.OneWire
 
             request.Add(DS2480B.SwitchToDataMode);
 
-            // 1. Select slave device
+            // 1. Select slave device by ROM code
             request.Add(DS18B20.MATCH_ROM);
             request.AddRange(BitConverter.GetBytes(romCode));
 
-            // 2. Read scratchpad
+            // 2. Read scratchpad contents
             request.Add(DS18B20.READ_SCRATCHPAD);
             for (var i = 0; i < DS18B20.ScratchpadSize; i++)
             {

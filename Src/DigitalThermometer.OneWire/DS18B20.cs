@@ -160,7 +160,7 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// Checks the validity of ROM code of DS18B20 (Family code, CRC)
         /// </summary>
-        /// <param name="romCode">Rom code</param>
+        /// <param name="romCode">DS18B20 ROM code</param>
         /// <returns></returns>
         public static bool IsValidRomCode(UInt64 romCode)
         {
