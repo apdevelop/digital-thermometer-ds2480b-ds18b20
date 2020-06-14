@@ -583,6 +583,7 @@ namespace DigitalThermometer.App.ViewModels
                         if (this.IsSimultaneousMeasurementsMode)
                         {
                             var counter = 0;
+                            //// Experimental results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementMergedRequestAsync(list, (r) =>
                             results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
                                 {
                                     counter++;

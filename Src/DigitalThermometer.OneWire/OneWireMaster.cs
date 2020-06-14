@@ -172,14 +172,28 @@ namespace DigitalThermometer.OneWire
                 measurementCompleted?.Invoke(new Tuple<UInt64, DS18B20.Scratchpad>(romCode, scratchpad));
             }
 
-            // Experimental
-            ////var scratchpadDataList = await ReadDS18B20ScratchpadDataMergedRequestAsync(romCodes);
-            ////for (var i = 0; i < romCodes.Count; i++)
-            ////{
-            ////    var scratchpad = new DS18B20.Scratchpad(scratchpadDataList[i]);
-            ////    result.Add(romCodes[i], scratchpad);
-            ////    measurementCompleted?.Invoke(new Tuple<UInt64, DS18B20.Scratchpad>(romCodes[i], scratchpad));
-            ////}
+            return result;
+        }
+
+        /// <summary>
+        /// Perform temperature measure on given DS18B20 slave devices on bus using merged serial connection writes 
+        /// </summary>
+        /// <param name="romCodes">ROM code of DS18B20</param>
+        /// <param name="measurementCompleted">Callback on measurement completed on each DS18B20</param>
+        /// <returns></returns>
+        public async Task<IDictionary<UInt64, DS18B20.Scratchpad>> PerformDS18B20TemperatureMeasurementMergedRequestAsync(IList<UInt64> romCodes, Action<Tuple<UInt64, DS18B20.Scratchpad>> measurementCompleted = null)
+        {
+            await this.PerformDS18B20TemperatureConversionMergedRequestAsync();
+
+            var result = new Dictionary<UInt64, DS18B20.Scratchpad>(romCodes.Count);
+
+            var scratchpadDataList = await ReadDS18B20ScratchpadDataMergedRequestAsync(romCodes);
+            for (var i = 0; i < romCodes.Count; i++)
+            {
+                var scratchpad = new DS18B20.Scratchpad(scratchpadDataList[i]);
+                result.Add(romCodes[i], scratchpad);
+                measurementCompleted?.Invoke(new Tuple<UInt64, DS18B20.Scratchpad>(romCodes[i], scratchpad));
+            }
 
             return result;
         }
@@ -462,6 +476,53 @@ namespace DigitalThermometer.OneWire
             {
                 throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
             }
+
+            // Check presence of DS18B20 commands
+            if ((this.receiveBuffer[1] != DS18B20.SKIP_ROM) || (this.receiveBuffer[2] != DS18B20.CONVERT_T))
+            {
+                throw new IOException($"Malformed response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+            }
+        }
+
+        /// <summary>
+        /// Perform temperature conversion on all DS18B20 slave devices on bus
+        /// </summary>
+        private async Task PerformDS18B20TemperatureConversionMergedRequestAsync()
+        {
+            var busResetRequest = new[]
+            {
+                DS2480B.SwitchToCommandMode,
+                DS2480B.CommandResetAtFlexSpeed,
+            };
+
+            var temperatureConversionRequest = CreatePerformDS18B20TemperatureConversionRequest();
+
+            var request = new List<byte>();
+            request.AddRange(busResetRequest);
+            request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
+            request.AddRange(DS2480B.EscapeDataPacket(temperatureConversionRequest));
+
+            this.ClearReceiveBuffer();
+            await this.TransmitRawDataAsync(request.ToArray());
+            await Task.Delay((int)DS18B20.MaxConversionTime12bit);
+
+            var response = await this.WaitResponseAsync(BusResetResponseLength + temperatureConversionRequest.Length - 1, this.BusResponseTimeout);
+            if (!response)
+            {
+                throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+            }
+
+            var busResetResponse = DS2480B.GetBusResetResponse(this.receiveBuffer[0]);
+            if (busResetResponse != OneWireBusResetResponse.PresencePulse)
+            {
+                throw new IOException($"No proper bus reset response was received ({busResetResponse})");
+            }
+
+            // Check presence of DS18B20 commands
+            if ((this.receiveBuffer[1] != DS18B20.SKIP_ROM) || (this.receiveBuffer[2] != DS18B20.CONVERT_T))
+            {
+                throw new IOException($"Malformed response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+            }
         }
 
         /// <summary>
@@ -485,6 +546,12 @@ namespace DigitalThermometer.OneWire
             if (!response)
             {
                 throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+            }
+
+            // Check presence of DS18B20 commands
+            if ((this.receiveBuffer[1] != DS18B20.MATCH_ROM) || (this.receiveBuffer[2 + 8] != DS18B20.CONVERT_T))
+            {
+                throw new IOException($"Malformed response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
             }
         }
 
