@@ -35,7 +35,7 @@
                     Margin="4">
 
             <ContentControl>
-                <Path Width="16" Height="16" Margin="4,0,8,0"
+                <Path Width="16" Height="16" Margin="0,0,8,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
                       Data="{Binding Source={StaticResource pathDataConnector01}}">
@@ -63,7 +63,7 @@
                 </StackPanel>
             </Button>
 
-            <ComboBox Width="80" Height="24" FontSize="12"
+            <ComboBox Width="95" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedSerialPortNameTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}"
                       ItemsSource="{Binding SerialPortNames}"
@@ -136,6 +136,17 @@
                     Orientation="Horizontal"
                     Margin="4">
 
+            <ContentControl>
+                <Path Width="16" Height="16" Margin="0,0,8,0"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Stretch="Uniform"
+                      Data="{Binding Source={StaticResource pathDataNodeWF}}">
+                    <Path.Fill>
+                        <SolidColorBrush Color="{StaticResource MetroGreen}"/>
+                    </Path.Fill>
+                </Path>
+            </ContentControl>
+            
             <Label Content="PDSRC"/>
             <ComboBox Width="80" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedPulldownSlewRateControlTooltip}"
