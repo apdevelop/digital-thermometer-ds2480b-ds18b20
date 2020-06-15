@@ -183,7 +183,6 @@ namespace DigitalThermometer.OneWire
             await this.PerformDS18B20TemperatureConversionMergedRequestAsync();
 
             var result = new Dictionary<UInt64, DS18B20.Scratchpad>(romCodes.Count);
-
             var scratchpadDataList = await ReadDS18B20ScratchpadDataMergedRequestAsync(romCodes);
             for (var i = 0; i < romCodes.Count; i++)
             {
@@ -268,7 +267,7 @@ namespace DigitalThermometer.OneWire
             var calibrationResetResponse = await this.OneWireBusResetAsync();
 
             var busResetResponse = await this.OneWireBusResetAsync();
-            if ((busResetResponse == OneWireBusResetResponse.PresencePulse) || 
+            if ((busResetResponse == OneWireBusResetResponse.PresencePulse) ||
                 (busResetResponse == OneWireBusResetResponse.NoPresencePulse))
             {
                 // Custom configuration
@@ -523,27 +522,29 @@ namespace DigitalThermometer.OneWire
 
             var request = new List<byte>();
             request.AddRange(busResetRequest);
-            request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
+            ////request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
+            request.Add((byte)DS2480B.ReadParameterCommand.RS232BaudRate); // Dummy 'read configuration parameter' command for making a pause after bus reset
             request.AddRange(DS2480B.EscapeDataPacket(temperatureConversionRequest));
 
             this.ClearReceiveBuffer();
             await this.TransmitRawDataAsync(request.ToArray());
             await Task.Delay((int)DS18B20.MaxConversionTime12bit);
 
-            var response = await this.WaitResponseAsync(BusResetResponseLength + temperatureConversionRequest.Length - 1, this.BusResponseTimeout);
+            var response = await this.WaitResponseAsync(1 + BusResetResponseLength + temperatureConversionRequest.Length - 1, this.BusResponseTimeout);
             if (!response)
             {
                 throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
             }
 
-            var busResetResponse = DS2480B.GetBusResetResponse(this.receiveBuffer[0]);
+            var offset = 1;
+            var busResetResponse = DS2480B.GetBusResetResponse(this.receiveBuffer[offset + 0]);
             if (busResetResponse != OneWireBusResetResponse.PresencePulse)
             {
                 throw new IOException($"No proper bus reset response was received ({busResetResponse})");
             }
 
             // Check presence of DS18B20 commands
-            if ((this.receiveBuffer[1] != DS18B20.SKIP_ROM) || (this.receiveBuffer[2] != DS18B20.CONVERT_T))
+            if ((this.receiveBuffer[offset + 1] != DS18B20.SKIP_ROM) || (this.receiveBuffer[offset + 2] != DS18B20.CONVERT_T))
             {
                 throw new IOException($"Malformed response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
             }
@@ -626,20 +627,20 @@ namespace DigitalThermometer.OneWire
 
             var request = new List<byte>();
             request.AddRange(busResetRequest);
-            request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
-            ////request.Add((byte)DS2480B.LoadSensorThreshold._3p0mA); // Dummy configuration command for making a pause after bus reset
+            ////request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
+            request.Add((byte)DS2480B.ReadParameterCommand.RS232BaudRate); // Dummy 'read configuration parameter' command for making a pause after bus reset
             request.AddRange(DS2480B.EscapeDataPacket(readScratchpadRequest));
 
             this.ClearReceiveBuffer();
             await this.TransmitRawDataAsync(request.ToArray());
 
-            var response = await this.WaitResponseAsync(BusResetResponseLength + readScratchpadRequest.Length - 1, this.BusResponseTimeout);
+            var response = await this.WaitResponseAsync(1 + BusResetResponseLength + readScratchpadRequest.Length - 1, this.BusResponseTimeout);
             if (!response)
             {
                 throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
             }
 
-            var result = GetDS18B20ScratchpadContentsFromReceiveBuffer(romCode);
+            var result = GetDS18B20ScratchpadContentsFromReceiveBuffer(romCode, 1);
 
             return result;
         }
@@ -668,15 +669,15 @@ namespace DigitalThermometer.OneWire
             {
                 var readScratchpadRequest = CreateReadDS18B20ScratchpadRequest(romCode);
                 request.AddRange(busResetRequest);
-                request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
-                ////request.Add((byte)DS2480B.LoadSensorThreshold._3p0mA); // Dummy configuration command for making a pause after bus reset
+                ////request.Add(DS2480B.SwitchToCommandMode); // Dummy 'switch to Command Mode' for making a pause after bus reset
+                request.Add((byte)DS2480B.ReadParameterCommand.RS232BaudRate); // Dummy 'read configuration parameter' command for making a pause after bus reset
                 request.AddRange(DS2480B.EscapeDataPacket(readScratchpadRequest));
             }
 
             this.ClearReceiveBuffer();
             await this.TransmitRawDataAsync(request.ToArray());
 
-            var response = await this.WaitResponseAsync(romCodes.Count * (BusResetResponseLength + ReadScratchpadRequestLength - 1), romCodes.Count * this.BusResponseTimeout);
+            var response = await this.WaitResponseAsync(romCodes.Count * (1 + BusResetResponseLength + ReadScratchpadRequestLength - 1), romCodes.Count * this.BusResponseTimeout);
             if (!response)
             {
                 throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
@@ -686,8 +687,8 @@ namespace DigitalThermometer.OneWire
             var result = new List<byte[]>();
             foreach (var romCode in romCodes)
             {
-                result.Add(GetDS18B20ScratchpadContentsFromReceiveBuffer(romCode, offset));
-                offset += BusResetResponseLength + ReadScratchpadRequestLength - 1;
+                result.Add(GetDS18B20ScratchpadContentsFromReceiveBuffer(romCode, offset + 1));
+                offset += 1 + BusResetResponseLength + ReadScratchpadRequestLength - 1;
             }
 
             return result;
