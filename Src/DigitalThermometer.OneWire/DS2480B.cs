@@ -47,52 +47,95 @@ namespace DigitalThermometer.OneWire
 
         // See Table 3. CONFIGURATION PARAMETER OVERVIEW
         // See Table 4. CONFIGURATION PARAMETER VALUE CODES
+        // See Table 5. CONFIGURATION COMMAND CODES
+        // See Table 6. CONFIGURATION COMMAND RESPONSE BYTE
+
+        /// <summary>
+        /// Read Parameter commands
+        /// </summary>
+        public enum ReadParameterCommand: byte // 0_000_bbb_1
+        {
+            /// <summary>
+            /// Read PDSRC parameter [0x03]
+            /// </summary>
+            PulldownSlewRateControl = 0b0_000_001_1,
+
+            /// <summary>
+            /// Read PPD parameter [0x05]
+            /// </summary>
+            ProgrammingPulseDuration = 0b0_000_010_1,
+
+            /// <summary>
+            /// Read SPUD parameter [0x07]
+            /// </summary>
+            StrongPullupDuration = 0b0_000_011_1,
+
+            /// <summary>
+            /// Read W1LT parameter [0x09]
+            /// </summary>
+            Write1LowTime = 0b0_000_100_1,
+
+            /// <summary>
+            /// Read DSO/W0RT parameter [0x0B]
+            /// </summary>
+            DataSampleOffsetAndWrite0RecoveryTime = 0b0_000_101_1,
+
+            /// <summary>
+            /// Read LOAD parameter [0x0D]
+            /// </summary>
+            LoadSensorThreshold = 0b0_000_110_1,
+
+            /// <summary>
+            /// Read RBR parameter [0x0F]
+            /// </summary>
+            RS232BaudRate = 0b0_000_111_1,
+        }
 
         /// <summary>
         /// (PDSRC) Pulldown Slew Rate Control, V/μs
-        /// Flexible mode only
+        /// Configurable at flexible mode only
         /// </summary>
-        public enum PulldownSlewRateControl : byte // 0001 xxx1
+        public enum PulldownSlewRateControl : byte // 0_001_bbb_1
         {
             /// <summary>
-            /// 15 V/μs
+            /// 15 V/μs [0x11] (default) 
             /// </summary>
-            _15_Vpus = 0b0001_0001,
+            _15_Vpus = 0b0_001_000_1,
 
             /// <summary>
-            /// 2.2 V/μs
+            /// 2.2 V/μs [0x13]
             /// </summary>
-            _2p2_Vpus = 0b0001_0011,
+            _2p2_Vpus = 0b0_001_001_1,
 
             /// <summary>
-            /// 1.65 V/μs
+            /// 1.65 V/μs [0x15]
             /// </summary>
-            _1p65_Vpus = 0b0001_0101,
+            _1p65_Vpus = 0b0_001_010_1,
 
             /// <summary>
-            /// 1.37 V/μs
+            /// 1.37 V/μs [0x17]
             /// </summary>
-            _1p37_Vpus = 0b0001_0111,
+            _1p37_Vpus = 0b0_001_011_1,
 
             /// <summary>
-            /// 1.1 V/μs
+            /// 1.1 V/μs [0x19]
             /// </summary>
-            _1p1_Vpus = 0b0001_1001,
+            _1p1_Vpus = 0b0_001_100_1,
 
             /// <summary>
-            /// 0.83 V/μs
+            /// 0.83 V/μs [0x1B]
             /// </summary>
-            _0p83_Vpus = 0b0001_1011,
+            _0p83_Vpus = 0b0_001_101_1,
 
             /// <summary>
-            /// 0.7 V/μs
+            /// 0.7 V/μs  [0x1D]
             /// </summary>
-            _0p7_Vpus = 0b0001_1101,
+            _0p7_Vpus = 0b0_001_110_1,
 
             /// <summary>
-            /// 0.55 V/μs
+            /// 0.55 V/μs [0x1F]
             /// </summary>
-            _0p55_Vpus = 0b0001_1111,
+            _0p55_Vpus = 0b0_001_111_1,
         }
 
         /// <summary>
@@ -121,7 +164,7 @@ namespace DigitalThermometer.OneWire
             _256us = 0b0010_0111,
 
             /// <summary>
-            /// 512 μs
+            /// 512 μs (default)
             /// </summary>
             _512us = 0b0010_1001,
 
@@ -144,196 +187,195 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// (SPUD) Strong Pullup Duration, ms
         /// </summary>
-        internal enum StrongPullupDuration : byte // 0011 xxx1
+        internal enum StrongPullupDuration : byte // 0_011_bbb_1
         {
             /// <summary>
             /// 16.4 ms
             /// </summary>
-            _16p4ms = 0b0011_0001,
+            _16p4ms = 0b0_011_000_1,
 
             /// <summary>
             /// 65.5 ms
             /// </summary>
-            _65p5ms = 0b0011_0011,
+            _65p5ms = 0b0_011_001_1,
 
             /// <summary>
             /// 131 ms
             /// </summary>
-            _131ms = 0b0011_0101,
+            _131ms = 0b0_011_010_1,
 
             /// <summary>
             /// 262 ms
             /// </summary>
-            _262ms = 0b0011_0111,
+            _262ms = 0b0_011_011_1,
 
             /// <summary>
-            /// 524 ms (Default value)
+            /// 524 ms (default)
             /// </summary>
-            _524ms = 0b0011_1001,
+            _524ms = 0b0_011_100_1,
 
             /// <summary>
             /// 1048 ms
             /// </summary>
-            _1048ms = 0b0011_1011,
+            _1048ms = 0b0_011_101_1,
 
             /// <summary>
             /// Dynamic
             /// </summary>
-            _DYN = 0b0011_1101,
+            _DYN = 0b0_011_110_1,
 
             /// <summary>
             /// Infinite
             /// </summary>
-            _INF = 0b0011_1111,
+            _INF = 0b0_011_111_1,
         }
 
         /// <summary>
         /// (W1LT) Write-1 Low Time, μs
+        /// Configurable at flexible mode only
         /// </summary>
-        public enum Write1LowTime : byte // 0100 xxx1
+        public enum Write1LowTime : byte // 0_100_bbb_1
         {
             /// <summary>
-            /// 8 μs
+            /// 8 μs [0x41] (default in Regular / Flexible mode)
             /// </summary>
-            _8us = 0b0100_0001,
+            _8us = 0b0_100_000_1,
 
             /// <summary>
-            /// 9 μs
+            /// 9 μs [0x43]
             /// </summary>
-            _9us = 0b0100_0011,
+            _9us = 0b0_100_001_1,
 
             /// <summary>
-            /// 10 μs
+            /// 10 μs [0x45]
             /// </summary>
-            _10us = 0b0100_0101,
+            _10us = 0b0_100_010_1,
 
             /// <summary>
-            /// 11 μs
+            /// 11 μs [0x47]
             /// </summary>
-            _11us = 0b0100_0111,
+            _11us = 0b0_100_011_1,
 
             /// <summary>
-            /// 12 μs
+            /// 12 μs [0x49]
             /// </summary>
-            _12us = 0b0100_1001,
+            _12us = 0b0_100_100_1,
 
             /// <summary>
-            /// 13 μs
+            /// 13 μs [0x4B]
             /// </summary>
-            _13us = 0b0100_1011,
+            _13us = 0b0_100_101_1,
 
             /// <summary>
-            /// 14 μs
+            /// 14 μs [0x4D]
             /// </summary>
-            _14us = 0b0100_1101,
+            _14us = 0b0_100_110_1,
 
             /// <summary>
-            /// 15 μs
+            /// 15 μs [0x4F]
             /// </summary>
-            _15us = 0b0100_1111,
+            _15us = 0b0_100_111_1,
         }
 
         /// <summary>
         /// (DSO/W0RT) Data Sample Offset and Write 0 Recovery Time, μs
         /// </summary>
-        public enum DataSampleOffsetAndWrite0RecoveryTime : byte
+        public enum DataSampleOffsetAndWrite0RecoveryTime : byte // 0_101_bbb_1
         {
-            // 0101 xxx1
-
             /// <summary>
-            /// 3 μs
+            /// 3 μs (default in Regular / Flexible mode)
             /// </summary>
-            _3us = 0b0101_0001,
+            _3us = 0b0_101_000_1,
 
             /// <summary>
             /// 4 μs
             /// </summary>
-            _4us = 0b0101_0011,
+            _4us = 0b0_101_001_1,
 
             /// <summary>
             /// 5 μs
             /// </summary>
-            _5us = 0b0101_0101,
+            _5us = 0b0_101_010_1,
 
             /// <summary>
             /// 6 μs
             /// </summary>
-            _6us = 0b0101_0111,
+            _6us = 0b0_101_011_1,
 
             /// <summary>
             /// 7 μs
             /// </summary>
-            _7us = 0b0101_1001,
+            _7us = 0b0_101_100_1,
 
             /// <summary>
             /// 8 μs
             /// </summary>
-            _8us = 0b0101_1011,
+            _8us = 0b0_101_101_1,
 
             /// <summary>
             /// 9 μs
             /// </summary>
-            _9us = 0b0101_1101,
+            _9us = 0b0_101_110_1,
 
             /// <summary>
-            /// 10 μs
+            /// 10 μs [0x5F]
             /// </summary>
-            _10us = 0b0101_1111,
+            _10us = 0b0_101_111_1,
         }
 
         /// <summary>
         /// (LOAD) Load Sensor Threshold, mA
         /// </summary>
-        internal enum LoadSensorThreshold : byte // 0110 xxx1
+        internal enum LoadSensorThreshold : byte // 0_110_bbb_1
         {
             /// <summary>
             /// 1.8 mA
             /// </summary>
-            _1p8mA = 0b0110_0001,
+            _1p8mA = 0b0_110_000_1,
 
             /// <summary>
             /// 2.1 mA
             /// </summary>
-            _2p1mA = 0b0110_0011,
+            _2p1mA = 0b0_110_001_1,
 
             /// <summary>
             /// 2.4 mA
             /// </summary>
-            _2p4mA = 0b0110_0101,
+            _2p4mA = 0b0_110_010_1,
 
             /// <summary>
             /// 2.7 mA
             /// </summary>
-            _2p7mA = 0b0110_0111,
+            _2p7mA = 0b0_110_011_1,
 
             /// <summary>
-            /// 3.0 mA (Default value)
+            /// 3.0 mA (default)
             /// </summary>
-            _3p0mA = 0b0110_1001,
+            _3p0mA = 0b0_110_100_1,
 
             /// <summary>
             /// 3.3 mA
             /// </summary>
-            _3p3mA = 0b0110_1011,
+            _3p3mA = 0b0_110_101_1,
 
             /// <summary>
             /// 3.6 mA
             /// </summary>
-            _3p6mA = 0b0110_1101,
+            _3p6mA = 0b0_110_110_1,
             
             /// <summary>
             /// 3.9 mA
             /// </summary>
-            _3p9mA = 0b0110_1111,
+            _3p9mA = 0b0_110_111_1,
         }
 
         /// <summary>
         /// (RBR) RS232 Baud Rate, kbps
         /// </summary>
-        internal enum RS232BaudRate : byte // 0111 xxx1
+        internal enum RS232BaudRate : byte // 0_111_bbb_1
         {
             /// <summary>
-            /// 9.6 kbps (Default)
+            /// 9.6 kbps (default)
             /// </summary>
             _9p6kbps = 0b0111_0001,
 

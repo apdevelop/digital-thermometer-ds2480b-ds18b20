@@ -27,18 +27,9 @@ namespace DigitalThermometer.OneWire
         public int BusSearchTimeout { get; set; } = 1000;
 
         /// <summary>
-        /// Default settings for Flexible Speed
+        /// Commands list for setting custom configuration parameters
         /// </summary>
-        private readonly byte[] OneWireBusFlexibleConfiguration = new[]
-        {
-            (byte)DS2480B.PulldownSlewRateControl._1p37_Vpus,
-            (byte)DS2480B.ProgrammingPulseDuration._512us,
-            (byte)DS2480B.StrongPullupDuration._524ms,
-            (byte)DS2480B.Write1LowTime._11us,
-            (byte)DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us,
-            (byte)DS2480B.LoadSensorThreshold._3p0mA,
-            (byte)DS2480B.RS232BaudRate._9p6kbps,
-        };
+        private readonly List<byte> BusConfigurationCommands = new List<byte>();
 
         private readonly ISerialConnection port;
 
@@ -71,19 +62,25 @@ namespace DigitalThermometer.OneWire
             this.port = portConnection;
             this.port.OnDataReceived += this.PortDataReceived;
 
+            // Convert configuration to commands sequence
             if (config != null)
             {
-                this.OneWireBusFlexibleConfiguration = new[]
+                // TODO: other parameters
+
+                if (config.PulldownSlewRateControl.HasValue)
                 {
-                    (byte)config.PulldownSlewRateControl,
-                    // TODO: other params
-                    (byte)DS2480B.ProgrammingPulseDuration._512us,
-                    (byte)DS2480B.StrongPullupDuration._524ms,
-                    (byte)config.Write1LowTime,
-                    (byte)config.DataSampleOffsetAndWrite0RecoveryTime,
-                    (byte)DS2480B.LoadSensorThreshold._3p0mA,
-                    (byte)DS2480B.RS232BaudRate._9p6kbps,
-                };
+                    this.BusConfigurationCommands.Add((byte)config.PulldownSlewRateControl.Value);
+                }
+
+                if (config.Write1LowTime.HasValue)
+                {
+                    this.BusConfigurationCommands.Add((byte)config.Write1LowTime.Value);
+                }
+
+                if (config.DataSampleOffsetAndWrite0RecoveryTime.HasValue)
+                {
+                    this.BusConfigurationCommands.Add((byte)config.DataSampleOffsetAndWrite0RecoveryTime.Value);
+                }
             }
         }
 
@@ -97,7 +94,7 @@ namespace DigitalThermometer.OneWire
         {
             await this.port.OpenPortAsync();
 
-            var resetResponse = await this.SetOneWireBusFlexParametersAsync();
+            var resetResponse = await this.SetBusParametersAsync();
 
             return resetResponse;
         }
@@ -240,34 +237,61 @@ namespace DigitalThermometer.OneWire
             }
         }
 
+        private async Task ReadCurrentParametersValuesAsync()
+        {
+            // Default parameters values:
+            // PDSRC=000 = 15 V/μs  PPD=100 = 512 μs  SPUD=100 = 524 ms 
+            // W1LT=000 = 8 μs  DSO/W0RT=000 = 3 μs 
+            // LOAD=100 = 3 mA  RBR=000 = 9.6 kbps
+            // Read current parameters values, if needed
+            await this.TransmitRawDataAsync(new[]
+            {
+                (byte)DS2480B.ReadParameterCommand.PulldownSlewRateControl,
+                (byte)DS2480B.ReadParameterCommand.ProgrammingPulseDuration,
+                (byte)DS2480B.ReadParameterCommand.StrongPullupDuration,
+                (byte)DS2480B.ReadParameterCommand.Write1LowTime,
+                (byte)DS2480B.ReadParameterCommand.DataSampleOffsetAndWrite0RecoveryTime,
+                (byte)DS2480B.ReadParameterCommand.LoadSensorThreshold,
+                (byte)DS2480B.ReadParameterCommand.RS232BaudRate,
+            });
+
+            // TODO: wait response, decode and return result
+        }
+
         /// <summary>
         /// Performs configuration of 1-Wire bus in Flex mode
         /// </summary>
         /// <returns>1-Wire bus reset response</returns>
-        private async Task<OneWireBusResetResponse> SetOneWireBusFlexParametersAsync()
+        private async Task<OneWireBusResetResponse> SetBusParametersAsync()
         {
-            // Calibration procedure: will be NoResponse on first run after DS2480B power-on, just ignoring result
+            // Calibration procedure: will be NoResponse on first run after DS2480B power-on, so just ignoring bus reset response presence / absence
             var calibrationResetResponse = await this.OneWireBusResetAsync();
 
             var busResetResponse = await this.OneWireBusResetAsync();
-            if ((busResetResponse == OneWireBusResetResponse.PresencePulse) || (busResetResponse == OneWireBusResetResponse.NoPresencePulse))
+            if ((busResetResponse == OneWireBusResetResponse.PresencePulse) || 
+                (busResetResponse == OneWireBusResetResponse.NoPresencePulse))
             {
-                await this.TransmitRawDataAsync(this.OneWireBusFlexibleConfiguration);
-                var response = await this.WaitResponseAsync(BusResetResponseLength + this.OneWireBusFlexibleConfiguration.Length, this.BusResponseTimeout);
-                if (response)
+                // Custom configuration
+                if (this.BusConfigurationCommands.Count > 0)
                 {
-                    for (var i = 0; i < this.OneWireBusFlexibleConfiguration.Length; i++)
+                    await this.TransmitRawDataAsync(this.BusConfigurationCommands.ToArray());
+                    var response = await this.WaitResponseAsync(BusResetResponseLength + this.BusConfigurationCommands.Count, this.BusResponseTimeout);
+                    if (response)
                     {
-                        // Table 6. CONFIGURATION COMMAND RESPONSE BYTE
-                        if (this.receiveBuffer[i + 1] != (this.OneWireBusFlexibleConfiguration[i] & 0b11111110))
+                        // Check response
+                        for (var i = 0; i < this.BusConfigurationCommands.Count; i++)
                         {
-                            throw new IOException($"Malformed response on bus configuration commands was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+                            // Table 6. CONFIGURATION COMMAND RESPONSE BYTE
+                            if (this.receiveBuffer[BusResetResponseLength + i] != (this.BusConfigurationCommands[i] & 0b11111110))
+                            {
+                                throw new IOException($"Malformed response on bus configuration commands was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+                            }
                         }
                     }
-                }
-                else
-                {
-                    throw new IOException($"No proper response on bus configuration commands was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+                    else
+                    {
+                        throw new IOException($"No proper response on bus configuration commands was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+                    }
                 }
             }
 
