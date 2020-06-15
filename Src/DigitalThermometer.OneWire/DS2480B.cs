@@ -141,47 +141,47 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// (PPD) Programming Pulse Duration, μs
         /// </summary>
-        internal enum ProgrammingPulseDuration : byte // 0010 xxx1
+        internal enum ProgrammingPulseDuration : byte // 0_010_bbb_1
         {
             /// <summary>
-            /// 32 μs
+            /// 32 μs [0x21]
             /// </summary>
-            _32us = 0b0010_0001,
+            _32us = 0b0_010_000_1,
 
             /// <summary>
-            /// 64 μs
+            /// 64 μs [0x23]
             /// </summary>
-            _64us = 0b0010_0011,
+            _64us = 0b0_010_001_1,
 
             /// <summary>
-            /// 128 μs
+            /// 128 μs [0x25]
             /// </summary>
-            _128us = 0b0010_0101,
+            _128us = 0b0_010_010_1,
 
             /// <summary>
-            /// 256 μs
+            /// 256 μs [0x27]
             /// </summary>
-            _256us = 0b0010_0111,
+            _256us = 0b0_010_011_1,
 
             /// <summary>
-            /// 512 μs (default)
+            /// 512 μs [0x29] (default)
             /// </summary>
-            _512us = 0b0010_1001,
+            _512us = 0b0_010_100_1,
 
             /// <summary>
-            /// 1024 μs
+            /// 1024 μs [0x2B]
             /// </summary>
-            _1024us = 0b0010_1011,
+            _1024us = 0b0_010_101_1,
 
             /// <summary>
-            /// 2048 μs
+            /// 2048 μs [0x2D]
             /// </summary>
-            _2048us = 0b0010_1101,
+            _2048us = 0b0_010_110_1,
 
             /// <summary>
-            /// Infinite
+            /// Infinite [0x2F]
             /// </summary>
-            _Inf = 0b0010_1111,
+            _Inf = 0b0_010_111_1,
         }
 
         /// <summary>
@@ -190,42 +190,42 @@ namespace DigitalThermometer.OneWire
         internal enum StrongPullupDuration : byte // 0_011_bbb_1
         {
             /// <summary>
-            /// 16.4 ms
+            /// 16.4 ms [0x31]
             /// </summary>
             _16p4ms = 0b0_011_000_1,
 
             /// <summary>
-            /// 65.5 ms
+            /// 65.5 ms [0x33]
             /// </summary>
             _65p5ms = 0b0_011_001_1,
 
             /// <summary>
-            /// 131 ms
+            /// 131 ms [0x35]
             /// </summary>
             _131ms = 0b0_011_010_1,
 
             /// <summary>
-            /// 262 ms
+            /// 262 ms [0x37]
             /// </summary>
             _262ms = 0b0_011_011_1,
 
             /// <summary>
-            /// 524 ms (default)
+            /// 524 ms [0x39] (default)
             /// </summary>
             _524ms = 0b0_011_100_1,
 
             /// <summary>
-            /// 1048 ms
+            /// 1048 ms [0x3B]
             /// </summary>
             _1048ms = 0b0_011_101_1,
 
             /// <summary>
-            /// Dynamic
+            /// Dynamic [0x3D]
             /// </summary>
             _DYN = 0b0_011_110_1,
 
             /// <summary>
-            /// Infinite
+            /// Infinite [0x3F]
             /// </summary>
             _INF = 0b0_011_111_1,
         }
@@ -283,37 +283,37 @@ namespace DigitalThermometer.OneWire
         public enum DataSampleOffsetAndWrite0RecoveryTime : byte // 0_101_bbb_1
         {
             /// <summary>
-            /// 3 μs (default in Regular / Flexible mode)
+            /// 3 μs [0x51] (default in Regular / Flexible mode)
             /// </summary>
             _3us = 0b0_101_000_1,
 
             /// <summary>
-            /// 4 μs
+            /// 4 μs [0x53]
             /// </summary>
             _4us = 0b0_101_001_1,
 
             /// <summary>
-            /// 5 μs
+            /// 5 μs [0x55]
             /// </summary>
             _5us = 0b0_101_010_1,
 
             /// <summary>
-            /// 6 μs
+            /// 6 μs [0x57]
             /// </summary>
             _6us = 0b0_101_011_1,
 
             /// <summary>
-            /// 7 μs
+            /// 7 μs [0x59]
             /// </summary>
             _7us = 0b0_101_100_1,
 
             /// <summary>
-            /// 8 μs
+            /// 8 μs [0x5B]
             /// </summary>
             _8us = 0b0_101_101_1,
 
             /// <summary>
-            /// 9 μs
+            /// 9 μs [0x5D]
             /// </summary>
             _9us = 0b0_101_110_1,
 
@@ -329,42 +329,42 @@ namespace DigitalThermometer.OneWire
         internal enum LoadSensorThreshold : byte // 0_110_bbb_1
         {
             /// <summary>
-            /// 1.8 mA
+            /// 1.8 mA [0x61]
             /// </summary>
             _1p8mA = 0b0_110_000_1,
 
             /// <summary>
-            /// 2.1 mA
+            /// 2.1 mA [0x63]
             /// </summary>
             _2p1mA = 0b0_110_001_1,
 
             /// <summary>
-            /// 2.4 mA
+            /// 2.4 mA [0x65]
             /// </summary>
             _2p4mA = 0b0_110_010_1,
 
             /// <summary>
-            /// 2.7 mA
+            /// 2.7 mA [0x67]
             /// </summary>
             _2p7mA = 0b0_110_011_1,
 
             /// <summary>
-            /// 3.0 mA (default)
+            /// 3.0 mA [0x69] (default)
             /// </summary>
             _3p0mA = 0b0_110_100_1,
 
             /// <summary>
-            /// 3.3 mA
+            /// 3.3 mA [0x6B]
             /// </summary>
             _3p3mA = 0b0_110_101_1,
 
             /// <summary>
-            /// 3.6 mA
+            /// 3.6 mA [0x6D]
             /// </summary>
             _3p6mA = 0b0_110_110_1,
-            
+
             /// <summary>
-            /// 3.9 mA
+            /// 3.9 mA [0x6F]
             /// </summary>
             _3p9mA = 0b0_110_111_1,
         }
@@ -375,44 +375,44 @@ namespace DigitalThermometer.OneWire
         internal enum RS232BaudRate : byte // 0_111_bbb_1
         {
             /// <summary>
-            /// 9.6 kbps (default)
+            /// 9.6 kbps [0x71] (default)
             /// </summary>
-            _9p6kbps = 0b0111_0001,
+            _9p6kbps = 0b0_111_000_1,
 
             /// <summary>
-            /// 19.2 kbps
+            /// 19.2 kbps [0x73]
             /// </summary>
-            _19p2kbps = 0b0111_0011,
+            _19p2kbps = 0b0_111_001_1,
 
             /// <summary>
-            /// 57.6 kbps
+            /// 57.6 kbps [0x75]
             /// </summary>
-            _57p6kbps = 0b0111_0101,
+            _57p6kbps = 0b0_111_010_1,
 
             /// <summary>
-            /// 115.2 kbps
+            /// 115.2 kbps [0x77]
             /// </summary>
-            _115p2kbps = 0b0111_0111,
+            _115p2kbps = 0b0_111_011_1,
 
             /// <summary>
-            /// 9.6 kbps (inverted)
+            /// 9.6 kbps inverted [0x79]
             /// </summary>
-            Inv_9p6kbps = 0b0111_1001,
+            Inv_9p6kbps = 0b0_111_100_1,
 
             /// <summary>
-            /// 19.2 kbps (inverted)
+            /// 19.2 kbps inverted [0x7B]
             /// </summary>
-            Inv_19p2kbps = 0b0111_1011,
+            Inv_19p2kbps = 0b0_111_101_1,
 
             /// <summary>
-            /// 57.6 kbps (inverted)
+            /// 57.6 kbps inverted [0x7D]
             /// </summary>
-            Inv_57p6kbps = 0b0111_1101,
+            Inv_57p6kbps = 0b0_111_110_1,
 
             /// <summary>
-            /// 115.2 kbps (inverted)
+            /// 115.2 kbps inverted [0x7F]
             /// </summary>
-            Inv_115p2kbps = 0b0111_1111,
+            Inv_115p2kbps = 0b0_111_111_1,
         }
 
         #endregion

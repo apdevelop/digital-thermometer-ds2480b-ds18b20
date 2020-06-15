@@ -124,9 +124,16 @@
                       IsEnabled="{Binding IsMeasuresEnabled}" 
                       IsChecked="{Binding IsSimultaneousMeasurementsMode, Mode=TwoWay}" />
 
+            <CheckBox Content="{DynamicResource UseMergedRequestsText}" 
+                      VerticalAlignment="Center"
+                      Margin="10,0,0,0"
+                      ToolTip="{DynamicResource UseMergedRequestsTooltip}"
+                      IsEnabled="{Binding IsMeasuresEnabled}" 
+                      IsChecked="{Binding UseMergedRequests, Mode=TwoWay}" />
+            
             <CheckBox Content="{DynamicResource IsTimerMeasurementsModeText}" 
                       VerticalAlignment="Center"
-                      Margin="20,0,0,0"
+                      Margin="10,0,0,0"
                       ToolTip="{DynamicResource IsTimerMeasurementsModeTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}" 
                       IsChecked="{Binding IsTimerMeasurementsMode, Mode=TwoWay}" />
@@ -315,7 +322,7 @@
             </TextBlock>
 
             <Button ToolTip="{DynamicResource MeasureInDemoModeButtonText}"
-                Margin="0,0,0,0"
+                Margin="0,0,0,0" Visibility="Visible"
                 IsEnabled="{Binding IsMeasuresEnabled}"
                 Command="{Binding MeasureInDemoModeCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

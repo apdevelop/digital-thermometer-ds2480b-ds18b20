@@ -14,8 +14,10 @@
     
     <sys:String x:Key="IsSimultaneousMeasurementsModeText">Simultaneous</sys:String>
     <sys:String x:Key="IsSimultaneousMeasurementsModeTooltip">Simultaneous measurement on all sensors</sys:String>
+    <sys:String x:Key="UseMergedRequestsText">Merge requests</sys:String>
+    <sys:String x:Key="UseMergedRequestsTooltip">Use merged requests for serial connection</sys:String>
     <sys:String x:Key="IsTimerMeasurementsModeText">Timer</sys:String>
-    <sys:String x:Key="IsTimerMeasurementsModeTooltip">Periodic measurements using timer (60 seconds)</sys:String>
+    <sys:String x:Key="IsTimerMeasurementsModeTooltip">Periodic measurements using timer (30 seconds)</sys:String>
 
     <sys:String x:Key="SelectedPulldownSlewRateControlTooltip">(PDSRC) Pulldown Slew Rate Control (V/μs)</sys:String>
     <sys:String x:Key="SelectedWrite1LowTimeTooltip">(W1LT) Write-1 Low Time, μs</sys:String>

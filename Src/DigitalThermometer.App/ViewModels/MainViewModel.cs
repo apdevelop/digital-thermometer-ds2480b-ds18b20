@@ -127,7 +127,27 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.isSimultaneousMeasurementsMode != value)
                 {
                     this.isSimultaneousMeasurementsMode = value;
-                    base.OnPropertyChanged(nameof(IsSimultaneousMeasurementsMode));
+                    base.OnPropertyChanged(nameof(this.IsSimultaneousMeasurementsMode));
+                }
+            }
+        }
+
+
+        private bool useMergedRequests = false;
+
+        public bool UseMergedRequests
+        {
+            get
+            {
+                return this.useMergedRequests;
+            }
+
+            set
+            {
+                if (this.useMergedRequests != value)
+                {
+                    this.useMergedRequests = value;
+                    base.OnPropertyChanged(nameof(this.UseMergedRequests));
                 }
             }
         }
@@ -274,7 +294,7 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private readonly DispatcherTimer measurementsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60), IsEnabled = false, };
+        private readonly DispatcherTimer measurementsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30), IsEnabled = false, };
 
         private bool isTimerMeasurementsMode = false;
 
@@ -519,6 +539,7 @@ namespace DigitalThermometer.App.ViewModels
             this.DisplayState(App.Locale["MessageInitializing"]);
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
             var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
+            busMaster.UseMergedRequests = this.UseMergedRequests;
 
             var result = new Dictionary<UInt64, OW.DS18B20.Scratchpad>();
 
@@ -583,7 +604,6 @@ namespace DigitalThermometer.App.ViewModels
                         if (this.IsSimultaneousMeasurementsMode)
                         {
                             var counter = 0;
-                            //// Experimental results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementMergedRequestAsync(list, (r) =>
                             results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
                                 {
                                     counter++;

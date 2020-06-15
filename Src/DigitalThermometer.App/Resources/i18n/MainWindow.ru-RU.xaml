@@ -14,8 +14,10 @@
 
     <sys:String x:Key="IsSimultaneousMeasurementsModeText">Одновременно</sys:String>
     <sys:String x:Key="IsSimultaneousMeasurementsModeTooltip">Одновременное измерение температуры по всем датчикам</sys:String>
+    <sys:String x:Key="UseMergedRequestsText">Объединение запросов</sys:String>
+    <sys:String x:Key="UseMergedRequestsTooltip">Объединение запросов при работе с последовательным соединением</sys:String>
     <sys:String x:Key="IsTimerMeasurementsModeText">Таймер</sys:String>
-    <sys:String x:Key="IsTimerMeasurementsModeTooltip">Периодическое выполнение измерений по таймеру (60 с)</sys:String>
+    <sys:String x:Key="IsTimerMeasurementsModeTooltip">Периодическое выполнение измерений по таймеру (30 с)</sys:String>
 
     <sys:String x:Key="SelectedPulldownSlewRateControlTooltip">(PDSRC) Крутизна спада сигнала (В/мкс)</sys:String>
     <sys:String x:Key="SelectedWrite1LowTimeTooltip">(W1LT) Низкий уровень при записи 1, мкс</sys:String>
