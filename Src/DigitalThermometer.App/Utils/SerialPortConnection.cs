@@ -71,7 +71,7 @@ namespace DigitalThermometer.App.Utils
             }
         }
 
-        public async Task OpenPortAsync()
+        public async Task OpenAsync()
         {
             this.stopPending = false;
 
@@ -177,7 +177,7 @@ namespace DigitalThermometer.App.Utils
             }
             catch (Exception)
             {
-                await this.ClosePortAsync();
+                await this.CloseAsync();
             }
         }
 
@@ -247,12 +247,12 @@ namespace DigitalThermometer.App.Utils
             }
             catch (Exception)
             {
-                await this.ClosePortAsync();
+                await this.CloseAsync();
                 return;
             }
         }
 
-        public async Task ClosePortAsync()
+        public async Task CloseAsync()
         {
             this.stopPending = true;
 

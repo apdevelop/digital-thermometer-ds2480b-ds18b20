@@ -27,7 +27,7 @@ namespace DigitalThermometer.OneWire
         public int BusSearchTimeout { get; set; } = 1000;
 
         /// <summary>
-        /// Merge requests for minimize count of serial connection requests/responses; useful with RF link to DS2480B
+        /// Merge requests for minimize count of serial connection requests/responses; useful with serial-over-RF link to DS2480B
         /// </summary>
         public bool UseMergedRequests { get; set; } = false;
 
@@ -36,14 +36,9 @@ namespace DigitalThermometer.OneWire
         /// </summary>
         private readonly List<byte> BusConfigurationCommands = new List<byte>();
 
-        private readonly ISerialConnection port;
+        private readonly ISerialConnection serialConnection;
 
         private readonly List<byte> receiveBuffer = new List<byte>(); // TODO: threading issues ?
-
-        /// <summary>
-        /// Length of 1-Wire devices ROM code, in bytes
-        /// </summary>
-        public const int RomCodeLength = 8;
 
         private const int BusResetResponseLength = 1;
 
@@ -60,12 +55,12 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="portConnection">Serial port connection which implements ISerialConnection</param>
+        /// <param name="serialConnection">Serial connection (UART connection to DS2480B) which implements ISerialConnection</param>
         /// <param name="config">Flexible Speed custom configuration</param>
-        public OneWireMaster(ISerialConnection portConnection, FlexibleSpeedConfiguration config = null)
+        public OneWireMaster(ISerialConnection serialConnection, FlexibleSpeedConfiguration config = null)
         {
-            this.port = portConnection;
-            this.port.OnDataReceived += this.PortDataReceived;
+            this.serialConnection = serialConnection;
+            this.serialConnection.OnDataReceived += this.SerialConnectionDataReceived;
 
             // Convert configuration to commands sequence
             if (config != null)
@@ -97,7 +92,7 @@ namespace DigitalThermometer.OneWire
         /// <returns>1-Wire bus reset response</returns>
         public async Task<OneWireBusResetResponse> OpenAsync()
         {
-            await this.port.OpenPortAsync();
+            await this.serialConnection.OpenAsync();
 
             if (this.UseMergedRequests)
             {
@@ -115,7 +110,7 @@ namespace DigitalThermometer.OneWire
         /// <returns></returns>
         public async Task CloseAsync()
         {
-            await this.port.ClosePortAsync();
+            await this.serialConnection.CloseAsync();
         }
 
         /// <summary>
@@ -371,13 +366,13 @@ namespace DigitalThermometer.OneWire
         }
 
         /// <summary>
-        /// Transmit data to port without any conversion / escaping
+        /// Transmit data to serial connection without any conversion / escaping
         /// </summary>
-        /// <param name="data">Data to transmit to port as-is</param>
+        /// <param name="data">Array of bytes to transmit to serial connection as-is</param>
         private async Task TransmitRawDataAsync(byte[] data)
         {
             Debug.WriteLine($"TX > {Utils.ByteArrayToHexSpacedString(data)}");
-            await this.port.TransmitDataAsync(data);
+            await this.serialConnection.TransmitDataAsync(data);
         }
 
         /// <summary>
@@ -390,7 +385,7 @@ namespace DigitalThermometer.OneWire
             await this.TransmitRawDataAsync(rawData);
         }
 
-        private void PortDataReceived(byte[] data)
+        private void SerialConnectionDataReceived(byte[] data)
         {
             Debug.WriteLine($"RX < {Utils.ByteArrayToHexSpacedString(data)}");
             this.receiveBuffer.AddRange(data);
@@ -724,7 +719,7 @@ namespace DigitalThermometer.OneWire
         }
 
         ///<summary>
-        /// Read scratchpad data of several DS18B20 slave devices using serial port single write - wait response cycle
+        /// Read scratchpad data of several DS18B20 slave devices using serial connection single write - wait response cycle
         ///</summary> 
         ///<param name="romCodes">ROM codes of DS18B20</param>
         ///<returns>Scratchpad contents</returns>
@@ -790,18 +785,18 @@ namespace DigitalThermometer.OneWire
                 throw new IOException($"Malformed response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
             }
 
-            // Compare received ROM code with given one
+            // Compare ROM code in response with given one
             var romCodeBytes = BitConverter.GetBytes(romCode);
-            for (int i = 0; i < RomCodeLength; i++)
+            for (int i = 0; i < Utils.RomCodeLength; i++)
             {
                 if (this.receiveBuffer[offset + i + 2] != romCodeBytes[i])
                 {
-                    throw new IOException($"ROM code mismatch in response [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+                    throw new IOException($"ROM code mismatch in response: expected [{Utils.ByteArrayToHexSpacedString(romCodeBytes)}], received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer, offset + 2, Utils.RomCodeLength)}]");
                 }
             }
 
             var result = new byte[DS18B20.ScratchpadSize];
-            this.receiveBuffer.CopyTo(offset + BusResetResponseLength + 1 + RomCodeLength + 1, result, 0, result.Length);
+            this.receiveBuffer.CopyTo(offset + BusResetResponseLength + 1 + Utils.RomCodeLength + 1, result, 0, result.Length);
 
             return result;
         }

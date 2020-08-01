@@ -11,6 +11,11 @@ namespace DigitalThermometer.OneWire
     public static class Utils
     {
         /// <summary>
+        /// Length of 1-Wire devices ROM code, in bytes
+        /// </summary>
+        public const int RomCodeLength = 8;
+
+        /// <summary>
         /// Converts byte sequence to hex string representation, with spaces between bytes
         /// </summary>
         /// <param name="data">Byte sequence</param>
@@ -18,6 +23,11 @@ namespace DigitalThermometer.OneWire
         public static string ByteArrayToHexSpacedString(IEnumerable<byte> data)
         {
             return String.Join(" ", data.Select(b => b.ToString("X2")));
+        }
+
+        internal static string ByteArrayToHexSpacedString(IEnumerable<byte> data, int offset, int count)
+        {
+            return String.Join(" ", data.Skip(offset).Take(count).Select(b => b.ToString("X2")));
         }
 
         /// <summary>

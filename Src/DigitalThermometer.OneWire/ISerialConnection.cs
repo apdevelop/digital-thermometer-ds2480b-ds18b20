@@ -4,21 +4,21 @@ using System.Threading.Tasks;
 namespace DigitalThermometer.OneWire
 {
     /// <summary>
-    /// Simple serial I/O implementation
+    /// Basic methods for serial I/O implementation
     /// </summary>
     public interface ISerialConnection
     {
         /// <summary>
-        /// Opens port
+        /// Opens connection
         /// </summary>
         /// <returns></returns>
-        Task OpenPortAsync();
+        Task OpenAsync();
 
         /// <summary>
-        /// Closes port
+        /// Closes connection
         /// </summary>
         /// <returns></returns>
-        Task ClosePortAsync();
+        Task CloseAsync();
 
         /// <summary>
         /// Outputs data to port (to external device)

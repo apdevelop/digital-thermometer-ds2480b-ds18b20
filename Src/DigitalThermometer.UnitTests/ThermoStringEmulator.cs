@@ -32,13 +32,13 @@ namespace DigitalThermometer.UnitTests
 
         #region ISerialConnection Members
 
-        async Task ISerialConnection.OpenPortAsync()
+        async Task ISerialConnection.OpenAsync()
         {
             await Task.Delay(5);
             this.isOpened = true;
         }
 
-        async Task ISerialConnection.ClosePortAsync()
+        async Task ISerialConnection.CloseAsync()
         {
             await Task.Delay(5);
             this.isOpened = false;
@@ -97,7 +97,7 @@ namespace DigitalThermometer.UnitTests
                 {
                     var result = new List<byte>();
                     result.Add(DS18B20.MATCH_ROM); // TODO: check ROM presence in this.romCodes
-                    for (var i = 0; i < OneWireMaster.RomCodeLength; i++)
+                    for (var i = 0; i < Utils.RomCodeLength; i++)
                     {
                         result.Add(this.rxBuffer[2 + i]); // Copy ROM code 
                     }
