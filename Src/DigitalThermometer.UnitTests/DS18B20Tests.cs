@@ -109,6 +109,16 @@ namespace DigitalThermometer.UnitTests
             Assert.That(() => { new DS18B20.Scratchpad(new byte[0]); }, Throws.ArgumentException);
         }
 
+        [Test]
+        public void ScratchpadFromAbsentDeviceTest()
+        {
+            // When processing response from absent device
+            var scratchpad = new DS18B20.Scratchpad(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, });
+            Assert.IsFalse(scratchpad.IsValidCrc);
+            Assert.IsFalse(scratchpad.Temperature.HasValue);
+            Assert.IsFalse(scratchpad.ThermometerActualResolution.HasValue);
+        }
+
         [TestCase("28341BF802000001")]
         [TestCase("280DBA7800000012")]
         [TestCase("28ABCE780000008E")]

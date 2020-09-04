@@ -114,6 +114,41 @@ namespace DigitalThermometer.OneWire
         }
 
         /// <summary>
+        /// Performs Read ROM
+        /// </summary>
+        /// <returns></returns>
+        public async Task<UInt64> ReadRomCodeAsync()
+        {
+            var busResetResponse = await this.OneWireBusResetAsync();
+            if (busResetResponse != OneWireBusResetResponse.PresencePulse)
+            {
+                throw new IOException($"No proper bus reset response was received ({busResetResponse})");
+            }
+
+            var request = new List<byte>(ReadScratchpadRequestLength);
+            request.Add(DS2480B.SwitchToDataMode);
+            request.Add(DS18B20.READ_ROM);
+            for (var i = 0; i < Utils.RomCodeLength; i++)
+            {
+                request.Add(0xFF); // Buffer for receiving response (ROM Code)
+            }
+
+            await this.TransmitDataPacketAsync(request);
+            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Count - 1, this.BusResponseTimeout);
+            if (!response)
+            {
+                throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+            }
+
+            var romCodeBuffer = new byte[Utils.RomCodeLength];
+            this.receiveBuffer.CopyTo(2, romCodeBuffer, 0, romCodeBuffer.Length);
+
+            var romCode = BitConverter.ToUInt64(romCodeBuffer, 0);
+
+            return romCode;
+        }
+
+        /// <summary>
         /// Search for slave devices on bus
         /// </summary>
         /// <returns>List of ROM codes of devices found</returns>

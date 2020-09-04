@@ -32,6 +32,10 @@
     <sys:String x:Key="DataGridRawDataHeader">Scratchpad Raw Data</sys:String>
 
     <sys:String x:Key="MeasureInDemoModeButtonText">Demo</sys:String>
+
+    <sys:String x:Key="PerformReadRomButtonText">Read ROM</sys:String>
+    <sys:String x:Key="PerformReadRomButtonToolTip">Read ROM code of SINGLE 1-Wire device on bus</sys:String>
+
     <sys:String x:Key="PerformMeasureButtonText">Measure</sys:String>
     <sys:String x:Key="PerformMeasureButtonToolTip">Perform temperature measurement on all sensors</sys:String>
 

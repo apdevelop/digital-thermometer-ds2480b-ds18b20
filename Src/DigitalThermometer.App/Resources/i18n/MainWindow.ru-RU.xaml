@@ -32,6 +32,10 @@
     <sys:String x:Key="DataGridRawDataHeader">Содержимое ОЗУ</sys:String>
 
     <sys:String x:Key="MeasureInDemoModeButtonText">Демо режим</sys:String>
+
+    <sys:String x:Key="PerformReadRomButtonText">Чтение ROM</sys:String>
+    <sys:String x:Key="PerformReadRomButtonToolTip">Прочитать ROM код ОДНОГО устройства на шине 1-Wire</sys:String>
+
     <sys:String x:Key="PerformMeasureButtonText">Измерение</sys:String>
     <sys:String x:Key="PerformMeasureButtonToolTip">Выполнить измерение температуры по всем датчикам</sys:String>
 

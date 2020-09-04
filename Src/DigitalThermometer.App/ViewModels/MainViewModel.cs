@@ -19,6 +19,8 @@ namespace DigitalThermometer.App.ViewModels
     {
         public ICommand RefreshSerialPortsListCommand { get; private set; }
 
+        public ICommand PerformReadRomCommand { get; private set; }
+
         public ICommand PerformMeasureCommand { get; private set; }
 
         public ICommand MeasureInDemoModeCommand { get; private set; }
@@ -26,6 +28,7 @@ namespace DigitalThermometer.App.ViewModels
         public MainViewModel()
         {
             this.RefreshSerialPortsListCommand = new RelayCommand((o) => this.UpdateSerialPortNames());
+            this.PerformReadRomCommand = new RelayCommand(async (o) => await this.PerformReadRomAsync());
             this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasurementsAsync());
             this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasurementsInDemoModeAsync());
 
@@ -526,6 +529,82 @@ namespace DigitalThermometer.App.ViewModels
 
         #endregion
 
+        private async Task PerformReadRomAsync()
+        {
+            this.BusState = String.Empty;
+            this.IsBusy = true;
+            this.SensorsState = new List<SensorStateModel>();
+
+            this.measuresRuns++;
+            var stopwatch = Stopwatch.StartNew();
+
+            this.DisplayState(App.Locale["MessageInitializing"]);
+            var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
+            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
+            busMaster.UseMergedRequests = this.UseMergedRequests;
+
+            try
+            {
+                this.DisplayState(App.Locale["MessagePerformingBusReset"]);
+                var busResult = await busMaster.OpenAsync();
+                var busResetResult = this.DisplayBusResult(busResult);
+                if (busResetResult)
+                {
+                    var romCode = await busMaster.ReadRomCodeAsync();
+                    this.MarshalToMainThread(
+                        (s) => this.AddFoundSensor(s),
+                        new SensorStateModel
+                        {
+                            RomCode = romCode,
+                            TemperatureValue = null,
+                            TemperatureRawCode = null,
+                            ThermometerResolution = null,
+                        });
+                    this.DisplayState(String.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message}");
+            }
+            finally
+            {
+                await busMaster.CloseAsync();
+                this.IsBusy = false;
+            }
+        }
+
+        private bool DisplayBusResult(OW.OneWireBusResetResponse busResult)
+        {
+            switch (busResult)
+            {
+                case OW.OneWireBusResetResponse.NoResponseReceived:
+                    {
+                        this.DisplayState(App.Locale["MessageNoResponseReceived"]);
+                        return false;
+                    }
+                case OW.OneWireBusResetResponse.NoPresencePulse:
+                    {
+                        this.DisplayState(App.Locale["MessageNoPresencePulse"]);
+                        return false;
+                    }
+                case OW.OneWireBusResetResponse.BusShorted:
+                    {
+                        this.DisplayState(App.Locale["MessageBusShorted"]);
+                        return false;
+                    }
+                case OW.OneWireBusResetResponse.PresencePulse:
+                    {
+                        this.DisplayState(App.Locale["MessagePresencePulseOk"]);
+                        return true;
+                    }
+                default:
+                    {
+                        throw new ArgumentException();
+                    }
+            }
+        }
+
         private async Task PerformMeasurementsAsync()
         {
             this.BusState = String.Empty;
@@ -547,34 +626,9 @@ namespace DigitalThermometer.App.ViewModels
             {
                 this.DisplayState(App.Locale["MessagePerformingBusReset"]);
                 var busResult = await busMaster.OpenAsync();
-                switch (busResult)
-                {
-                    case OW.OneWireBusResetResponse.NoResponseReceived:
-                        {
-                            this.DisplayState(App.Locale["MessageNoResponseReceived"]);
-                            result = null;
-                            break;
-                        }
-                    case OW.OneWireBusResetResponse.NoPresencePulse:
-                        {
-                            this.DisplayState(App.Locale["MessageNoPresencePulse"]);
-                            result = null;
-                            break;
-                        }
-                    case OW.OneWireBusResetResponse.BusShorted:
-                        {
-                            this.DisplayState(App.Locale["MessageBusShorted"]);
-                            result = null;
-                            break;
-                        }
-                    case OW.OneWireBusResetResponse.PresencePulse:
-                        {
-                            this.DisplayState(App.Locale["MessagePresencePulseOk"]);
-                            break;
-                        }
-                }
+                var busResetResult = this.DisplayBusResult(busResult);
 
-                if (result != null)
+                if (busResetResult)
                 {
                     var count = 0;
                     this.DisplayState(App.Locale["MessageSearchingDevicesOnBus"]);
@@ -680,9 +734,9 @@ namespace DigitalThermometer.App.ViewModels
             finally
             {
                 await busMaster.CloseAsync();
+                this.IsBusy = false;
             }
 
-            this.IsBusy = false;
             if (result != null)
             {
                 this.measuresCompleted++;

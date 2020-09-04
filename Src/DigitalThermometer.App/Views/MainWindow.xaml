@@ -130,7 +130,7 @@
                       ToolTip="{DynamicResource UseMergedRequestsTooltip}"
                       IsEnabled="{Binding IsMeasuresEnabled}" 
                       IsChecked="{Binding UseMergedRequests, Mode=TwoWay}" />
-            
+
             <CheckBox Content="{DynamicResource IsTimerMeasurementsModeText}" 
                       VerticalAlignment="Center"
                       Margin="10,0,0,0"
@@ -153,7 +153,7 @@
                     </Path.Fill>
                 </Path>
             </ContentControl>
-            
+
             <Label Content="PDSRC"/>
             <ComboBox Width="80" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedPulldownSlewRateControlTooltip}"
@@ -322,7 +322,7 @@
             </TextBlock>
 
             <Button ToolTip="{DynamicResource MeasureInDemoModeButtonText}"
-                Margin="0,0,0,0" Visibility="Visible"
+                Margin="0,0,0,0" Width="80" 
                 IsEnabled="{Binding IsMeasuresEnabled}"
                 Command="{Binding MeasureInDemoModeCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -338,7 +338,24 @@
                 </StackPanel>
             </Button>
 
-            <Button Margin="240,0,0,0"
+            <Button Margin="180,0,0,0" Width="80"
+                ToolTip="{DynamicResource PerformReadRomButtonToolTip}"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                Command="{Binding PerformReadRomCommand}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!--<ContentControl>
+                        <Path Data="{Binding Source={StaticResource pathDataMediaPlay}}">
+                            <Path.Fill>
+                                <SolidColorBrush Color="{StaticResource MetroGreen}"/>
+                            </Path.Fill>
+                        </Path>
+                    </ContentControl>-->
+                    <TextBlock Margin="0,0,0,0" VerticalAlignment="Center"
+                               Text="{DynamicResource PerformReadRomButtonText}" />
+                </StackPanel>
+            </Button>
+
+            <Button Margin="20,0,0,0" Width="110"
                 ToolTip="{DynamicResource PerformMeasureButtonToolTip}"
                 IsEnabled="{Binding IsMeasuresEnabled}"
                 Command="{Binding PerformMeasureCommand}">
