@@ -9,23 +9,17 @@ namespace DigitalThermometer.ConsoleApp
     {
         static void Main(string[] args)
         {
-            var portNames = System.IO.Ports.SerialPort.GetPortNames();
-            Console.WriteLine($"Serial ports: {String.Join(" ", portNames)}");
-
-            var portName = String.Empty;
             if (args.Length == 1)
             {
-                portName = args[0];
-                Console.WriteLine($"Using port: {portName}");
+                MainAsync(args[0]).GetAwaiter().GetResult();
             }
             else
             {
-                portName = portNames[0];
+                Console.WriteLine($"Usage: dotnet {System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.dll <SerialPort>");
+                var portNames = System.IO.Ports.SerialPort.GetPortNames();
+                Console.WriteLine($"Found serial ports:");
+                Console.WriteLine($"{String.Join(Environment.NewLine, portNames)}");
             }
-
-            MainAsync(portName).GetAwaiter().GetResult();
-
-            Console.ReadLine();
         }
 
         static async Task MainAsync(string serialPortName)
@@ -41,18 +35,11 @@ namespace DigitalThermometer.ConsoleApp
                 return;
             }
 
-            var counter = 0;
-            Console.WriteLine();
-            var list = await busMaster.SearchDevicesOnBusAsync((romCode) =>
+            var sensors = await busMaster.SearchDevicesOnBusAsync();
+            if (sensors.Count > 0)
             {
-                counter++;
-                Console.WriteLine($"[{counter:D3}] {OW.Utils.RomCodeToLEString(romCode)}");
-            });
-
-            if (list.Count > 0)
-            {
-                Console.WriteLine();
-                foreach (var romCode in list)
+                Console.WriteLine($"Found DS18B20: {sensors.Count}");
+                foreach (var romCode in sensors)
                 {
                     try
                     {
@@ -68,7 +55,7 @@ namespace DigitalThermometer.ConsoleApp
             }
             else
             {
-                Console.WriteLine("Sensors are not found on 1-Wire bus");
+                Console.WriteLine("DS18B20 were not found on 1-Wire bus");
             }
 
             await busMaster.CloseAsync();

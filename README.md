@@ -7,6 +7,9 @@ Windows desktop (WPF, .NET 4.5.2) and cross-platform console (.NET Core 2.1) app
 Developed using MS Visual Studio 2017, C#, .NET Framework 4.5.2, WPF for UI, NET Core 2.1. Application code separation according to MVVM pattern.
 1-Wire functions are implemented in separate .NET Standard 1.0 assembly. Unit tests implemented using NUnit. 
 
+### Why DS2480B ?
+This Serial 1-Wire Driver allows fine tuning of bus signal parameters, which is necessary for working on long cables and/or with large number of devices on bus.
+
 ### Getting started with demo application
 * Connect any 1-Wire bus adapter, based on `DS2480B` chip to USB or serial port on PC (For example, with FT232RL USB-UART adapter).
 * Connect one or several `DS18B20` 1-Wire temperature sensors to 1-Wire bus (using three wires, i.e. in normal power mode, not parasite mode).
@@ -16,7 +19,7 @@ Developed using MS Visual Studio 2017, C#, .NET Framework 4.5.2, WPF for UI, NET
 `DigitalThermometer.ConsoleApp.exe COM5`
 
 ### Known issues and limitations
-* Demo application with UI runs on Windows only, due to WPF. Console application uses .NET Core 2.1 and was tested on Raspberry PI / Raspbian OS.
+* Demo application with UI runs on Windows only, due to WPF. Console application uses .NET Core 2.1 and was tested on Raspberry PI (Raspberry Pi OS Lite).
 
 ### Building .NET Core console application
 
@@ -37,18 +40,19 @@ Similar steps are for building for Linux:
 
 (There will be error on compiling `DigitalThermometer.App`, you can ignore them.)
 
-### Running console application on Raspberry Pi (Raspbian OS)
+### Running console application on Raspberry Pi (Raspberry Pi OS)
 Run `sudo raspi-config` then select `Interfacing Options` in menu, then select `Serial`. 
 Select `No` to `login shell to be accessible over serial`.
 Select `Yes` to `serial port hardware to be enabled`.
 Select `Finish` in main menu and then reboot system.
 
+#### Self-contained deployment
 Copy contents of `publish` console application directory to RPi (for example into `/home/pi/dt` directory).
 Set permissions (execute access) to startup file (note that filename is case-sensitive and has no extension)
 
 `chmod +x DigitalThermometer.ConsoleApp`
 
-Run application (file without extension):
+Run application:
 
 `./DigitalThermometer.ConsoleApp`
 
@@ -61,9 +65,22 @@ Run application with serial port name provided as command line argument:
 
 `./DigitalThermometer.ConsoleApp /dev/ttyUSB0`
 
+#### Framework-dependent deployment
+
+Check installed .NET Core runtime using command:
+
+`dotnet --info`
+
+The `Microsoft.NETCore.App 2.1.10` (or later version) should present in list.
+
+Run application with serial port name provided as command line argument:
+
+`dotnet DigitalThermometer.ConsoleApp.dll /dev/ttyUSB0`
+
 ![Demo screenshot](https://github.com/apdevelop/digital-thermometer-ds2480b-ds18b20/blob/master/Docs/DigitalThermometerConsoleRPi.png)
 
 ### References
 * [DS18B20 Programmable Resolution 1-Wire Digital Thermometer](https://www.maximintegrated.com/en/products/DS18B20)
 * [DS2480B Serial to 1-Wire Line Driver](https://www.maximintegrated.com/en/products/DS2480B)
 * [System.IO.Ports Nuget package](https://www.nuget.org/packages/System.IO.Ports/)
+* [Download .NET Core](https://dotnet.microsoft.com/download/dotnet-core)
