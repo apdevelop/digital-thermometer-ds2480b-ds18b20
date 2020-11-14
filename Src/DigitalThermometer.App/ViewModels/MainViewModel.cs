@@ -627,7 +627,6 @@ namespace DigitalThermometer.App.ViewModels
                 this.DisplayState(App.Locale["MessagePerformingBusReset"]);
                 var busResult = await busMaster.OpenAsync();
                 var busResetResult = this.DisplayBusResult(busResult);
-
                 if (busResetResult)
                 {
                     var count = 0;
