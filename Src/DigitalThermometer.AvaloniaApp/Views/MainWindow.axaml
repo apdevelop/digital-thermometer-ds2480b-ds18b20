@@ -1,0 +1,385 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:DigitalThermometer.AvaloniaApp.ViewModels;assembly=DigitalThermometer.AvaloniaApp"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DigitalThermometer.AvaloniaApp;assembly=DigitalThermometer.AvaloniaApp"
+        x:Class="DigitalThermometer.AvaloniaApp.Views.MainWindow"
+        Width="780" Height="300"
+        MinWidth="780" MinHeight="280"
+        FontFamily="Segoe UI"
+        WindowStartupLocation="CenterScreen"
+        Title="{DynamicResource MainWindowTitle}">
+
+  <Design.DataContext>
+    <vm:MainWindowViewModel/>
+  </Design.DataContext>
+
+  <Window.Resources>
+    <local:PathGeometryConverter x:Key="pathGeometryConverter"/>
+  </Window.Resources>
+
+  <Grid>
+
+    <Grid.Background>
+      <SolidColorBrush Color="{StaticResource MetroWhite}"/>
+    </Grid.Background>
+
+    <Grid.RowDefinitions>
+      <RowDefinition Height="32" />
+      <RowDefinition Height="32" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" Orientation="Horizontal"
+            Margin="4">
+
+      <ContentControl>
+        <Path Width="16" Height="16" Margin="0,0,8,0"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              Stretch="Uniform"
+              Data="{Binding Source={StaticResource pathDataConnector01}, Converter={StaticResource pathGeometryConverter}}">
+          <Path.Fill>
+            <SolidColorBrush Color="{StaticResource MetroGreen}"/>
+          </Path.Fill>
+        </Path>
+      </ContentControl>
+
+      <Button Margin="8,0,4,0" Width="24" Height="24"
+        ToolTip.Tip="{DynamicResource RefreshSerialPortsListTooltip}"
+        IsEnabled="{Binding IsMeasuresEnabled}"
+        Command="{Binding RefreshSerialPortsListCommand}">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <ContentControl>
+            <Path Width="16" Height="16"
+                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                  Stretch="Uniform"
+                  Data="{Binding Source={StaticResource pathDataCommandRefresh}, Converter={StaticResource pathGeometryConverter}}">
+              <Path.Fill>
+                <SolidColorBrush Color="{StaticResource MetroDarken}"/>
+              </Path.Fill>
+            </Path>
+          </ContentControl>
+        </StackPanel>
+      </Button>
+
+      <ComboBox Width="120" Height="24" FontSize="12"
+                ToolTip.Tip="{DynamicResource SelectedSerialPortNameTooltip}"
+                IsEnabled="{Binding IsSelectSerialPortEnabled}"
+                Items="{Binding SerialPortNames}"
+                SelectedItem="{Binding SelectedSerialPortName}" />
+
+      <ContentControl
+        ToolTip.Tip="{DynamicResource ParasitePowerTooltip}">
+        <Path Width="16" Height="16" Margin="32,0,0,0"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              Stretch="Uniform"
+              Fill="{Binding ParasitePowerColor}"
+              Data="{Binding Source={StaticResource pathDataShapeLightingWF}, Converter={StaticResource pathGeometryConverter}}">
+        </Path>
+      </ContentControl>
+
+      <ContentControl
+              ToolTip.Tip="{DynamicResource PowerUpTemperatureTooltip}">
+        <Path Width="12" Height="16" Margin="16,0,0,0"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              Stretch="Uniform"
+              Fill="{Binding PowerUpTemperatureColor}"
+              Data="{Binding Source={StaticResource pathDataDigitalEight}, Converter={StaticResource pathGeometryConverter}}">
+        </Path>
+      </ContentControl>
+
+      <ContentControl
+              ToolTip.Tip="{DynamicResource PowerUpTemperatureTooltip}">
+        <Path Width="12" Height="16"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              Stretch="Uniform"
+              Fill="{Binding PowerUpTemperatureColor}"
+              Data="{Binding Source={StaticResource pathDataDigitalFive}, Converter={StaticResource pathGeometryConverter}}">
+        </Path>
+      </ContentControl>
+
+      <ContentControl
+              ToolTip.Tip="{DynamicResource CrcErrorTooltip}">
+        <Path Width="24" Height="16" Margin="8,0,0,0"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              Stretch="Uniform"
+              Fill="{Binding CrcErrorColor}"
+              Data="{Binding Source={StaticResource pathDataWarningMessage}, Converter={StaticResource pathGeometryConverter}}">
+        </Path>
+      </ContentControl>
+
+      <CheckBox Content="{DynamicResource IsSimultaneousMeasurementsModeText}"
+                VerticalAlignment="Center"
+                Margin="60,0,0,0"
+                ToolTip.Tip="{DynamicResource IsSimultaneousMeasurementsModeTooltip}"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                IsChecked="{Binding IsSimultaneousMeasurementsMode, Mode=TwoWay}" />
+
+      <CheckBox Content="{DynamicResource UseMergedRequestsText}"
+                VerticalAlignment="Center"
+                Margin="10,0,0,0"
+                ToolTip.Tip="{DynamicResource UseMergedRequestsTooltip}"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                IsChecked="{Binding UseMergedRequests, Mode=TwoWay}" />
+
+      <CheckBox Content="{DynamicResource IsTimerMeasurementsModeText}"
+                VerticalAlignment="Center"
+                Margin="10,0,0,0"
+                ToolTip.Tip="{DynamicResource IsTimerMeasurementsModeTooltip}"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                IsChecked="{Binding IsTimerMeasurementsMode, Mode=TwoWay}" />
+
+    </StackPanel>
+
+    <StackPanel Grid.Row="1"
+            Orientation="Horizontal"
+            Margin="4">
+
+      <ContentControl>
+        <Path Width="16" Height="16" Margin="0,0,8,0"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              Stretch="Uniform"
+              Data="{Binding Source={StaticResource pathDataNodeWF}, Converter={StaticResource pathGeometryConverter}}">
+          <Path.Fill>
+            <SolidColorBrush Color="{StaticResource MetroGreen}"/>
+          </Path.Fill>
+        </Path>
+      </ContentControl>
+
+      <TextBlock Text="PDSRC" Margin="8,0,4,0" VerticalAlignment="Center" />
+      <ComboBox Width="90" Height="24" FontSize="12"
+                ToolTip.Tip="{DynamicResource SelectedPulldownSlewRateControlTooltip}"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                Items="{Binding PulldownSlewRateControlItems}"
+                SelectedItem="{Binding SelectedPulldownSlewRateControl}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Item2}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+      <TextBlock Text="W1LT" Margin="8,0,4,0" VerticalAlignment="Center"  />
+      <ComboBox Width="60" Height="24" FontSize="12"
+                ToolTip.Tip="{DynamicResource SelectedWrite1LowTimeTooltip}"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                Items="{Binding Write1LowTimeItems}"
+                SelectedItem="{Binding SelectedWrite1LowTime}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Item2}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+      <TextBlock Text="DSO/W0RT" Margin="8,0,4,0" VerticalAlignment="Center" />
+      <ComboBox Width="60" Height="24" FontSize="12"
+                ToolTip.Tip="{DynamicResource SelectedDataSampleOffsetAndWrite0RecoveryTimeTooltip}"
+                IsEnabled="{Binding IsMeasuresEnabled}"
+                Items="{Binding DataSampleOffsetAndWrite0RecoveryTimeItems}"
+                SelectedItem="{Binding SelectedDataSampleOffsetAndWrite0RecoveryTime}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Item2}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+    </StackPanel>
+
+    <DataGrid Grid.Row="2" Margin="4,0,4,0"
+          FontSize="14"
+          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+          IsReadOnly="True"
+          AutoGenerateColumns="False"
+          Items="{Binding SensorsStateItems}">
+
+      <DataGrid.Styles>
+        <Style Selector="DataGridRow">
+          <Setter Property="Background" Value="White" />
+        </Style>
+      </DataGrid.Styles>
+
+      <!-- TODO: context menu -->
+      <!--<DataGrid.Styles>
+            <ContextMenu x:Key="RowMenu"
+                          DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+              <MenuItem Command="{Binding CopyRomCodeHexLEStringCommand}">
+                <MenuItem.Header>
+                  <TextBlock Text="{DynamicResource CopyRomCodeHexLEStringMenuItemText}" />
+                </MenuItem.Header>
+              </MenuItem>
+              <MenuItem Command="{Binding CopyRomCodeHexNumberCommand}">
+                <MenuItem.Header>
+                  <TextBlock Text="{DynamicResource CopyRomCodeHexNumberMenuItemText}" />
+                </MenuItem.Header>
+              </MenuItem>
+            </ContextMenu>
+          </DataGrid.Styles>-->
+
+      <!--<DataGrid.RowStyle>
+            <Style TargetType="DataGridRow">
+              <Setter Property="ContextMenu" Value="{StaticResource RowMenu}" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsValidCrc}" Value="true">
+                  <Setter Property="Foreground" Value="DarkGreen"></Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsValidCrc}" Value="false">
+                  <Setter Property="Foreground" Value="Red"></Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsValidCrc}" Value="null">
+                  <Setter Property="Foreground" Value="Black"></Setter>
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </DataGrid.RowStyle>-->
+
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="№"
+                        Binding="{Binding IndexNumberString}"
+                        CanUserSort="False"
+                        Width="35" />
+        <DataGridTextColumn
+                        Binding="{Binding RomCodeString}"
+                        CanUserSort="False"
+                        FontFamily="Courier New"
+                        FontWeight="Bold"
+                        Width="150">
+          <DataGridTextColumn.Header>
+            <TextBlock Text="{DynamicResource DataGridRomCodeHeader}" />
+          </DataGridTextColumn.Header>
+        </DataGridTextColumn>
+        <DataGridTextColumn Header="T, &#186;C"
+                        Binding="{Binding TemperatureValueString}"
+                        CanUserSort="False"
+                        FontFamily="Courier New"
+                        FontWeight="Bold"
+                        Width="90" />
+        <DataGridTextColumn
+                        Binding="{Binding TemperatureRawCodeString}"
+                        CanUserSort="False"
+                        FontFamily="Courier New"
+                        Width="65">
+          <DataGridTextColumn.Header>
+            <TextBlock Text="{DynamicResource DataGridCodeHeader}" ToolTip.Tip="{DynamicResource DataGridCodeHeaderTooltip}" />
+          </DataGridTextColumn.Header>
+        </DataGridTextColumn>
+        <DataGridTextColumn
+                        Binding="{Binding ThermometerResolutionString}"
+                        CanUserSort="False"
+                        FontFamily="Courier New"
+                        Width="60">
+          <DataGridTextColumn.Header>
+            <TextBlock Text="{DynamicResource DataGridModeHeader}" />
+          </DataGridTextColumn.Header>
+        </DataGridTextColumn>
+        <DataGridTextColumn Header="CRC"
+                        Binding="{Binding ComputedCrcString}"
+                        CanUserSort="False"
+                        FontFamily="Courier New"
+                        Width="85" >
+          <DataGridTextColumn.Header>
+            <TextBlock Text="{DynamicResource DataGridCrcHeader}" ToolTip.Tip="{DynamicResource DataGridCrcHeaderTooltip}" />
+          </DataGridTextColumn.Header>
+        </DataGridTextColumn>
+        <DataGridTextColumn
+                        Binding="{Binding RawDataString}"
+                        CanUserSort="False"
+                        FontFamily="Courier New"
+                        Width="*">
+          <DataGridTextColumn.Header>
+            <TextBlock Text="{DynamicResource DataGridRawDataHeader}" />
+          </DataGridTextColumn.Header>
+        </DataGridTextColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+
+    <StackPanel Grid.Row="3"
+            Orientation="Horizontal"
+            Margin="8,8,8,8" VerticalAlignment="Bottom">
+      <StackPanel.Styles>
+        <Style Selector="Button">
+          <Setter Property="Button.Width" Value="120" />
+          <Setter Property="Button.Height" Value="36" />
+          <Setter Property="Button.VerticalAlignment" Value="Center" />
+          <Setter Property="Button.FontSize" Value="12" />
+          <Setter Property="Button.Margin" Value="1,1,1,1" />
+        </Style>
+        <Style Selector="ContentControl">
+          <!--<Setter Property="ContentControl.IsTabStop" Value="False" />-->
+          <Setter Property="ContentControl.VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Path">
+          <Setter Property="Path.Stretch" Value="Uniform" />
+          <Setter Property="Path.Stroke" Value="Black" />
+          <Setter Property="Path.Width" Value="20" />
+          <Setter Property="Path.Height" Value="20" />
+        </Style>
+      </StackPanel.Styles>
+
+      <Button ToolTip.Tip="{DynamicResource MeasureInDemoModeButtonText}"
+              Margin="0,0,0,0" Width="80"
+              IsEnabled="{Binding IsMeasuresEnabled}"
+              Command="{Binding MeasureInDemoModeCommand}">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <ContentControl>
+            <Path Data="{Binding Source={StaticResource pathDataGear01WF}, Converter={StaticResource pathGeometryConverter}}">
+              <Path.Fill>
+                <SolidColorBrush Color="{StaticResource MetroDarken}"/>
+              </Path.Fill>
+            </Path>
+          </ContentControl>
+          <TextBlock Text="{DynamicResource MeasureInDemoModeButtonText}"
+                     Margin="12,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+      </Button>
+
+      <Button Margin="180,0,0,0" Width="80"
+          ToolTip.Tip="{DynamicResource PerformReadRomButtonToolTip}"
+          IsEnabled="{Binding IsPerformMeasureCommandEnabled}"
+          Command="{Binding PerformReadRomCommand}">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Margin="0,0,0,0" VerticalAlignment="Center"
+                     Text="{DynamicResource PerformReadRomButtonText}" />
+        </StackPanel>
+      </Button>
+
+      <Button Margin="20,0,0,0" Width="110"
+          ToolTip.Tip="{DynamicResource PerformMeasureButtonToolTip}"
+          IsEnabled="{Binding IsPerformMeasureCommandEnabled}"
+          Command="{Binding PerformMeasureCommand}">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <ContentControl>
+            <Path Data="{Binding Source={StaticResource pathDataMediaPlay}, Converter={StaticResource pathGeometryConverter}}">
+              <Path.Fill>
+                <SolidColorBrush Color="{StaticResource MetroGreen}"/>
+              </Path.Fill>
+            </Path>
+          </ContentControl>
+          <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
+                     Text="{DynamicResource PerformMeasureButtonText}" />
+        </StackPanel>
+      </Button>
+
+      <TextBlock Margin="8"
+             Text="{Binding MeasuresCounter}"
+             FontSize="14"
+             TextAlignment="Center"
+             HorizontalAlignment="Stretch" VerticalAlignment="Center">
+      </TextBlock>
+
+    </StackPanel>
+
+    <!-- TODO: ? StatusBar -->
+    <StackPanel Grid.Row="4"
+           Height="24">
+      <TextBlock FontSize="12" Margin="4,0,0,0"
+                 Text="{Binding BusState}" />
+    </StackPanel>
+
+  </Grid>
+
+</Window>

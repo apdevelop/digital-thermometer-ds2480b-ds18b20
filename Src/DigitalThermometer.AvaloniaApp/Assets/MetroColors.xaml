@@ -1,0 +1,25 @@
+﻿<controls:ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Styling"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="MetroLightGreen">#99B433</Color>
+    <Color x:Key="MetroGreen">#00A300</Color>
+    <Color x:Key="MetroDarkGreen">#1E7145</Color>
+    <Color x:Key="MetroMagenta">#FF0097</Color>
+    <Color x:Key="MetroLightPurple">#9F00A7</Color>
+    <Color x:Key="MetroPurple">#7E3878</Color>
+    <Color x:Key="MetroDarkPurple">#603CBA</Color>
+    <Color x:Key="MetroDarken">#1D1D1D</Color>
+    <Color x:Key="MetroTeal">#00ABA9</Color>
+    <Color x:Key="MetroLightBlue">#EFF4FF</Color>
+    <Color x:Key="MetroBlue">#2D89EF</Color>
+    <Color x:Key="MetroDarkBlue">#2B5797</Color>
+    <Color x:Key="MetroYellow">#FFC40D</Color>
+    <Color x:Key="MetroOrange">#E3A21A</Color>
+    <Color x:Key="MetroDarkOrange">#DA532C</Color>
+    <Color x:Key="MetroRed">#EE1111</Color>
+    <Color x:Key="MetroDarkRed">#B91D47</Color>
+    <Color x:Key="MetroWhite">#FFFFFF</Color>
+
+</controls:ResourceDictionary>

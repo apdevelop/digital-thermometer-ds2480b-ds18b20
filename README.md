@@ -3,12 +3,13 @@ Windows desktop (WPF, .NET 4.5.2) and cross-platform console (.NET Core 2.1) app
 
 ![Demo screenshot](https://github.com/apdevelop/digital-thermometer-ds2480b-ds18b20/blob/master/Docs/DigitalThermometerScreenshot.png)
 
-### Technologies
-Developed using MS Visual Studio 2017, C#, .NET Framework 4.5.2, WPF for UI, NET Core 2.1. Application code separation according to MVVM pattern.
-1-Wire functions are implemented in separate .NET Standard 1.0 assembly. Unit tests implemented using NUnit. 
-
 ### Why DS2480B ?
-This Serial 1-Wire Driver allows fine tuning of bus signal parameters, which is necessary for working on long cables and/or with large number of devices on bus.
+The `DS2480B` Serial 1-Wire Driver (UART to 1-Wire bridge) allows fine tuning of bus signal parameters, which is necessary for working on long cables and/or with large number of devices on bus.
+
+### Three implementations of demo application
+* App uses .NET Framework 4.5.2 runs on Windows platform only, due to WPF. 
+* ConsoleApp uses .NET Core 2.1, was tested on Raspberry PI 3 (Raspberry Pi OS Lite).
+* AvaloniaApp uses .NET Core 2.1 and Avalonia UI Framework, was tested on Raspberry PI 3 (Raspberry Pi OS with desktop).
 
 ### Getting started with demo application
 * Connect any 1-Wire bus adapter, based on `DS2480B` chip to USB or serial port on PC (For example, with FT232RL USB-UART adapter).
@@ -17,9 +18,6 @@ This Serial 1-Wire Driver allows fine tuning of bus signal parameters, which is 
 * Run console application using serial port name as first command line argument, for example:
 
 `DigitalThermometer.ConsoleApp.exe COM5`
-
-### Known issues and limitations
-* Demo application with UI runs on Windows only, due to WPF. Console application uses .NET Core 2.1 and was tested on Raspberry PI (Raspberry Pi OS Lite).
 
 ### Building .NET Core console application
 
@@ -73,11 +71,21 @@ Check installed .NET Core runtime using command:
 
 The `Microsoft.NETCore.App 2.1.10` (or later version) should present in list.
 
-Run application with serial port name provided as command line argument:
+Run console application with serial port name provided as command line argument:
 
 `dotnet DigitalThermometer.ConsoleApp.dll /dev/ttyUSB0`
 
-![Demo screenshot](https://github.com/apdevelop/digital-thermometer-ds2480b-ds18b20/blob/master/Docs/DigitalThermometerConsoleRPi.png)
+![Raspberry Pi OS Lite](https://github.com/apdevelop/digital-thermometer-ds2480b-ds18b20/blob/master/Docs/DigitalThermometerConsoleRPi.png)
+
+Run desktop application:
+
+`dotnet DigitalThermometer.AvaloniaApp.dll`
+
+![Raspberry Pi OS with desktop](https://github.com/apdevelop/digital-thermometer-ds2480b-ds18b20/blob/master/Docs/DigitalThermometerAvaloniaAppRPi.png)
+
+### Technologies
+Developed using MS Visual Studio 2017, C#, .NET Framework 4.5.2, WPF and Avalonia for UI, NET Core 2.1. Application code separation according to MVVM pattern.
+1-Wire functions are implemented in separate .NET Standard 1.0 assembly. Unit tests implemented using NUnit. 
 
 ### References
 * [DS18B20 Programmable Resolution 1-Wire Digital Thermometer](https://www.maximintegrated.com/en/products/DS18B20)
