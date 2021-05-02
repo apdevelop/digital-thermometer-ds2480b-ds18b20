@@ -22,6 +22,7 @@ namespace DigitalThermometer.UnitTests
 
             Assert.AreEqual(0.0, DS18B20.Scratchpad.DecodeTemperature12bit(0x0000));
 
+            Assert.AreEqual(-0.0625, DS18B20.Scratchpad.DecodeTemperature12bit(0xFFFF));
             Assert.AreEqual(-0.5, DS18B20.Scratchpad.DecodeTemperature12bit(0xFFF8));
             Assert.AreEqual(-10.125, DS18B20.Scratchpad.DecodeTemperature12bit(0xFF5E));
             Assert.AreEqual(-25.0625, DS18B20.Scratchpad.DecodeTemperature12bit(0xFE6F));

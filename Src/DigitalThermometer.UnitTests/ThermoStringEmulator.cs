@@ -8,7 +8,7 @@ using DigitalThermometer.OneWire;
 namespace DigitalThermometer.UnitTests
 {
     /// <summary>
-    /// Simple software emulator of DS2480B + DS18B20
+    /// Simple software emulator of DS2480B + DS18B20.
     /// </summary>
     sealed class ThermoStringEmulator : ISerialConnection
     {
@@ -92,7 +92,7 @@ namespace DigitalThermometer.UnitTests
                 }
                 // TODO: split to MATCH_ROM + READ_SCRATCHPAD
                 else if ((this.rxBuffer.Count == 20) &&
-                         (this.rxBuffer[1] == DS18B20.MATCH_ROM) && 
+                         (this.rxBuffer[1] == DS18B20.MATCH_ROM) &&
                          (this.rxBuffer[10] == DS18B20.READ_SCRATCHPAD))
                 {
                     var result = new List<byte>();
@@ -110,9 +110,9 @@ namespace DigitalThermometer.UnitTests
                     return result;
                 }
                 // TODO: encode real serial numbers (here used 0x4D000000BE736128, 0x91000000BED06928)
-                else if (this.rxBuffer.SequenceEqual(new byte[] 
-                {                
-                    DS2480B.SwitchToDataMode, DS18B20.SEARCH_ROM, 
+                else if (this.rxBuffer.SequenceEqual(new byte[]
+                {
+                    DS2480B.SwitchToDataMode, DS18B20.SEARCH_ROM,
                     DS2480B.SwitchToCommandMode, DS2480B.CommandSearchAcceleratorControlOnAtRegularSpeed,
                     DS2480B.SwitchToDataMode,
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -121,13 +121,13 @@ namespace DigitalThermometer.UnitTests
                     DS2480B.CommandSearchAcceleratorControlOffAtRegularSpeed,
                 }))
                 {
-                    return new byte[] 
-                    { 
+                    return new byte[]
+                    {
                         DS18B20.SEARCH_ROM,
                         0x80, 0x08, 0x42, 0x28, 0x0A, 0x2A, 0xA8, 0x8A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA2, 0x20,
                     };
                 }
-                else if (this.rxBuffer.SequenceEqual(new byte[] {                
+                else if (this.rxBuffer.SequenceEqual(new byte[] {
                     DS2480B.SwitchToDataMode, DS18B20.SEARCH_ROM,
                     DS2480B.SwitchToCommandMode, DS2480B.CommandSearchAcceleratorControlOnAtRegularSpeed,
                     DS2480B.SwitchToDataMode,
@@ -135,9 +135,9 @@ namespace DigitalThermometer.UnitTests
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                     DS2480B.SwitchToCommandMode, DS2480B.CommandSearchAcceleratorControlOffAtRegularSpeed, }))
                 {
-                    return new byte[] 
-                    { 
-                        DS18B20.SEARCH_ROM, 
+                    return new byte[]
+                    {
+                        DS18B20.SEARCH_ROM,
                         0x80, 0x08, 0xC2, 0x28, 0x00, 0xA2, 0xA8, 0x8A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x82,
                     };
                 }
