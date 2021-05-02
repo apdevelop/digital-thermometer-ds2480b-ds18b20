@@ -38,7 +38,7 @@ namespace DigitalThermometer.App
             base.OnStartup(e);
 
             var mainWindow = new Views.MainWindow { DataContext = new ViewModels.MainViewModel() };
-            App.Locale.SetDefaultLanguage(mainWindow, "en-US");   // TODO: dynamically switch from UI 
+            App.Locale.SetDefaultLanguage(mainWindow, "en-US"); // TODO: dynamically switch from UI 
             mainWindow.Show();
         }
 

@@ -7,7 +7,7 @@ Windows desktop (WPF, .NET 4.5.2) and cross-platform console (.NET Core 2.1) app
 The `DS2480B` Serial 1-Wire Driver (UART to 1-Wire bridge) allows fine tuning of bus signal parameters, which is necessary for working on long cables and/or with large number of devices on bus.
 
 ### Three implementations of demo application
-* App uses .NET Framework 4.5.2 runs on Windows platform only, due to WPF. 
+* App uses .NET Framework 4.5.2 runs on Windows platform only, due to WPF UI. 
 * ConsoleApp uses .NET Core 2.1, was tested on Raspberry PI 3 (Raspberry Pi OS Lite).
 * AvaloniaApp uses .NET Core 2.1 and Avalonia UI Framework, was tested on Raspberry PI 3 (Raspberry Pi OS with desktop).
 
