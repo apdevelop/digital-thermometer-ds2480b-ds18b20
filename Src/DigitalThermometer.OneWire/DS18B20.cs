@@ -418,7 +418,31 @@ namespace DigitalThermometer.OneWire
                 }
             }
 
-            // TODO: add Th, Tl registers interpretation
+            /// <summary>
+            /// Alarm trigger register (TH).
+            /// </summary>
+            public int? HighAlarmTemperature
+            {
+                get
+                {
+                    return this.IsValidCrc ?
+                        (int)unchecked((sbyte)this.scratchpad[MemoryMapOffsetThRegister]) :
+                        (int?)null;
+                }
+            }
+
+            /// <summary>
+            /// Alarm trigger register (TL).
+            /// </summary>
+            public int? LowAlarmTemperature
+            {
+                get
+                {
+                    return this.IsValidCrc ?
+                        (int)unchecked((sbyte)this.scratchpad[MemoryMapOffsetTlRegister]) :
+                        (int?)null;
+                }
+            }
 
             /// <summary>
             /// Convert temperature code to value (12-bit resolution)

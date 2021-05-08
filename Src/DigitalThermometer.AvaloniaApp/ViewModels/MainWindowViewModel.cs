@@ -525,83 +525,76 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                             });
                     });
 
-                    if (list != null)
+                    this.DisplayState($"{App.Locale["MessageTotalSensorsFound"]}: {list.Count}");
+
+                    this.IsParasitePower = OW.DS18B20.IsParasitePowerMode(await busMaster.ReadDS18B20PowerSupplyAsync());
+
+                    this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}...");
+                    var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
+                    if (this.IsSimultaneousMeasurementsMode)
                     {
-                        this.DisplayState($"{App.Locale["MessageTotalSensorsFound"]}: {list.Count}");
-
-                        this.IsParasitePower = OW.DS18B20.IsParasitePowerMode(await busMaster.ReadDS18B20PowerSupplyAsync());
-
-                        this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}...");
-                        var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
-                        if (this.IsSimultaneousMeasurementsMode)
+                        var counter = 0;
+                        results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
                         {
-                            var counter = 0;
-                            results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
+                            counter++;
+                            this.MarshalToMainThread(
+                                (s) => this.UpdateSensorState(s),
+                                new SensorStateModel
+                                {
+                                    RomCode = r.Item1,
+                                    TemperatureValue = r.Item2.Temperature,
+                                    TemperatureRawCode = r.Item2.TemperatureRawData,
+                                    ThermometerResolution = r.Item2.ThermometerActualResolution,
+                                    RawData = r.Item2.RawData,
+                                    ComputedCrc = r.Item2.ComputedCrc,
+                                    IsValidCrc = r.Item2.IsValidCrc,
+                                });
+                            this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{list.Count}");
+                        }));
+                    }
+                    else
+                    {
+                        var counter = 0;
+                        foreach (var romCode in list)
+                        {
+                            counter++;
+                            this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}: {counter}/{list.Count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
+                            try
                             {
-                                counter++;
+                                var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
+                                results.Add(romCode, r);
                                 this.MarshalToMainThread(
                                     (s) => this.UpdateSensorState(s),
                                     new SensorStateModel
                                     {
-                                        RomCode = r.Item1,
-                                        TemperatureValue = r.Item2.Temperature,
-                                        TemperatureRawCode = r.Item2.TemperatureRawData,
-                                        ThermometerResolution = r.Item2.ThermometerActualResolution,
-                                        RawData = r.Item2.RawData,
-                                        ComputedCrc = r.Item2.ComputedCrc,
-                                        IsValidCrc = r.Item2.IsValidCrc,
+                                        RomCode = romCode,
+                                        TemperatureValue = r.Temperature,
+                                        TemperatureRawCode = r.TemperatureRawData,
+                                        ThermometerResolution = r.ThermometerActualResolution,
+                                        RawData = r.RawData,
+                                        ComputedCrc = r.ComputedCrc,
+                                        IsValidCrc = r.IsValidCrc,
                                     });
                                 this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{list.Count}");
-                            }));
-                        }
-                        else
-                        {
-                            var counter = 0;
-                            foreach (var romCode in list)
+                            }
+                            catch (Exception)
                             {
-                                counter++;
-                                this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}: {counter}/{list.Count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
-                                try
-                                {
-                                    var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
-                                    results.Add(romCode, r);
-                                    this.MarshalToMainThread(
-                                        (s) => this.UpdateSensorState(s),
-                                        new SensorStateModel
-                                        {
-                                            RomCode = romCode,
-                                            TemperatureValue = r.Temperature,
-                                            TemperatureRawCode = r.TemperatureRawData,
-                                            ThermometerResolution = r.ThermometerActualResolution,
-                                            RawData = r.RawData,
-                                            ComputedCrc = r.ComputedCrc,
-                                            IsValidCrc = r.IsValidCrc,
-                                        });
-                                    this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{list.Count}");
-                                }
-                                catch (Exception)
-                                {
-                                    this.MarshalToMainThread(
-                                        (s) => this.UpdateSensorState(s),
-                                        new SensorStateModel
-                                        {
-                                            RomCode = romCode,
-                                            TemperatureValue = null,
-                                            TemperatureRawCode = null,
-                                            ThermometerResolution = null,
-                                        });
-                                    this.DisplayState($"{App.Locale["MessageError"]}: {counter}/{list.Count}");
-                                }
+                                this.MarshalToMainThread(
+                                    (s) => this.UpdateSensorState(s),
+                                    new SensorStateModel
+                                    {
+                                        RomCode = romCode,
+                                        TemperatureValue = null,
+                                        TemperatureRawCode = null,
+                                        ThermometerResolution = null,
+                                    });
+                                this.DisplayState($"{App.Locale["MessageError"]}: {counter}/{list.Count}");
                             }
                         }
+                    }
 
-                        this.DisplayState($"{App.Locale["MessageCompleted"]} ({stopwatch.Elapsed})");
-                        result = results;
-                    }
-                    else
-                    {
-                        result = null;
-                    }
+                    this.DisplayState($"{App.Locale["MessageCompleted"]} ({stopwatch.Elapsed})");
+                    result = results;
                 }
             }
             catch (Exception ex)

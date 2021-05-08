@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +11,6 @@ using System.Windows.Threading;
 
 using DigitalThermometer.App.Models;
 using DigitalThermometer.App.Utils;
-
 using OW = DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.App.ViewModels
@@ -19,7 +19,11 @@ namespace DigitalThermometer.App.ViewModels
     {
         public ICommand RefreshSerialPortsListCommand { get; private set; }
 
+        public ICommand PerformOpenCommand { get; private set; }
+
         public ICommand PerformReadRomCommand { get; private set; }
+
+        public ICommand PerformSearchCommand { get; private set; }
 
         public ICommand PerformMeasureCommand { get; private set; }
 
@@ -28,7 +32,9 @@ namespace DigitalThermometer.App.ViewModels
         public MainViewModel()
         {
             this.RefreshSerialPortsListCommand = new RelayCommand((o) => this.UpdateSerialPortNames());
+            this.PerformOpenCommand = new RelayCommand((o) => this.OpenDevicesListFile());
             this.PerformReadRomCommand = new RelayCommand(async (o) => await this.PerformReadRomAsync());
+            this.PerformSearchCommand = new RelayCommand(async (o) => await this.PerformSearchAsync());
             this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasurementsAsync());
             this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasurementsInDemoModeAsync());
 
@@ -84,7 +90,45 @@ namespace DigitalThermometer.App.ViewModels
                 {
                     this.selectedSerialPortName = value;
                     base.OnPropertyChanged(nameof(SelectedSerialPortName));
+                    base.OnPropertyChanged(nameof(IsSearchEnabled));
+                    base.OnPropertyChanged(nameof(IsMeasuresEnabled));
                 }
+            }
+        }
+
+        private void OpenDevicesListFile()
+        {
+            var openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var path = openFileDialog.FileName;
+                var text = System.IO.File.ReadAllText(path);
+
+                this.sensorsList = text
+                    .Split('\r', '\n')
+                    .Select(line => line
+                        .Trim()
+                        .Replace(" ", String.Empty)
+                        .Replace("\t", String.Empty))
+                        .Where(line => !String.IsNullOrWhiteSpace(line) && OW.Utils.CheckRomCodeFormat(line))
+                        .Select(line => OW.Utils.RomCodeFromLEString(line))
+                        .ToList();
+
+                this.SensorsState = new List<SensorStateModel>();
+                foreach (var romCode in this.sensorsList) // TODO: reactive property
+                {
+                    this.MarshalToMainThread(
+                        (s) => this.AddFoundSensor(s),
+                        new SensorStateModel
+                        {
+                            RomCode = romCode,
+                            TemperatureValue = null,
+                            TemperatureRawCode = null,
+                            ThermometerResolution = null,
+                        });
+                }
+
+                base.OnPropertyChanged(nameof(IsMeasuresEnabled));
             }
         }
 
@@ -102,9 +146,27 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.isBusy != value)
                 {
                     this.isBusy = value;
-                    base.OnPropertyChanged("IsBusy");
-                    base.OnPropertyChanged("IsMeasuresEnabled");
+                    base.OnPropertyChanged(nameof(IsBusy));
+                    base.OnPropertyChanged(nameof(IsNotBusy));
+                    base.OnPropertyChanged(nameof(IsSearchEnabled));
+                    base.OnPropertyChanged(nameof(IsMeasuresEnabled));
                 }
+            }
+        }
+
+        public bool IsNotBusy
+        {
+            get
+            {
+                return !this.IsBusy;
+            }
+        }
+
+        public bool IsSearchEnabled
+        {
+            get
+            {
+                return !this.IsBusy && this.SelectedSerialPortName != null;
             }
         }
 
@@ -112,7 +174,9 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return !this.IsBusy;
+                return !this.IsBusy &&
+                    this.SelectedSerialPortName != null &&
+                    this.sensorsList.Count > 0;
             }
         }
 
@@ -134,7 +198,6 @@ namespace DigitalThermometer.App.ViewModels
                 }
             }
         }
-
 
         private bool useMergedRequests = false;
 
@@ -174,6 +237,11 @@ namespace DigitalThermometer.App.ViewModels
                 }
             }
         }
+
+        /// <summary>
+        /// List of sensors
+        /// </summary>
+        private List<UInt64> sensorsList = new List<ulong>();
 
         public Visibility ParasitePowerVisibility
         {
@@ -322,7 +390,7 @@ namespace DigitalThermometer.App.ViewModels
         private async Task PerformMeasurementsInDemoModeAsync()
         {
             this.IsBusy = true;
-            this.SensorsState = null;
+            this.SensorsState = new List<SensorStateModel>();
             this.DisplayState(String.Empty);
             this.IsParasitePower = false;
 
@@ -551,6 +619,7 @@ namespace DigitalThermometer.App.ViewModels
                 if (busResetResult)
                 {
                     var romCode = await busMaster.ReadRomCodeAsync();
+                    this.sensorsList = new List<ulong> { romCode };
                     this.MarshalToMainThread(
                         (s) => this.AddFoundSensor(s),
                         new SensorStateModel
@@ -605,11 +674,65 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private async Task PerformMeasurementsAsync()
+        private async Task PerformSearchAsync()
         {
             this.BusState = String.Empty;
             this.IsBusy = true;
             this.SensorsState = new List<SensorStateModel>();
+            this.IsParasitePower = null;
+
+            var stopwatch = Stopwatch.StartNew();
+
+            this.DisplayState(App.Locale["MessageInitializing"]);
+            var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
+            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
+            busMaster.UseMergedRequests = this.UseMergedRequests;
+
+            var result = new Dictionary<UInt64, OW.DS18B20.Scratchpad>();
+
+            try
+            {
+                this.DisplayState(App.Locale["MessagePerformingBusReset"]);
+                var busResult = await busMaster.OpenAsync();
+                var busResetResult = this.DisplayBusResult(busResult);
+                if (busResetResult)
+                {
+                    var count = 0;
+                    this.DisplayState(App.Locale["MessageSearchingDevicesOnBus"]);
+                    this.sensorsList = await busMaster.SearchDevicesOnBusAsync((romCode) =>
+                    {
+                        count++;
+                        this.DisplayState($"{App.Locale["MessageSensorFound"]}: {count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
+                        this.MarshalToMainThread(
+                            (s) => this.AddFoundSensor(s),
+                            new SensorStateModel
+                            {
+                                RomCode = romCode,
+                                TemperatureValue = null,
+                                TemperatureRawCode = null,
+                                ThermometerResolution = null,
+                            });
+                    });
+
+                    this.DisplayState($"{App.Locale["MessageTotalSensorsFound"]}: {this.sensorsList.Count}");
+                    this.DisplayState($"{App.Locale["MessageCompleted"]} ({stopwatch.Elapsed})");
+                }
+            }
+            catch (Exception ex)
+            {
+                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message}");
+            }
+            finally
+            {
+                await busMaster.CloseAsync();
+                this.IsBusy = false;
+            }
+        }
+
+        private async Task PerformMeasurementsAsync()
+        {
+            this.BusState = String.Empty;
+            this.IsBusy = true;
             this.IsParasitePower = null;
 
             this.measuresRuns++;
@@ -629,100 +752,78 @@ namespace DigitalThermometer.App.ViewModels
                 var busResetResult = this.DisplayBusResult(busResult);
                 if (busResetResult)
                 {
-                    var count = 0;
-                    this.DisplayState(App.Locale["MessageSearchingDevicesOnBus"]);
-                    var list = await busMaster.SearchDevicesOnBusAsync((romCode) =>
+                    this.IsParasitePower = OW.DS18B20.IsParasitePowerMode(await busMaster.ReadDS18B20PowerSupplyAsync());
+
+                    this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}...");
+                    var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
+                    if (this.IsSimultaneousMeasurementsMode)
                     {
-                        count++;
-                        this.DisplayState($"{App.Locale["MessageSensorFound"]}: {count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
-                        this.MarshalToMainThread(
-                            (s) => this.AddFoundSensor(s),
-                            new SensorStateModel
-                            {
-                                RomCode = romCode,
-                                TemperatureValue = null,
-                                TemperatureRawCode = null,
-                                ThermometerResolution = null,
-                            });
-                    });
-
-                    if (list != null)
-                    {
-                        this.DisplayState($"{App.Locale["MessageTotalSensorsFound"]}: {list.Count}");
-
-                        this.IsParasitePower = OW.DS18B20.IsParasitePowerMode(await busMaster.ReadDS18B20PowerSupplyAsync());
-
-                        this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}...");
-                        var results = new Dictionary<ulong, OW.DS18B20.Scratchpad>();
-                        if (this.IsSimultaneousMeasurementsMode)
-                        {
-                            var counter = 0;
-                            results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(list, (r) =>
-                                {
-                                    counter++;
-                                    this.MarshalToMainThread(
-                                        (s) => this.UpdateSensorState(s),
-                                        new SensorStateModel
-                                        {
-                                            RomCode = r.Item1,
-                                            TemperatureValue = r.Item2.Temperature,
-                                            TemperatureRawCode = r.Item2.TemperatureRawData,
-                                            ThermometerResolution = r.Item2.ThermometerActualResolution,
-                                            RawData = r.Item2.RawData,
-                                            ComputedCrc = r.Item2.ComputedCrc,
-                                            IsValidCrc = r.Item2.IsValidCrc,
-                                        });
-                                    this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{list.Count}");
-                                }));
-                        }
-                        else
-                        {
-                            var counter = 0;
-                            foreach (var romCode in list)
+                        var counter = 0;
+                        results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(this.sensorsList, (r) =>
                             {
                                 counter++;
-                                this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}: {counter}/{list.Count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
-                                try
-                                {
-                                    var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
-                                    results.Add(romCode, r);
-                                    this.MarshalToMainThread(
-                                        (s) => this.UpdateSensorState(s),
-                                        new SensorStateModel
-                                        {
-                                            RomCode = romCode,
-                                            TemperatureValue = r.Temperature,
-                                            TemperatureRawCode = r.TemperatureRawData,
-                                            ThermometerResolution = r.ThermometerActualResolution,
-                                            RawData = r.RawData,
-                                            ComputedCrc = r.ComputedCrc,
-                                            IsValidCrc = r.IsValidCrc,
-                                        });
-                                    this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{list.Count}");
-                                }
-                                catch (Exception)
-                                {
-                                    this.MarshalToMainThread(
-                                        (s) => this.UpdateSensorState(s),
-                                        new SensorStateModel
-                                        {
-                                            RomCode = romCode,
-                                            TemperatureValue = null,
-                                            TemperatureRawCode = null,
-                                            ThermometerResolution = null,
-                                        });
-                                    this.DisplayState($"{App.Locale["MessageError"]}: {counter}/{list.Count}");
-                                }
-                            }
-                        }
-
-                        this.DisplayState($"{App.Locale["MessageCompleted"]} ({stopwatch.Elapsed})");
-                        result = results;
+                                this.MarshalToMainThread(
+                                    (s) => this.UpdateSensorState(s),
+                                    new SensorStateModel
+                                    {
+                                        RomCode = r.Item1,
+                                        TemperatureValue = r.Item2.Temperature,
+                                        TemperatureRawCode = r.Item2.TemperatureRawData,
+                                        HighAlarmTemperature = r.Item2.HighAlarmTemperature,
+                                        LowAlarmTemperature = r.Item2.LowAlarmTemperature,
+                                        ThermometerResolution = r.Item2.ThermometerActualResolution,
+                                        RawData = r.Item2.RawData,
+                                        ComputedCrc = r.Item2.ComputedCrc,
+                                        IsValidCrc = r.Item2.IsValidCrc,
+                                    });
+                                this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{this.sensorsList.Count}");
+                            }));
                     }
                     else
                     {
-                        result = null;
+                        var counter = 0;
+                        foreach (var romCode in this.sensorsList)
+                        {
+                            counter++;
+                            this.DisplayState($"{App.Locale["MessagePerformingMeasure"]}: {counter}/{this.sensorsList.Count}  <{OW.Utils.RomCodeToLEString(romCode)}>");
+                            try
+                            {
+                                var r = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCode);
+                                results.Add(romCode, r);
+                                this.MarshalToMainThread(
+                                    (s) => this.UpdateSensorState(s),
+                                    new SensorStateModel
+                                    {
+                                        RomCode = romCode,
+                                        TemperatureValue = r.Temperature,
+                                        TemperatureRawCode = r.TemperatureRawData,
+                                        HighAlarmTemperature = r.HighAlarmTemperature,
+                                        LowAlarmTemperature = r.LowAlarmTemperature,
+                                        ThermometerResolution = r.ThermometerActualResolution,
+                                        RawData = r.RawData,
+                                        ComputedCrc = r.ComputedCrc,
+                                        IsValidCrc = r.IsValidCrc,
+                                    });
+                                this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{this.sensorsList.Count}");
+                            }
+                            catch (Exception)
+                            {
+                                this.MarshalToMainThread(
+                                    (s) => this.UpdateSensorState(s),
+                                    new SensorStateModel
+                                    {
+                                        RomCode = romCode,
+                                        TemperatureValue = null,
+                                        TemperatureRawCode = null,
+                                        ThermometerResolution = null,
+                                    });
+                                this.DisplayState($"{App.Locale["MessageError"]}: {counter}/{this.sensorsList.Count}");
+                            }
+                        }
                     }
+
+                    this.DisplayState($"{App.Locale["MessageCompleted"]} ({stopwatch.Elapsed})");
+                    result = results;
                 }
             }
             catch (Exception ex)
@@ -756,9 +857,9 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private IList<SensorStateModel> sensorsState;
+        private List<SensorStateModel> sensorsState = new List<SensorStateModel>();
 
-        public IList<SensorStateModel> SensorsState
+        public List<SensorStateModel> SensorsState
         {
             get
             {

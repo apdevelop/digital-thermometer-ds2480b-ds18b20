@@ -74,6 +74,36 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
+        public string THString
+        {
+            get
+            {
+                if (this.sensorState.HighAlarmTemperature.HasValue)
+                {
+                    return this.sensorState.HighAlarmTemperature.Value.ToString();
+                }
+                else
+                {
+                    return "?";
+                }
+            }
+        }
+
+        public string TLString
+        {
+            get
+            {
+                if (this.sensorState.LowAlarmTemperature.HasValue)
+                {
+                    return this.sensorState.LowAlarmTemperature.Value.ToString();
+                }
+                else
+                {
+                    return "?";
+                }
+            }
+        }
+
         public string ThermometerResolutionString
         {
             get

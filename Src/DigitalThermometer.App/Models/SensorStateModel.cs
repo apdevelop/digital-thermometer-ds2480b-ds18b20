@@ -12,6 +12,10 @@ namespace DigitalThermometer.App.Models
 
         public UInt16? TemperatureRawCode { get; set; }
 
+        public int? HighAlarmTemperature { get; set; }
+
+        public int? LowAlarmTemperature { get; set; }
+
         public OW.DS18B20.ThermometerResolution? ThermometerResolution { get; set; }
 
         public byte[] RawData { get; set; }

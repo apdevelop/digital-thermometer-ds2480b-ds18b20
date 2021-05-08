@@ -152,7 +152,7 @@ namespace DigitalThermometer.OneWire
         /// Search for slave devices on bus
         /// </summary>
         /// <returns>List of ROM codes of devices found</returns>
-        public async Task<IList<UInt64>> SearchDevicesOnBusAsync(Action<UInt64> deviceFound = null)
+        public async Task<List<UInt64>> SearchDevicesOnBusAsync(Action<UInt64> deviceFound = null)
         {
             this.lastDiscrepancy = 0;
             this.lastDeviceFlag = false;
@@ -174,7 +174,7 @@ namespace DigitalThermometer.OneWire
 
                     timeoutControl.Restart();
 
-                    if ((this.lastDeviceFlag) || (this.lastDiscrepancy <= 0))
+                    if (this.lastDeviceFlag || (this.lastDiscrepancy <= 0))
                     {
                         return result;
                     }

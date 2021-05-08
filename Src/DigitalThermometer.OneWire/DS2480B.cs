@@ -439,6 +439,16 @@ namespace DigitalThermometer.OneWire
             }
         }
 
+        public static bool IsBusResetResponse(byte response)
+        {
+            // Table 2. COMMUNICATION COMMAND RESPONSE
+            // The response byte includes a code for the reaction on the 1-Wire bus (bits 0 and 1) and a code for the chip revision(bits 2 to 4).
+            var bits67 = (response & 0b1100_0000) >> 6;
+            var bits23 = (response & 0b0000_1100) >> 2;
+
+            return (bits67 == 0b11) && (bits23 == 0b11);
+        }
+
         internal static byte[] EscapeDataPacket(IList<byte> data)
         {
             if (data == null)

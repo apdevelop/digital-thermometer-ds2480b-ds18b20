@@ -57,6 +57,14 @@ namespace DigitalThermometer.UnitTests
         }
 
         [Test]
+        public void GetAlarmTriggerRegisters()
+        {
+            var scratchpad = new DS18B20.Scratchpad(new byte[] { 0xB4, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x0C, 0x10, 0x8E });
+            Assert.AreEqual(75, scratchpad.HighAlarmTemperature);
+            Assert.AreEqual(70, scratchpad.LowAlarmTemperature);
+        }
+
+        [Test]
         public void GetThermometerResolution()
         {
             var scratchpad = new DS18B20.Scratchpad(new byte[] { 0x55, 0x01, 0x4B, 0x46, 0x7F, 0xFF, 0x0B, 0x10, 0xD0 });

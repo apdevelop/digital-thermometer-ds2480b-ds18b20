@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{DynamicResource MainWindowTitle}" 
-        Width="720" Height="300"
-        MinWidth="720" MinHeight="250"
+        Width="800" Height="300"
+        MinWidth="800" MinHeight="250"
         ResizeMode="CanResizeWithGrip"
         FontFamily="Segoe UI">
 
@@ -18,6 +18,16 @@
     </Window.Resources>
 
     <Grid>
+
+        <Grid.Resources>
+            <Style TargetType="Button">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Cursor" Value="Hand"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Resources>
 
         <Grid.Background>
             <SolidColorBrush Color="{StaticResource MetroWhite}"/>
@@ -47,7 +57,7 @@
 
             <Button Margin="0,0,4,0" Width="24" Height="24"
                 ToolTip="{DynamicResource RefreshSerialPortsListTooltip}"
-                IsEnabled="{Binding IsMeasuresEnabled}"
+                IsEnabled="{Binding IsNotBusy}"
                 Command="{Binding RefreshSerialPortsListCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <ContentControl>
@@ -65,7 +75,7 @@
 
             <ComboBox Width="95" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedSerialPortNameTooltip}"
-                      IsEnabled="{Binding IsMeasuresEnabled}"
+                      IsEnabled="{Binding IsSearchEnabled}"
                       ItemsSource="{Binding SerialPortNames}"
                       SelectedItem="{Binding SelectedSerialPortName}" />
 
@@ -121,22 +131,29 @@
                       VerticalAlignment="Center"
                       Margin="60,0,0,0"
                       ToolTip="{DynamicResource IsSimultaneousMeasurementsModeTooltip}"
-                      IsEnabled="{Binding IsMeasuresEnabled}" 
+                      IsEnabled="{Binding IsSearchEnabled}" 
                       IsChecked="{Binding IsSimultaneousMeasurementsMode, Mode=TwoWay}" />
 
             <CheckBox Content="{DynamicResource UseMergedRequestsText}" 
                       VerticalAlignment="Center"
                       Margin="10,0,0,0"
                       ToolTip="{DynamicResource UseMergedRequestsTooltip}"
-                      IsEnabled="{Binding IsMeasuresEnabled}" 
+                      IsEnabled="{Binding IsSearchEnabled}" 
                       IsChecked="{Binding UseMergedRequests, Mode=TwoWay}" />
 
             <CheckBox Content="{DynamicResource IsTimerMeasurementsModeText}" 
                       VerticalAlignment="Center"
                       Margin="10,0,0,0"
                       ToolTip="{DynamicResource IsTimerMeasurementsModeTooltip}"
-                      IsEnabled="{Binding IsMeasuresEnabled}" 
+                      IsEnabled="{Binding IsSearchEnabled}" 
                       IsChecked="{Binding IsTimerMeasurementsMode, Mode=TwoWay}" />
+
+            <TextBlock Margin="5" 
+                   Text="{Binding MeasuresCounter}"
+                   TextAlignment="Center"
+                   HorizontalAlignment="Stretch" VerticalAlignment="Center">
+            </TextBlock>
+
         </StackPanel>
 
         <StackPanel Grid.Row="1"
@@ -144,10 +161,10 @@
                     Margin="4">
 
             <ContentControl>
-                <Path Width="16" Height="16" Margin="0,0,8,0"
+                <Path Width="16" Height="16" Margin="0,0,0,0"
                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                       Stretch="Uniform"
-                      Data="{Binding Source={StaticResource pathDataNodeWF}}">
+                      Data="{Binding Source={StaticResource pathDataAudipWave01}}">
                     <Path.Fill>
                         <SolidColorBrush Color="{StaticResource MetroGreen}"/>
                     </Path.Fill>
@@ -157,7 +174,7 @@
             <Label Content="PDSRC"/>
             <ComboBox Width="80" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedPulldownSlewRateControlTooltip}"
-                      IsEnabled="{Binding IsMeasuresEnabled}"
+                      IsEnabled="{Binding IsSearchEnabled}"
                       SelectedValuePath="Item1"
                       DisplayMemberPath="Item2"
                       ItemsSource="{Binding PulldownSlewRateControlItems}"
@@ -166,7 +183,7 @@
             <Label Content="W1LT" Margin="8,0,0,0"/>
             <ComboBox Width="60" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedWrite1LowTimeTooltip}"
-                      IsEnabled="{Binding IsMeasuresEnabled}"
+                      IsEnabled="{Binding IsSearchEnabled}"
                       SelectedValuePath="Item1"
                       DisplayMemberPath="Item2"
                       ItemsSource="{Binding Write1LowTimeItems}"
@@ -175,7 +192,7 @@
             <Label Content="DSO/W0RT" Margin="8,0,0,0"/>
             <ComboBox Width="60" Height="24" FontSize="12"
                       ToolTip="{DynamicResource SelectedDataSampleOffsetAndWrite0RecoveryTimeTooltip}"
-                      IsEnabled="{Binding IsMeasuresEnabled}"
+                      IsEnabled="{Binding IsSearchEnabled}"
                       SelectedValuePath="Item1"
                       DisplayMemberPath="Item2"
                       ItemsSource="{Binding DataSampleOffsetAndWrite0RecoveryTimeItems}"
@@ -257,6 +274,16 @@
                         <TextBlock Text="{DynamicResource DataGridCodeHeader}" />
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
+                <DataGridTextColumn Header="TH"
+                                Binding="{Binding THString}" 
+                                CanUserSort="False"
+                                FontFamily="Courier New"
+                                Width="35" />
+                <DataGridTextColumn Header="TL"
+                                Binding="{Binding TLString}" 
+                                CanUserSort="False"
+                                FontFamily="Courier New"
+                                Width="35" />
                 <DataGridTextColumn
                                 Binding="{Binding ThermometerResolutionString}" 
                                 CanUserSort="False"
@@ -285,7 +312,7 @@
 
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
-                    Margin="8,8,8,8" VerticalAlignment="Bottom">
+                    Margin="4,8,8,8" VerticalAlignment="Bottom">
             <StackPanel.Resources>
                 <Style TargetType="Button">
                     <Setter Property="Width" Value="120" />
@@ -293,6 +320,11 @@
                     <Setter Property="VerticalAlignment" Value="Center" />
                     <Setter Property="FontSize" Value="12" />
                     <Setter Property="Margin" Value="1,1,1,1" />
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Cursor" Value="Hand"/>
+                        </Trigger>
+                    </Style.Triggers>
                 </Style>
                 <Style TargetType="ContentControl">
                     <Setter Property="IsTabStop" Value="False" />
@@ -306,24 +338,9 @@
                 </Style>
             </StackPanel.Resources>
 
-            <TextBlock Margin="10,0,0,0" 
-                   Text="12.3&#186;C"
-                   Width="98" Height="24" 
-                   FontSize="24"
-                   TextAlignment="Center"
-                   Visibility="Collapsed"
-                   HorizontalAlignment="Right" VerticalAlignment="Top">
-                <TextBlock.Background>
-                    <SolidColorBrush Color="{StaticResource MetroTeal}" />
-                </TextBlock.Background>
-                <TextBlock.Foreground>
-                    <SolidColorBrush Color="{StaticResource MetroWhite}" />
-                </TextBlock.Foreground>
-            </TextBlock>
-
             <Button ToolTip="{DynamicResource MeasureInDemoModeButtonText}"
                 Margin="0,0,0,0" Width="80" 
-                IsEnabled="{Binding IsMeasuresEnabled}"
+                IsEnabled="{Binding IsNotBusy}"
                 Command="{Binding MeasureInDemoModeCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <ContentControl>
@@ -338,20 +355,54 @@
                 </StackPanel>
             </Button>
 
-            <Button Margin="180,0,0,0" Width="80"
-                ToolTip="{DynamicResource PerformReadRomButtonToolTip}"
-                IsEnabled="{Binding IsMeasuresEnabled}"
-                Command="{Binding PerformReadRomCommand}">
+            <Button Margin="120,0,0,0" Width="100"
+                ToolTip="{DynamicResource PerformOpenButtonToolTip}"
+                IsEnabled="{Binding IsNotBusy}"
+                Command="{Binding PerformOpenCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <!--<ContentControl>
-                        <Path Data="{Binding Source={StaticResource pathDataMediaPlay}}">
+                    <ContentControl>
+                        <Path Data="{Binding Source={StaticResource pathDataOpen}}">
                             <Path.Fill>
-                                <SolidColorBrush Color="{StaticResource MetroGreen}"/>
+                                <SolidColorBrush Color="{StaticResource MetroYellow}"/>
                             </Path.Fill>
                         </Path>
-                    </ContentControl>-->
-                    <TextBlock Margin="0,0,0,0" VerticalAlignment="Center"
+                    </ContentControl>
+                    <TextBlock Margin="5,0,0,0" VerticalAlignment="Center"
+                               Text="{DynamicResource PerformOpenButtonText}" />
+                </StackPanel>
+            </Button>
+
+            <Button Margin="5,0,0,0" Width="100"
+                ToolTip="{DynamicResource PerformReadRomButtonToolTip}"
+                IsEnabled="{Binding IsSearchEnabled}"
+                Command="{Binding PerformReadRomCommand}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ContentControl>
+                        <Path Data="{Binding Source={StaticResource pathColorPicker}}">
+                            <Path.Fill>
+                                <SolidColorBrush Color="{StaticResource MetroTeal}"/>
+                            </Path.Fill>
+                        </Path>
+                    </ContentControl>
+                    <TextBlock Margin="5,0,0,0" VerticalAlignment="Center"
                                Text="{DynamicResource PerformReadRomButtonText}" />
+                </StackPanel>
+            </Button>
+
+            <Button Margin="5,0,0,0" Width="100"
+                ToolTip="{DynamicResource PerformSearchButtonToolTip}"
+                IsEnabled="{Binding IsSearchEnabled}"
+                Command="{Binding PerformSearchCommand}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ContentControl>
+                        <Path Data="{Binding Source={StaticResource pathDataSearch}}">
+                            <Path.Fill>
+                                <SolidColorBrush Color="{StaticResource MetroBlue}"/>
+                            </Path.Fill>
+                        </Path>
+                    </ContentControl>
+                    <TextBlock Margin="5,0,0,0" VerticalAlignment="Center"
+                               Text="{DynamicResource PerformSearchButtonText}" />
                 </StackPanel>
             </Button>
 
@@ -367,17 +418,10 @@
                             </Path.Fill>
                         </Path>
                     </ContentControl>
-                    <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
+                    <TextBlock Margin="10,0,0,0" VerticalAlignment="Center"
                                Text="{DynamicResource PerformMeasureButtonText}" />
                 </StackPanel>
             </Button>
-
-            <TextBlock Margin="8" 
-                   Text="{Binding MeasuresCounter}"
-                   FontSize="14"
-                   TextAlignment="Center"
-                   HorizontalAlignment="Stretch" VerticalAlignment="Center">
-            </TextBlock>
 
         </StackPanel>
 
