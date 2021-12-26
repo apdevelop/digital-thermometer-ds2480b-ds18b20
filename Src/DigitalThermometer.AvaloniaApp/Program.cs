@@ -1,4 +1,8 @@
-﻿using Avalonia;
+﻿using System;
+
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Logging.Serilog;
 using Avalonia.ReactiveUI;
 
 namespace DigitalThermometer.AvaloniaApp
@@ -19,7 +23,7 @@ namespace DigitalThermometer.AvaloniaApp
             // TODO: load i18n dictionary
             return AppBuilder.Configure<App>()
                  .UsePlatformDetect()
-                 .LogToTrace()
+                 .LogToDebug()
                  .UseReactiveUI();
         }
     }

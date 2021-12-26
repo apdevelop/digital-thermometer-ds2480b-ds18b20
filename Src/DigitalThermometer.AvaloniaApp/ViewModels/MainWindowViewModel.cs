@@ -99,7 +99,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
 
         private async Task OpenDevicesListFile()
         {
-            var result = await new OpenFileDialog().ShowAsync(this.window);
+            var result = await new OpenFileDialog().ShowAsync(this.window); // TODO: GLib-GObject-WARNING issue
             if (result != null)
             {
                 var path = result[0];
