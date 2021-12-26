@@ -351,7 +351,7 @@ namespace DigitalThermometer.OneWire
             }
 
             /// <summary>
-            /// Temperature value raw data
+            /// Temperature value raw data; null if CRC mismatch
             /// </summary>
             public UInt16? TemperatureRawData
             {
@@ -364,7 +364,7 @@ namespace DigitalThermometer.OneWire
             }
 
             /// <summary>
-            /// Temperature value, in degrees Celsius
+            /// Temperature value, in degrees Celsius; null if CRC mismatch or raw code value out of allowed range
             /// </summary>
             public double? Temperature
             {
@@ -372,10 +372,22 @@ namespace DigitalThermometer.OneWire
                 {
                     // TODO: use actual resolution
                     // TODO: ? IsValidTemperatureCode(temperatureCode)
-                    return (this.IsValidCrc && (this.ThermometerActualResolution == ThermometerResolution.Resolution12bit)) ?
+                    return (this.TemperatureRawData.HasValue &&
+                        (this.ThermometerActualResolution == ThermometerResolution.Resolution12bit) &&
+                        IsValidTemperatureCode(this.TemperatureRawData.Value) &&
+                        (this.TemperatureRawData.Value != 0x07FF)) ? // Temperature conversion was unsuccessful (undocumented)
                         DS18B20.Scratchpad.DecodeTemperature12bit(this.TemperatureRawData.Value) :
                         (double?)null;
                 }
+            }
+
+            /// <summary>
+            /// Returns true if temperature code in allowed range (Table 2 in datasheet)
+            /// </summary>
+            public static bool IsValidTemperatureCode(ushort temperatureCode)
+            {
+                return (temperatureCode >= 0x0000) && (temperatureCode <= DS18B20.MaxTemperatureCode) ||
+                        (temperatureCode >= DS18B20.MinTemperatureCode) && (temperatureCode <= 0xFFFF);
             }
 
             /// <summary>

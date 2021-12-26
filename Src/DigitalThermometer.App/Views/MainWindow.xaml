@@ -231,13 +231,13 @@
                 <Style TargetType="DataGridRow">
                     <Setter Property="ContextMenu" Value="{StaticResource RowMenu}" />
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsValidCrc}" Value="true">
+                        <DataTrigger Binding="{Binding IsValidReadings}" Value="true">
                             <Setter Property="Foreground" Value="DarkGreen"></Setter>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding IsValidCrc}" Value="false">
+                        <DataTrigger Binding="{Binding IsValidReadings}" Value="false">
                             <Setter Property="Foreground" Value="Red"></Setter>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding IsValidCrc}" Value="null">
+                        <DataTrigger Binding="{Binding IsValidReadings}" Value="null">
                             <Setter Property="Foreground" Value="Black"></Setter>
                         </DataTrigger>
                     </Style.Triggers>

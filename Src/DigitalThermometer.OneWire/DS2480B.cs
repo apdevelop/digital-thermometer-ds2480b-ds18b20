@@ -53,7 +53,7 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// Read Parameter commands
         /// </summary>
-        public enum ReadParameterCommand: byte // 0_000_bbb_1
+        public enum ReadParameterCommand : byte // 0_000_bbb_1
         {
             /// <summary>
             /// Read PDSRC parameter [0x03]
@@ -439,6 +439,11 @@ namespace DigitalThermometer.OneWire
             }
         }
 
+        /// <summary>
+        /// Checks if input value is valid bus reset response code of DS2480B
+        /// </summary>
+        /// <param name="response">Response value</param>
+        /// <returns>True if input value is valid bus reset response code of DS2480B, otherwise false</returns>
         public static bool IsBusResetResponse(byte response)
         {
             // Table 2. COMMUNICATION COMMAND RESPONSE

@@ -165,5 +165,20 @@ namespace DigitalThermometer.App.ViewModels
                 }
             }
         }
+
+        public bool? IsValidReadings
+        {
+            get
+            {
+                if (this.sensorState.IsValidCrc.HasValue && this.sensorState.TemperatureRawCode.HasValue)
+                {
+                    return this.sensorState.IsValidCrc.Value && OW.DS18B20.IsValidTemperatureCode(this.sensorState.TemperatureRawCode.Value);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
     }
 }
