@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reactive;
-using System.Windows.Input;
 
 using Avalonia;
 using ReactiveUI;
@@ -76,6 +75,36 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
         }
 
+        public string THString
+        {
+            get
+            {
+                if (this.sensorState.HighAlarmTemperature.HasValue)
+                {
+                    return this.sensorState.HighAlarmTemperature.Value.ToString();
+                }
+                else
+                {
+                    return "?";
+                }
+            }
+        }
+
+        public string TLString
+        {
+            get
+            {
+                if (this.sensorState.LowAlarmTemperature.HasValue)
+                {
+                    return this.sensorState.LowAlarmTemperature.Value.ToString();
+                }
+                else
+                {
+                    return "?";
+                }
+            }
+        }
+
         public string ThermometerResolutionString
         {
             get
@@ -130,6 +159,21 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                 if (this.sensorState.IsValidCrc.HasValue)
                 {
                     return this.sensorState.IsValidCrc.Value;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        public bool? IsValidReadings
+        {
+            get
+            {
+                if (this.sensorState.IsValidCrc.HasValue && this.sensorState.TemperatureRawCode.HasValue)
+                {
+                    return this.sensorState.IsValidCrc.Value && OW.DS18B20.IsValidTemperatureCode(this.sensorState.TemperatureRawCode.Value);
                 }
                 else
                 {

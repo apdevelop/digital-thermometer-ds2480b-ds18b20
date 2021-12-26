@@ -1,50 +1,42 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 
-using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Threading;
-using ReactiveUI;
-
-using DigitalThermometer.AvaloniaApp.Models;
+using DigitalThermometer.App.Models;
+using DigitalThermometer.App.Utils;
 using OW = DigitalThermometer.OneWire;
 
-namespace DigitalThermometer.AvaloniaApp.ViewModels
+namespace DigitalThermometer.App.ViewModels
 {
-    public class MainWindowViewModel : ReactiveObject
+    public class MainWindowViewModel : BaseNotifyPropertyChanged
     {
-        public ReactiveCommand<Unit, Unit> RefreshSerialPortsListCommand { get; private set; }
+        public ICommand RefreshSerialPortsListCommand { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> PerformOpenCommand { get; private set; }
+        public ICommand PerformOpenCommand { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> PerformReadRomCommand { get; private set; }
+        public ICommand PerformReadRomCommand { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> PerformSearchCommand { get; private set; }
+        public ICommand PerformSearchCommand { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> PerformMeasureCommand { get; private set; }
+        public ICommand PerformMeasureCommand { get; private set; }
 
-        public ReactiveCommand<Unit, Unit> MeasureInDemoModeCommand { get; private set; }
+        public ICommand MeasureInDemoModeCommand { get; private set; }
 
-        private Window window = null;
-
-        public MainWindowViewModel(Window window)
+        public MainWindowViewModel()
         {
-            this.RefreshSerialPortsListCommand = ReactiveCommand.Create(this.UpdateSerialPortNames);
-            this.PerformOpenCommand = ReactiveCommand.CreateFromTask(this.OpenDevicesListFile);
-            this.PerformReadRomCommand = ReactiveCommand.CreateFromTask(this.PerformReadRomAsync);
-            this.PerformSearchCommand = ReactiveCommand.CreateFromTask(this.PerformSearchAsync);
-            this.PerformMeasureCommand = ReactiveCommand.CreateFromTask(this.PerformMeasurementsAsync);
-            this.MeasureInDemoModeCommand = ReactiveCommand.CreateFromTask(this.PerformMeasurementsInDemoModeAsync);
-
-            this.selectedPulldownSlewRateControl = this.PulldownSlewRateControlItems[0];
-            this.selectedWrite1LowTime = this.Write1LowTimeItems[0];
-            this.selectedDataSampleOffsetAndWrite0RecoveryTime = this.DataSampleOffsetAndWrite0RecoveryTimeItems[0];
-
-            this.window = window;
+            this.RefreshSerialPortsListCommand = new RelayCommand((o) => this.UpdateSerialPortNames());
+            this.PerformOpenCommand = new RelayCommand((o) => this.OpenDevicesListFile());
+            this.PerformReadRomCommand = new RelayCommand(async (o) => await this.PerformReadRomAsync());
+            this.PerformSearchCommand = new RelayCommand(async (o) => await this.PerformSearchAsync());
+            this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasurementsAsync());
+            this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasurementsInDemoModeAsync());
 
             // TODO: config and save/restore settings
             this.UpdateSerialPortNames();
@@ -68,16 +60,17 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
         public List<string> SerialPortNames
         {
             get => this.serialPortNames;
+
             set
             {
-                this.RaiseAndSetIfChanged(ref this.serialPortNames, value);
-                this.RaisePropertyChanged(nameof(this.IsSelectSerialPortEnabled));
+                this.serialPortNames = value;
+                base.OnPropertyChanged(nameof(SerialPortNames));
             }
         }
 
         private void UpdateSerialPortNames()
         {
-            this.SerialPortNames = System.IO.Ports.SerialPort.GetPortNames().ToList();
+            this.SerialPortNames = SerialPortUtils.GetSerialPortNames().ToList();
             if (this.SerialPortNames.Count > 0)
             {
                 this.SelectedSerialPortName = this.SerialPortNames[0];
@@ -89,20 +82,25 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
         public string SelectedSerialPortName
         {
             get => this.selectedSerialPortName;
+
             set
             {
-                this.RaiseAndSetIfChanged(ref this.selectedSerialPortName, value);
-                this.RaisePropertyChanged(nameof(this.IsSearchEnabled));
-                this.RaisePropertyChanged(nameof(this.IsMeasuresEnabled));
+                if (this.selectedSerialPortName != value)
+                {
+                    this.selectedSerialPortName = value;
+                    base.OnPropertyChanged(nameof(SelectedSerialPortName));
+                    base.OnPropertyChanged(nameof(IsSearchEnabled));
+                    base.OnPropertyChanged(nameof(IsMeasuresEnabled));
+                }
             }
         }
 
-        private async Task OpenDevicesListFile()
+        private void OpenDevicesListFile()
         {
-            var result = await new OpenFileDialog().ShowAsync(this.window);
-            if (result != null)
+            var openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
             {
-                var path = result[0];
+                var path = openFileDialog.FileName;
                 var text = System.IO.File.ReadAllText(path);
 
                 this.sensorsList = text
@@ -129,7 +127,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                         });
                 }
 
-                this.RaisePropertyChanged(nameof(this.IsMeasuresEnabled));
+                base.OnPropertyChanged(nameof(this.IsMeasuresEnabled));
             }
         }
 
@@ -144,11 +142,10 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                 if (this.isBusy != value)
                 {
                     this.isBusy = value;
-                    this.RaiseAndSetIfChanged(ref this.isBusy, value);
-                    this.RaisePropertyChanged(nameof(this.IsNotBusy));
-                    this.RaisePropertyChanged(nameof(this.IsSearchEnabled));
-                    this.RaisePropertyChanged(nameof(this.IsMeasuresEnabled));
-                    this.RaisePropertyChanged(nameof(this.IsSelectSerialPortEnabled));
+                    base.OnPropertyChanged(nameof(this.IsBusy));
+                    base.OnPropertyChanged(nameof(this.IsNotBusy));
+                    base.OnPropertyChanged(nameof(this.IsSearchEnabled));
+                    base.OnPropertyChanged(nameof(this.IsMeasuresEnabled));
                 }
             }
         }
@@ -173,17 +170,20 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
         }
 
-        public bool IsSelectSerialPortEnabled
-        {
-            get => !this.IsBusy && this.SerialPortNames.Count > 0;
-        }
-
         private bool isSimultaneousMeasurementsMode = true;
 
         public bool IsSimultaneousMeasurementsMode
         {
             get => this.isSimultaneousMeasurementsMode;
-            set => this.RaiseAndSetIfChanged(ref this.isSimultaneousMeasurementsMode, value);
+
+            set
+            {
+                if (this.isSimultaneousMeasurementsMode != value)
+                {
+                    this.isSimultaneousMeasurementsMode = value;
+                    base.OnPropertyChanged(nameof(this.IsSimultaneousMeasurementsMode));
+                }
+            }
         }
 
         private bool useMergedRequests = false;
@@ -191,7 +191,15 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
         public bool UseMergedRequests
         {
             get => this.useMergedRequests;
-            set => this.RaiseAndSetIfChanged(ref this.useMergedRequests, value);
+
+            set
+            {
+                if (this.useMergedRequests != value)
+                {
+                    this.useMergedRequests = value;
+                    base.OnPropertyChanged(nameof(this.UseMergedRequests));
+                }
+            }
         }
 
         private bool? isParasitePower = null;
@@ -199,26 +207,41 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
         private bool? IsParasitePower
         {
             get => this.isParasitePower;
+
             set
             {
                 if (this.isParasitePower != value)
                 {
                     this.isParasitePower = value;
-                    this.RaiseAndSetIfChanged(ref this.isParasitePower, value);
-                    this.RaisePropertyChanged(nameof(this.ParasitePowerColor));
+                    base.OnPropertyChanged(nameof(this.ParasitePowerVisibility));
+                    base.OnPropertyChanged(nameof(this.ParasitePowerColor));
                 }
             }
         }
 
-        public IBrush ParasitePowerColor
+        public Visibility ParasitePowerVisibility
         {
             get
             {
                 switch (this.IsParasitePower)
                 {
-                    case null: return new SolidColorBrush(StateOffColor);
-                    case false: return new SolidColorBrush(StateOffColor);
-                    case true: return new SolidColorBrush(Color.FromArgb(0xFF, 0xE3, 0xA2, 0x1A)); // TODO: from ResourceDictionary
+                    case null: return Visibility.Hidden;
+                    case true: return Visibility.Visible;
+                    case false: return Visibility.Hidden;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        public Color ParasitePowerColor
+        {
+            get
+            {
+                switch (this.IsParasitePower)
+                {
+                    case null: return StateOffColor;
+                    case true: return Color.FromArgb(0xFF, 0xE3, 0xA2, 0x1A); // TODO: from ResourceDictionary
+                    case false: return StateOffColor;
                     default: throw new ArgumentOutOfRangeException();
                 }
             }
@@ -239,15 +262,29 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
         }
 
-        public IBrush PowerUpTemperatureColor
+        public Visibility PowerUpTemperatureVisibility
         {
             get
             {
                 switch (this.IsPowerUpTemperatureValue)
                 {
-                    case null: return new SolidColorBrush(StateOffColor);
-                    case false: return new SolidColorBrush(StateOffColor);
-                    case true: return new SolidColorBrush(Color.FromArgb(0xFF, 0xEE, 0x11, 0x11)); // TODO: from ResourceDictionary
+                    case null: return Visibility.Hidden;
+                    case true: return Visibility.Visible;
+                    case false: return Visibility.Hidden;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        public Color PowerUpTemperatureColor
+        {
+            get
+            {
+                switch (this.IsPowerUpTemperatureValue)
+                {
+                    case null: return StateOffColor;
+                    case true: return Color.FromArgb(0xFF, 0xEE, 0x11, 0x11); // TODO: from ResourceDictionary
+                    case false: return StateOffColor;
                     default: throw new ArgumentOutOfRangeException();
                 }
             }
@@ -268,6 +305,20 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
         }
 
+        public Visibility CrcErrorVisibility
+        {
+            get
+            {
+                switch (this.IsCrcError)
+                {
+                    case null: return Visibility.Hidden;
+                    case true: return Visibility.Visible;
+                    case false: return Visibility.Hidden;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
         private static Color StateOffColor
         {
             get
@@ -276,15 +327,15 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
         }
 
-        public IBrush CrcErrorColor
+        public Color CrcErrorColor
         {
             get
             {
                 switch (this.IsCrcError)
                 {
-                    case null: return new SolidColorBrush(StateOffColor);
-                    case true: return new SolidColorBrush(Color.FromArgb(0xFF, 0xEE, 0x11, 0x11)); // TODO: from ResourceDictionary
-                    case false: return new SolidColorBrush(StateOffColor);
+                    case null: return StateOffColor;
+                    case true: return Color.FromArgb(0xFF, 0xEE, 0x11, 0x11); // TODO: from ResourceDictionary
+                    case false: return StateOffColor;
                     default: throw new ArgumentOutOfRangeException();
                 }
             }
@@ -296,14 +347,18 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
 
         public bool IsTimerMeasurementsMode
         {
-            get => this.isTimerMeasurementsMode;
+            get
+            {
+                return this.isTimerMeasurementsMode;
+            }
+
             set
             {
                 if (this.isTimerMeasurementsMode != value)
                 {
                     this.isTimerMeasurementsMode = value;
                     this.measurementsTimer.IsEnabled = value;
-                    this.RaiseAndSetIfChanged(ref this.isTimerMeasurementsMode, value);
+                    base.OnPropertyChanged(nameof(IsTimerMeasurementsMode));
                 }
             }
         }
@@ -311,7 +366,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
         private async Task PerformMeasurementsInDemoModeAsync()
         {
             this.IsBusy = true;
-            this.SensorsState = null;
+            this.SensorsState = new List<SensorStateModel>();
             this.DisplayState(String.Empty);
             this.IsParasitePower = false;
 
@@ -351,57 +406,102 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
 
         private void MarshalToMainThread(Action action)
         {
-            ////Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
-            ////{
-            action();
-            ////});
+            Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
+            {
+                action();
+            });
         }
 
         private void MarshalToMainThread<T>(Action<T> action, T parameter)
         {
-            ////Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
-            ////{
-            action(parameter);
-            ////});
+            Application.Current.Dispatcher.BeginInvoke((Action)delegate ()
+            {
+                action(parameter);
+            });
         }
 
         private string busState = String.Empty;
 
         public string BusState
         {
-            get => this.busState;
-            set => this.RaiseAndSetIfChanged(ref this.busState, value);
+            get
+            {
+                return this.busState;
+            }
+
+            set
+            {
+                if (this.busState != value)
+                {
+                    this.busState = value;
+                    base.OnPropertyChanged(nameof(BusState));
+                }
+            }
         }
 
         private void DisplayState(string state)
         {
-            this.BusState = state;
+            // http://www.claassen.net/geek/blog/2007/07/inotifypropertychanged-and-cross-thread-exceptions.html
+            this.MarshalToMainThread(s => this.BusState = s, state);
         }
 
         #region Flexible Speed options
 
-        private Tuple<OW.DS2480B.PulldownSlewRateControl, string> selectedPulldownSlewRateControl;
+        private OW.DS2480B.PulldownSlewRateControl selectedPulldownSlewRateControl = OW.DS2480B.PulldownSlewRateControl._1p37_Vpus;
 
-        public Tuple<OW.DS2480B.PulldownSlewRateControl, string> SelectedPulldownSlewRateControl
+        public OW.DS2480B.PulldownSlewRateControl SelectedPulldownSlewRateControl
         {
-            get => this.selectedPulldownSlewRateControl;
-            set => this.RaiseAndSetIfChanged(ref this.selectedPulldownSlewRateControl, value);
+            get
+            {
+                return this.selectedPulldownSlewRateControl;
+            }
+
+            set
+            {
+                if (this.selectedPulldownSlewRateControl != value)
+                {
+                    this.selectedPulldownSlewRateControl = value;
+                    base.OnPropertyChanged(nameof(this.SelectedPulldownSlewRateControl));
+                }
+            }
         }
 
-        private Tuple<OW.DS2480B.Write1LowTime, string> selectedWrite1LowTime;
+        private OW.DS2480B.Write1LowTime selectedWrite1LowTime = OW.DS2480B.Write1LowTime._11us;
 
-        public Tuple<OW.DS2480B.Write1LowTime, string> SelectedWrite1LowTime
+        public OW.DS2480B.Write1LowTime SelectedWrite1LowTime
         {
-            get => this.selectedWrite1LowTime;
-            set => this.RaiseAndSetIfChanged(ref this.selectedWrite1LowTime, value);
+            get
+            {
+                return this.selectedWrite1LowTime;
+            }
+
+            set
+            {
+                if (this.selectedWrite1LowTime != value)
+                {
+                    this.selectedWrite1LowTime = value;
+                    base.OnPropertyChanged(nameof(this.SelectedWrite1LowTime));
+                }
+            }
         }
 
-        private Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string> selectedDataSampleOffsetAndWrite0RecoveryTime;
+        private OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime selectedDataSampleOffsetAndWrite0RecoveryTime = OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us;
 
-        public Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string> SelectedDataSampleOffsetAndWrite0RecoveryTime
+        public OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime SelectedDataSampleOffsetAndWrite0RecoveryTime
         {
-            get => this.selectedDataSampleOffsetAndWrite0RecoveryTime;
-            set => this.RaiseAndSetIfChanged(ref this.selectedDataSampleOffsetAndWrite0RecoveryTime, value);
+            get
+            {
+                return this.selectedDataSampleOffsetAndWrite0RecoveryTime;
+            }
+
+            set
+            {
+                if (this.selectedDataSampleOffsetAndWrite0RecoveryTime != value)
+                {
+                    this.selectedDataSampleOffsetAndWrite0RecoveryTime = value;
+                    base.OnPropertyChanged(nameof(this.SelectedDataSampleOffsetAndWrite0RecoveryTime));
+                }
+            }
         }
 
         public List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>> PulldownSlewRateControlItems
@@ -464,9 +564,9 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             {
                 return new OW.FlexibleSpeedConfiguration
                 {
-                    PulldownSlewRateControl = this.SelectedPulldownSlewRateControl.Item1,
-                    Write1LowTime = this.SelectedWrite1LowTime.Item1,
-                    DataSampleOffsetAndWrite0RecoveryTime = this.SelectedDataSampleOffsetAndWrite0RecoveryTime.Item1,
+                    PulldownSlewRateControl = this.SelectedPulldownSlewRateControl,
+                    Write1LowTime = this.SelectedWrite1LowTime,
+                    DataSampleOffsetAndWrite0RecoveryTime = this.SelectedDataSampleOffsetAndWrite0RecoveryTime,
                 };
             }
         }
@@ -483,7 +583,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             var stopwatch = Stopwatch.StartNew();
 
             this.DisplayState(App.Locale["MessageInitializing"]);
-            var portConnection = new Utils.SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
+            var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
             var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
             busMaster.UseMergedRequests = this.UseMergedRequests;
 
@@ -495,6 +595,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                 if (busResetResult)
                 {
                     var romCode = await busMaster.ReadRomCodeAsync();
+                    this.sensorsList = new List<ulong> { romCode };
                     this.MarshalToMainThread(
                         (s) => this.AddFoundSensor(s),
                         new SensorStateModel
@@ -509,7 +610,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
             catch (Exception ex)
             {
-                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message.Replace(Environment.NewLine, " ")}");
+                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message}");
             }
             finally
             {
@@ -559,7 +660,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             var stopwatch = Stopwatch.StartNew();
 
             this.DisplayState(App.Locale["MessageInitializing"]);
-            var portConnection = new Utils.SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
+            var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
             var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
             busMaster.UseMergedRequests = this.UseMergedRequests;
 
@@ -614,7 +715,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             var stopwatch = Stopwatch.StartNew();
 
             this.DisplayState(App.Locale["MessageInitializing"]);
-            var portConnection = new Utils.SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
+            var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
             var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
             busMaster.UseMergedRequests = this.UseMergedRequests;
 
@@ -635,24 +736,24 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                     {
                         var counter = 0;
                         results = (Dictionary<ulong, OW.DS18B20.Scratchpad>)(await busMaster.PerformDS18B20TemperatureMeasurementAsync(this.sensorsList, (r) =>
-                        {
-                            counter++;
-                            this.MarshalToMainThread(
-                                (s) => this.UpdateSensorState(s),
-                                new SensorStateModel
-                                {
-                                    RomCode = r.Item1,
-                                    TemperatureValue = r.Item2.Temperature,
-                                    TemperatureRawCode = r.Item2.TemperatureRawData,
-                                    HighAlarmTemperature = r.Item2.HighAlarmTemperature,
-                                    LowAlarmTemperature = r.Item2.LowAlarmTemperature,
-                                    ThermometerResolution = r.Item2.ThermometerActualResolution,
-                                    RawData = r.Item2.RawData,
-                                    ComputedCrc = r.Item2.ComputedCrc,
-                                    IsValidCrc = r.Item2.IsValidCrc,
-                                });
-                            this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{this.sensorsList.Count}");
-                        }));
+                            {
+                                counter++;
+                                this.MarshalToMainThread(
+                                    (s) => this.UpdateSensorState(s),
+                                    new SensorStateModel
+                                    {
+                                        RomCode = r.Item1,
+                                        TemperatureValue = r.Item2.Temperature,
+                                        TemperatureRawCode = r.Item2.TemperatureRawData,
+                                        HighAlarmTemperature = r.Item2.HighAlarmTemperature,
+                                        LowAlarmTemperature = r.Item2.LowAlarmTemperature,
+                                        ThermometerResolution = r.Item2.ThermometerActualResolution,
+                                        RawData = r.Item2.RawData,
+                                        ComputedCrc = r.Item2.ComputedCrc,
+                                        IsValidCrc = r.Item2.IsValidCrc,
+                                    });
+                                this.DisplayState($"{App.Locale["MessageResult"]}: {counter}/{this.sensorsList.Count}");
+                            }));
                     }
                     else
                     {
@@ -703,7 +804,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
             catch (Exception ex)
             {
-                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message.Replace(Environment.NewLine, " ")}");
+                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message}");
                 result = null;
             }
             finally
@@ -717,7 +818,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                 this.measuresCompleted++;
             }
 
-            this.MarshalToMainThread(() => this.RaisePropertyChanged(nameof(this.MeasuresCounter)));
+            this.MarshalToMainThread(() => base.OnPropertyChanged("MeasuresCounter"));
         }
 
         private int measuresRuns = 0;
@@ -732,27 +833,34 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
         }
 
-        private IList<SensorStateModel> sensorsState;
+        private List<SensorStateModel> sensorsState = new List<SensorStateModel>();
 
-        public IList<SensorStateModel> SensorsState
+        public List<SensorStateModel> SensorsState
         {
-            get => this.sensorsState;
+            get
+            {
+                return this.sensorsState;
+            }
+
             set
             {
                 this.sensorsState = value;
-                this.RaiseAndSetIfChanged(ref this.sensorsState, value);
-                this.RaisePropertyChanged(nameof(this.SensorsStateItems));
-                this.RaisePropertyChanged(nameof(this.PowerUpTemperatureColor));
-                this.RaisePropertyChanged(nameof(this.CrcErrorColor));
+                base.OnPropertyChanged("SensorsStateItems");
+                base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+                base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
+                base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
+                base.OnPropertyChanged(nameof(this.CrcErrorColor));
             }
         }
 
         public void AddFoundSensor(SensorStateModel state)
         {
             this.SensorsState.Add(state);
-            this.RaisePropertyChanged(nameof(this.SensorsStateItems));
-            this.RaisePropertyChanged(nameof(this.PowerUpTemperatureColor));
-            this.RaisePropertyChanged(nameof(this.CrcErrorColor));
+            base.OnPropertyChanged("SensorsStateItems");
+            base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+            base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
+            base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
+            base.OnPropertyChanged(nameof(this.CrcErrorColor));
         }
 
         public void UpdateSensorState(SensorStateModel state)
@@ -762,9 +870,11 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                 if (this.SensorsState[i].RomCode == state.RomCode)
                 {
                     this.SensorsState[i] = state;
-                    this.RaisePropertyChanged(nameof(this.SensorsStateItems));
-                    this.RaisePropertyChanged(nameof(this.PowerUpTemperatureColor));
-                    this.RaisePropertyChanged(nameof(this.CrcErrorColor));
+                    base.OnPropertyChanged("SensorsStateItems");
+                    base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
+                    base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
+                    base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
+                    base.OnPropertyChanged(nameof(this.CrcErrorColor));
                     return;
                 }
             }

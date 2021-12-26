@@ -82,7 +82,7 @@
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\SerialPortUtils.cs" />
     <Compile Include="Utils\StringLogicalComparer.cs" />
-    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\SensorStateViewModel.cs" />
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
