@@ -188,7 +188,7 @@ namespace DigitalThermometer.App.Utils
             await this.DataReceivedEventDriverAsync();
         }
 
-        byte[] inputBuffer = new byte[4096];
+        private readonly byte[] inputBuffer = new byte[4096];
 
         private async Task ReceiveAsync()
         {
@@ -229,7 +229,7 @@ namespace DigitalThermometer.App.Utils
                     {
                         if (this.serialPort == null)
                         {
-                            throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort == null)");
+                            throw new InvalidOperationException($"Port is in invalid state (serialPort == null)");
                         }
                         else
                         {

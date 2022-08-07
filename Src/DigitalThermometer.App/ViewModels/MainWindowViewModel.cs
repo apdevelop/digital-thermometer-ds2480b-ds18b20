@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -29,6 +30,8 @@ namespace DigitalThermometer.App.ViewModels
 
         public ICommand MeasureInDemoModeCommand { get; private set; }
 
+        public ICommand CopyTableToClipboardCommand { get; private set; }
+
         public MainWindowViewModel()
         {
             this.RefreshSerialPortsListCommand = new RelayCommand((o) => this.UpdateSerialPortNames());
@@ -37,6 +40,7 @@ namespace DigitalThermometer.App.ViewModels
             this.PerformSearchCommand = new RelayCommand(async (o) => await this.PerformSearchAsync());
             this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasurementsAsync());
             this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasurementsInDemoModeAsync());
+            this.CopyTableToClipboardCommand = new RelayCommand((o) => this.CopyTableToClipboard());
 
             // TODO: config and save/restore settings
             this.UpdateSerialPortNames();
@@ -372,11 +376,11 @@ namespace DigitalThermometer.App.ViewModels
 
             var sensors = new List<SensorStateModel>(new[]
             {
-                new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, TemperatureRawCode = 0x00A0, HighAlarmTemperature = 75, LowAlarmTemperature = 70, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
-                new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +25.0625, TemperatureRawCode = 0x0191, HighAlarmTemperature = 75, LowAlarmTemperature = 70, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
-                new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -10.125, TemperatureRawCode= 0xFF5E, HighAlarmTemperature = 75, LowAlarmTemperature = 70, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x01000002F81B3428, TemperatureValue = +10.0, TemperatureRawCode = 0x00A0, HighAlarmTemperature = 75, LowAlarmTemperature = 10, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x1200000078BA0D28, TemperatureValue = +25.0625, TemperatureRawCode = 0x0191, HighAlarmTemperature = 45, LowAlarmTemperature = 20, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x8E00000078CEAB28, TemperatureValue = -10.125, TemperatureRawCode= 0xFF5E, HighAlarmTemperature = 99, LowAlarmTemperature = 70, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
                 new SensorStateModel { RomCode = 0xEA00000078B0FC28, TemperatureValue = null, TemperatureRawCode = null, HighAlarmTemperature = 75, LowAlarmTemperature = 70, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
-                new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, TemperatureRawCode = 0x0550, HighAlarmTemperature = 75, LowAlarmTemperature = 70, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
+                new SensorStateModel { RomCode = 0x91000000BED06928, TemperatureValue = +85.0, TemperatureRawCode = 0x0550, HighAlarmTemperature = 25, LowAlarmTemperature = 70, ThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit },
             });
 
             var list = sensors
@@ -402,6 +406,45 @@ namespace DigitalThermometer.App.ViewModels
             }
 
             this.MarshalToMainThread(() => this.IsBusy = false);
+        }
+
+        private void CopyTableToClipboard()
+        {
+            const string Tab = "\t"; // Tab-separated lines
+
+            var tsv = new StringBuilder();
+            tsv.AppendLine(String.Join(Tab, new[]
+                {
+                    "№",
+                    App.Locale["DataGridRomCodeHeader"],
+                    "T, °C",
+                    App.Locale["DataGridCodeHeader"],
+                    "TH",
+                    "TL",
+                    App.Locale["DataGridModeHeader"],
+                    "CRC",
+                    App.Locale["DataGridRawDataHeader"],
+                }
+            ));
+
+            foreach (var state in this.SensorsStateItems)
+            {
+                tsv.AppendLine(String.Join(Tab, new[]
+                    {
+                        state.IndexNumberString.ToString(),
+                        state.RomCodeString,
+                        state.TemperatureValueString,
+                        state.TemperatureRawCodeString,
+                        state.THString,
+                        state.TLString,
+                        state.ThermometerResolutionString,
+                        state.ComputedCrcString,
+                        state.RawDataString,
+                    }
+                ));
+            }
+
+            Clipboard.SetText(tsv.ToString());
         }
 
         private void MarshalToMainThread(Action action)
@@ -584,8 +627,10 @@ namespace DigitalThermometer.App.ViewModels
 
             this.DisplayState(App.Locale["MessageInitializing"]);
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
-            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
-            busMaster.UseMergedRequests = this.UseMergedRequests;
+            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration)
+            {
+                UseMergedRequests = this.UseMergedRequests
+            };
 
             try
             {
@@ -661,8 +706,10 @@ namespace DigitalThermometer.App.ViewModels
 
             this.DisplayState(App.Locale["MessageInitializing"]);
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
-            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
-            busMaster.UseMergedRequests = this.UseMergedRequests;
+            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration)
+            {
+                UseMergedRequests = this.UseMergedRequests
+            };
 
             var result = new Dictionary<UInt64, OW.DS18B20.Scratchpad>();
 
@@ -716,8 +763,10 @@ namespace DigitalThermometer.App.ViewModels
 
             this.DisplayState(App.Locale["MessageInitializing"]);
             var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
-            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration);
-            busMaster.UseMergedRequests = this.UseMergedRequests;
+            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration)
+            {
+                UseMergedRequests = this.UseMergedRequests
+            };
 
             var result = new Dictionary<UInt64, OW.DS18B20.Scratchpad>();
 
@@ -884,11 +933,9 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                return (this.SensorsState != null) ?
-                    this.SensorsState
+                return this.SensorsState?
                         .Select((state, index) => new SensorStateViewModel(index, state))
-                        .ToList() :
-                        null;
+                        .ToList();
             }
         }
     }

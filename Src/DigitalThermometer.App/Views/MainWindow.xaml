@@ -355,7 +355,24 @@
                 </StackPanel>
             </Button>
 
-            <Button Margin="120,0,0,0" Width="100"
+            <Button Margin="5,0,0,0" Width="105" 
+                ToolTip="{DynamicResource CopyTableToClipboardButtonToolTip}"
+                IsEnabled="{Binding IsNotBusy}"
+                Command="{Binding CopyTableToClipboardCommand}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ContentControl>
+                        <Path Data="{Binding Source={StaticResource pathDataCopy}}">
+                            <Path.Fill>
+                                <SolidColorBrush Color="{StaticResource MetroDarken}"/>
+                            </Path.Fill>
+                        </Path>
+                    </ContentControl>
+                    <TextBlock Text="{DynamicResource CopyTableToClipboardButtonText}"
+                               Margin="5,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <Button Margin="20,0,0,0" Width="100"
                 ToolTip="{DynamicResource PerformOpenButtonToolTip}"
                 IsEnabled="{Binding IsNotBusy}"
                 Command="{Binding PerformOpenCommand}">
@@ -372,7 +389,7 @@
                 </StackPanel>
             </Button>
 
-            <Button Margin="5,0,0,0" Width="100"
+            <Button Margin="5,0,0,0" Width="105"
                 ToolTip="{DynamicResource PerformReadRomButtonToolTip}"
                 IsEnabled="{Binding IsSearchEnabled}"
                 Command="{Binding PerformReadRomCommand}">
@@ -389,7 +406,7 @@
                 </StackPanel>
             </Button>
 
-            <Button Margin="5,0,0,0" Width="100"
+            <Button Margin="5,0,0,0" Width="90"
                 ToolTip="{DynamicResource PerformSearchButtonToolTip}"
                 IsEnabled="{Binding IsSearchEnabled}"
                 Command="{Binding PerformSearchCommand}">
