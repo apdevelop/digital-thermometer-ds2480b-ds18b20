@@ -32,6 +32,12 @@ namespace DigitalThermometer.App.ViewModels
 
         public ICommand CopyTableToClipboardCommand { get; private set; }
 
+        public ICommand OpenConfigurationBlockCommand { get; private set; }
+
+        public ICommand WriteConfigurationCommand { get; private set; }
+
+        public ICommand CloseConfigurationBlockCommand { get; private set; }
+
         public MainWindowViewModel()
         {
             this.RefreshSerialPortsListCommand = new RelayCommand((o) => this.UpdateSerialPortNames());
@@ -41,6 +47,9 @@ namespace DigitalThermometer.App.ViewModels
             this.PerformMeasureCommand = new RelayCommand(async (o) => await this.PerformMeasurementsAsync());
             this.MeasureInDemoModeCommand = new RelayCommand(async (o) => await this.PerformMeasurementsInDemoModeAsync());
             this.CopyTableToClipboardCommand = new RelayCommand((o) => this.CopyTableToClipboard());
+            this.OpenConfigurationBlockCommand = new RelayCommand((o) => this.OpenConfigurationBlock(o as SensorStateViewModel));
+            this.WriteConfigurationCommand = new RelayCommand(async (o) => await this.WriteConfigurationAsync());
+            this.CloseConfigurationBlockCommand = new RelayCommand((o) => this.CloseConfigurationBlock());
 
             // TODO: config and save/restore settings
             this.UpdateSerialPortNames();
@@ -164,15 +173,9 @@ namespace DigitalThermometer.App.ViewModels
             get => !this.IsBusy && this.SelectedSerialPortName != null;
         }
 
-        public bool IsMeasuresEnabled
-        {
-            get
-            {
-                return !this.IsBusy &&
+        public bool IsMeasuresEnabled => !this.IsBusy &&
                     this.SelectedSerialPortName != null &&
                     this.sensorsList.Count > 0;
-            }
-        }
 
         private bool isSimultaneousMeasurementsMode = true;
 
@@ -251,20 +254,9 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private bool? IsPowerUpTemperatureValue
-        {
-            get
-            {
-                if ((this.SensorsStateItems != null) && (this.SensorsStateItems.Count > 0))
-                {
-                    return this.SensorsStateItems.Any(s => s.IsPowerUpTemperatureValue == true);
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
+        private bool? IsPowerUpTemperatureValue => (this.SensorsStateItems != null) && (this.SensorsStateItems.Count > 0)
+                    ? this.SensorsStateItems.Any(s => s.IsPowerUpTemperatureValue == true)
+                    : (bool?)null;
 
         public Visibility PowerUpTemperatureVisibility
         {
@@ -298,14 +290,9 @@ namespace DigitalThermometer.App.ViewModels
         {
             get
             {
-                if ((this.SensorsStateItems != null) && (this.SensorsStateItems.Count > 0))
-                {
-                    return this.SensorsStateItems.Any(s => s.IsValidCrc == false);
-                }
-                else
-                {
-                    return null;
-                }
+                return (this.SensorsStateItems != null) && (this.SensorsStateItems.Count > 0)
+                    ? this.SensorsStateItems.Any(s => s.IsValidCrc == false)
+                    : (bool?)null;
             }
         }
 
@@ -323,13 +310,7 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        private static Color StateOffColor
-        {
-            get
-            {
-                return Color.FromArgb(0xFF, 0xF0, 0xF0, 0xF0);
-            }
-        }
+        private static Color StateOffColor => Color.FromArgb(0xFF, 0xF0, 0xF0, 0xF0);
 
         public Color CrcErrorColor
         {
@@ -351,10 +332,7 @@ namespace DigitalThermometer.App.ViewModels
 
         public bool IsTimerMeasurementsMode
         {
-            get
-            {
-                return this.isTimerMeasurementsMode;
-            }
+            get => this.isTimerMeasurementsMode;
 
             set
             {
@@ -393,15 +371,15 @@ namespace DigitalThermometer.App.ViewModels
                 })
                 .ToList();
 
-            await Task.Delay(1000);
+            await Task.Delay(500);
 
             this.MarshalToMainThread((items) => this.SensorsState = items, list);
 
-            await Task.Delay(1000);
+            await Task.Delay(500);
 
             foreach (var s in sensors)
             {
-                await Task.Delay(200);
+                await Task.Delay(100);
                 this.MarshalToMainThread((state) => this.UpdateSensorState(state), s);
             }
 
@@ -446,6 +424,103 @@ namespace DigitalThermometer.App.ViewModels
 
             Clipboard.SetText(tsv.ToString());
         }
+
+        private void OpenConfigurationBlock(SensorStateViewModel s)
+        {
+            this.ConfigurationBlockRomCodeString = s.RomCodeString;
+            this.ConfigurationBlockTh = s.Th ?? 75;
+            this.ConfigurationBlockTl = s.Tl ?? 70;
+            this.ConfigurationBlockThermometerResolution = s.ThermometerResolution ?? OW.DS18B20.ThermometerResolution.Resolution12bit;
+            this.IsConfigurationBlockOpened = true;
+        }
+
+        private void CloseConfigurationBlock()
+        {
+            this.IsConfigurationBlockOpened = false;
+        }
+
+        private bool isConfigurationBlockOpened = false;
+
+        public bool IsConfigurationBlockOpened
+        {
+            get => this.isConfigurationBlockOpened;
+
+            set
+            {
+                if (this.isConfigurationBlockOpened != value)
+                {
+                    this.isConfigurationBlockOpened = value;
+                    base.OnPropertyChanged(nameof(this.IsConfigurationBlockOpened));
+                    base.OnPropertyChanged(nameof(this.IsConfigurationBlockEnabled));
+                }
+            }
+        }
+
+        private string configurationBlockRomCodeString = null;
+
+        public string ConfigurationBlockRomCodeString
+        {
+            get => this.configurationBlockRomCodeString;
+
+            set
+            {
+                if (this.configurationBlockRomCodeString != value)
+                {
+                    this.configurationBlockRomCodeString = value;
+                    base.OnPropertyChanged(nameof(this.ConfigurationBlockRomCodeString));
+                }
+            }
+        }
+
+        private int configurationBlockTh = 75;
+
+        public int ConfigurationBlockTh
+        {
+            get => this.configurationBlockTh;
+
+            set
+            {
+                if (this.configurationBlockTh != value)
+                {
+                    this.configurationBlockTh = value;
+                    base.OnPropertyChanged(nameof(this.ConfigurationBlockTh));
+                }
+            }
+        }
+
+        private int configurationBlockTl = 70;
+
+        public int ConfigurationBlockTl
+        {
+            get => this.configurationBlockTl;
+
+            set
+            {
+                if (this.configurationBlockTl != value)
+                {
+                    this.configurationBlockTl = value;
+                    base.OnPropertyChanged(nameof(this.ConfigurationBlockTl));
+                }
+            }
+        }
+
+        private bool configurationBlockSaveToEeprom = false;
+
+        public bool ConfigurationBlockSaveToEeprom
+        {
+            get => this.configurationBlockSaveToEeprom;
+
+            set
+            {
+                if (this.configurationBlockSaveToEeprom != value)
+                {
+                    this.configurationBlockSaveToEeprom = value;
+                    base.OnPropertyChanged(nameof(this.ConfigurationBlockSaveToEeprom));
+                }
+            }
+        }
+
+        public bool IsConfigurationBlockEnabled => !this.IsConfigurationBlockOpened;
 
         private void MarshalToMainThread(Action action)
         {
@@ -494,10 +569,7 @@ namespace DigitalThermometer.App.ViewModels
 
         public OW.DS2480B.PulldownSlewRateControl SelectedPulldownSlewRateControl
         {
-            get
-            {
-                return this.selectedPulldownSlewRateControl;
-            }
+            get => this.selectedPulldownSlewRateControl;
 
             set
             {
@@ -513,10 +585,7 @@ namespace DigitalThermometer.App.ViewModels
 
         public OW.DS2480B.Write1LowTime SelectedWrite1LowTime
         {
-            get
-            {
-                return this.selectedWrite1LowTime;
-            }
+            get => this.selectedWrite1LowTime;
 
             set
             {
@@ -547,74 +616,76 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        public List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>> PulldownSlewRateControlItems
+        public List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>> PulldownSlewRateControlItems => new List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>>(new[]
         {
-            get
-            {
-                return new List<Tuple<OW.DS2480B.PulldownSlewRateControl, string>>(new[]
-                {
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._15_Vpus, "15 V/μs"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._2p2_Vpus, "2.2 V/μs"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p65_Vpus, "1.65 V/μs"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p37_Vpus, "1.37 V/μs"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p1_Vpus, "1.1 V/μs"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p83_Vpus, "0.83 V/μs"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p7_Vpus, "0.7 V/μs"),
-                    new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p55_Vpus, "0.55 V/μs"),
-                });
-            }
-        }
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._15_Vpus, "15 V/μs"),
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._2p2_Vpus, "2.2 V/μs"),
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p65_Vpus, "1.65 V/μs"),
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p37_Vpus, "1.37 V/μs"),
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._1p1_Vpus, "1.1 V/μs"),
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p83_Vpus, "0.83 V/μs"),
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p7_Vpus, "0.7 V/μs"),
+            new Tuple<OW.DS2480B.PulldownSlewRateControl, string>(OW.DS2480B.PulldownSlewRateControl._0p55_Vpus, "0.55 V/μs"),
+        });
 
-        public List<Tuple<OW.DS2480B.Write1LowTime, string>> Write1LowTimeItems
+        public List<Tuple<OW.DS2480B.Write1LowTime, string>> Write1LowTimeItems => new List<Tuple<OW.DS2480B.Write1LowTime, string>>(new[]
         {
-            get
-            {
-                return new List<Tuple<OW.DS2480B.Write1LowTime, string>>(new[]
-                {
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._8us, "8 μs"),
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._9us, "9 μs"),
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._10us, "10 μs"),
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._11us, "11 μs"),
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._12us, "12 μs"),
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._13us, "13 μs"),
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._14us, "14 μs"),
-                    new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._15us, "15 μs"),
-                });
-            }
-        }
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._8us, "8 μs"),
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._9us, "9 μs"),
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._10us, "10 μs"),
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._11us, "11 μs"),
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._12us, "12 μs"),
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._13us, "13 μs"),
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._14us, "14 μs"),
+            new Tuple<OW.DS2480B.Write1LowTime, string>(OW.DS2480B.Write1LowTime._15us, "15 μs"),
+        });
 
-        public List<Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>> DataSampleOffsetAndWrite0RecoveryTimeItems
+        public List<Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>> DataSampleOffsetAndWrite0RecoveryTimeItems => new List<Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>>(new[]
         {
-            get
-            {
-                return new List<Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>>(new[]
-                {
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._3us, "3 μs"),
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._4us, "4 μs"),
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._5us, "5 μs"),
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._6us, "6 μs"),
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._7us, "7 μs"),
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._8us, "8 μs"),
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._9us, "9 μs"),
-                    new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us, "10 μs"),
-                });
-            }
-        }
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._3us, "3 μs"),
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._4us, "4 μs"),
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._5us, "5 μs"),
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._6us, "6 μs"),
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._7us, "7 μs"),
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._8us, "8 μs"),
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._9us, "9 μs"),
+            new Tuple<OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime, string>(OW.DS2480B.DataSampleOffsetAndWrite0RecoveryTime._10us, "10 μs"),
+        });
 
-        private OW.FlexibleSpeedConfiguration FlexibleSpeedConfiguration
+        private OW.FlexibleSpeedConfiguration FlexibleSpeedConfiguration => new OW.FlexibleSpeedConfiguration
         {
-            get
-            {
-                return new OW.FlexibleSpeedConfiguration
-                {
-                    PulldownSlewRateControl = this.SelectedPulldownSlewRateControl,
-                    Write1LowTime = this.SelectedWrite1LowTime,
-                    DataSampleOffsetAndWrite0RecoveryTime = this.SelectedDataSampleOffsetAndWrite0RecoveryTime,
-                };
-            }
-        }
+            PulldownSlewRateControl = this.SelectedPulldownSlewRateControl,
+            Write1LowTime = this.SelectedWrite1LowTime,
+            DataSampleOffsetAndWrite0RecoveryTime = this.SelectedDataSampleOffsetAndWrite0RecoveryTime,
+        };
 
         #endregion
+
+        public List<int> ThTlRegisterValues => Enumerable.Range(SByte.MinValue, 256).ToList();
+
+        public List<Tuple<OW.DS18B20.ThermometerResolution, string>> ThermometerResolutionItems => new List<Tuple<OW.DS18B20.ThermometerResolution, string>>(new[]
+        {
+            new Tuple<OW.DS18B20.ThermometerResolution, string>(OW.DS18B20.ThermometerResolution.Resolution9bit, "9-bit"),
+            new Tuple<OW.DS18B20.ThermometerResolution, string>(OW.DS18B20.ThermometerResolution.Resolution10bit, "10-bit"),
+            new Tuple<OW.DS18B20.ThermometerResolution, string>(OW.DS18B20.ThermometerResolution.Resolution11bit, "11-bit"),
+            new Tuple<OW.DS18B20.ThermometerResolution, string>(OW.DS18B20.ThermometerResolution.Resolution12bit, "12-bit"),
+        });
+
+        private OW.DS18B20.ThermometerResolution configurationBlockThermometerResolution = OW.DS18B20.ThermometerResolution.Resolution12bit;
+
+        public OW.DS18B20.ThermometerResolution ConfigurationBlockThermometerResolution
+        {
+            get => this.configurationBlockThermometerResolution;
+
+            set
+            {
+                if (this.configurationBlockThermometerResolution != value)
+                {
+                    this.configurationBlockThermometerResolution = value;
+                    base.OnPropertyChanged(nameof(this.ConfigurationBlockThermometerResolution));
+                }
+            }
+        }
 
         private async Task PerformReadRomAsync()
         {
@@ -660,6 +731,48 @@ namespace DigitalThermometer.App.ViewModels
             finally
             {
                 await busMaster.CloseAsync();
+                this.IsBusy = false;
+            }
+        }
+       
+        private async Task WriteConfigurationAsync()
+        {
+            this.BusState = String.Empty;
+            this.IsBusy = true;
+
+            this.measuresRuns++;
+
+            this.DisplayState(App.Locale["MessageInitializing"]);
+            var portConnection = new SerialPortConnection(this.SelectedSerialPortName, 9600); // TODO: const
+            var busMaster = new OW.OneWireMaster(portConnection, this.FlexibleSpeedConfiguration)
+            {
+                UseMergedRequests = this.UseMergedRequests
+            };
+
+            try
+            {
+                this.DisplayState(App.Locale["MessagePerformingBusReset"]);
+                var busResult = await busMaster.OpenAsync();
+                var busResetResult = this.DisplayBusResult(busResult);
+                if (busResetResult)
+                {
+                    await busMaster.WriteConfigurationAsync(
+                        OW.Utils.RomCodeFromLEString(this.ConfigurationBlockRomCodeString),
+                        this.ConfigurationBlockTh,
+                        this.ConfigurationBlockTl,
+                        this.ConfigurationBlockThermometerResolution,
+                        this.ConfigurationBlockSaveToEeprom);
+                    this.DisplayState(App.Locale["ConfigurationSaveCompletedText"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.DisplayState($"{App.Locale["MessageFatalError"]}: {ex.Message}");
+            }
+            finally
+            {
+                await busMaster.CloseAsync();
+                this.CloseConfigurationBlock();
                 this.IsBusy = false;
             }
         }
@@ -867,7 +980,7 @@ namespace DigitalThermometer.App.ViewModels
                 this.measuresCompleted++;
             }
 
-            this.MarshalToMainThread(() => base.OnPropertyChanged("MeasuresCounter"));
+            this.MarshalToMainThread(() => base.OnPropertyChanged(nameof(MeasuresCounter)));
         }
 
         private int measuresRuns = 0;
@@ -886,15 +999,12 @@ namespace DigitalThermometer.App.ViewModels
 
         public List<SensorStateModel> SensorsState
         {
-            get
-            {
-                return this.sensorsState;
-            }
+            get => this.sensorsState;
 
             set
             {
                 this.sensorsState = value;
-                base.OnPropertyChanged("SensorsStateItems");
+                base.OnPropertyChanged(nameof(this.SensorsStateItems));
                 base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
                 base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
                 base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
@@ -905,7 +1015,7 @@ namespace DigitalThermometer.App.ViewModels
         public void AddFoundSensor(SensorStateModel state)
         {
             this.SensorsState.Add(state);
-            base.OnPropertyChanged("SensorsStateItems");
+            base.OnPropertyChanged(nameof(this.SensorsStateItems));
             base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
             base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
             base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
@@ -919,7 +1029,7 @@ namespace DigitalThermometer.App.ViewModels
                 if (this.SensorsState[i].RomCode == state.RomCode)
                 {
                     this.SensorsState[i] = state;
-                    base.OnPropertyChanged("SensorsStateItems");
+                    base.OnPropertyChanged(nameof(this.SensorsStateItems));
                     base.OnPropertyChanged(nameof(this.PowerUpTemperatureVisibility));
                     base.OnPropertyChanged(nameof(this.PowerUpTemperatureColor));
                     base.OnPropertyChanged(nameof(this.CrcErrorVisibility));
@@ -929,14 +1039,8 @@ namespace DigitalThermometer.App.ViewModels
             }
         }
 
-        public IList<SensorStateViewModel> SensorsStateItems
-        {
-            get
-            {
-                return this.SensorsState?
+        public IList<SensorStateViewModel> SensorsStateItems => this.SensorsState?
                         .Select((state, index) => new SensorStateViewModel(index, state))
                         .ToList();
-            }
-        }
     }
 }

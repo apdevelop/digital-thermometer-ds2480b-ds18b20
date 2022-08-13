@@ -188,7 +188,7 @@ namespace DigitalThermometer.ConsoleApp
             await this.DataReceivedEventDriverAsync();
         }
 
-        byte[] inputBuffer = new byte[4096];
+        private readonly byte[] inputBuffer = new byte[4096];
 
         private async Task ReceiveAsync()
         {
@@ -209,7 +209,7 @@ namespace DigitalThermometer.ConsoleApp
                                 throw new InvalidOperationException("readedBytes != bytesToRead");
                             }
 
-                            await this.rxBufferMutex.WaitAsync();
+                            await this.rxBufferMutex.WaitAsync(); // TODO: sync
                             try
                             {
                                 for (var i = 0; i < readedBytes; i++)

@@ -8,7 +8,7 @@ using OW = DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.App.ViewModels
 {
-    public class SensorStateViewModel
+    public class SensorStateViewModel : BaseNotifyPropertyChanged
     {
         private readonly int indexNumber = 0;
 
@@ -23,162 +23,55 @@ namespace DigitalThermometer.App.ViewModels
             this.indexNumber = indexNumber;
             this.sensorState = sensorState;
 
-            this.CopyRomCodeHexLEStringCommand = new RelayCommand((o) => { Clipboard.SetText(this.RomCodeString); });
-            this.CopyRomCodeHexNumberCommand = new RelayCommand((o) => { Clipboard.SetText("0x" + this.sensorState.RomCode.ToString("X16")); });
+            this.CopyRomCodeHexLEStringCommand = new RelayCommand((o) => Clipboard.SetText(this.RomCodeString));
+            this.CopyRomCodeHexNumberCommand = new RelayCommand((o) => Clipboard.SetText("0x" + this.sensorState.RomCode.ToString("X16")));
         }
 
-        public int IndexNumberString
-        {
-            get
-            {
-                return this.indexNumber + 1;
-            }
-        }
+        public int IndexNumberString => this.indexNumber + 1;
 
-        public string RomCodeString
-        {
-            get
-            {
-                return OW.Utils.RomCodeToLEString(this.sensorState.RomCode);
-            }
-        }
+        public string RomCodeString => OW.Utils.RomCodeToLEString(this.sensorState.RomCode);
 
-        public string TemperatureValueString
-        {
-            get
-            {
-                return this.sensorState.TemperatureValue.HasValue ?
+        public string TemperatureValueString => this.sensorState.TemperatureValue.HasValue ?
                     ((this.sensorState.TemperatureValue > 0.0) ? "+" : String.Empty) +
                         this.sensorState.TemperatureValue.Value.ToString("F4") :
                         "?";
-            }
-        }
 
-        public string TemperatureRawCodeString
-        {
-            get
-            {
-                return this.sensorState.TemperatureRawCode.HasValue ?
+        public string TemperatureRawCodeString => this.sensorState.TemperatureRawCode.HasValue ?
                     "0x" + this.sensorState.TemperatureRawCode.Value.ToString("X4") :
                     "?";
-            }
-        }
 
-        public bool? IsPowerUpTemperatureValue
-        {
-            get
-            {
-                return this.sensorState.TemperatureRawCode.HasValue ?
+        public bool? IsPowerUpTemperatureValue => this.sensorState.TemperatureRawCode.HasValue ?
                     (bool?)(this.sensorState.TemperatureRawCode.Value == OW.DS18B20.PowerOnTemperatureCode) :
                     null;
-            }
-        }
 
-        public string THString
-        {
-            get
-            {
-                if (this.sensorState.HighAlarmTemperature.HasValue)
-                {
-                    return this.sensorState.HighAlarmTemperature.Value.ToString();
-                }
-                else
-                {
-                    return "?";
-                }
-            }
-        }
+        public int? Th => this.sensorState.HighAlarmTemperature;
 
-        public string TLString
-        {
-            get
-            {
-                if (this.sensorState.LowAlarmTemperature.HasValue)
-                {
-                    return this.sensorState.LowAlarmTemperature.Value.ToString();
-                }
-                else
-                {
-                    return "?";
-                }
-            }
-        }
+        public int? Tl => this.sensorState.LowAlarmTemperature;
 
-        public string ThermometerResolutionString
-        {
-            get
-            {
-                if (this.sensorState.ThermometerResolution != null)
-                {
-                    switch (this.sensorState.ThermometerResolution.Value)
-                    {
-                        case OW.DS18B20.ThermometerResolution.Resolution9bit: return "9-bit";
-                        case OW.DS18B20.ThermometerResolution.Resolution10bit: return "10-bit";
-                        case OW.DS18B20.ThermometerResolution.Resolution11bit: return "11-bit";
-                        case OW.DS18B20.ThermometerResolution.Resolution12bit: return "12-bit";
-                        default: throw new ArgumentOutOfRangeException();
-                    }
-                }
-                else
-                {
-                    return "?";
-                }
-            }
-        }
+        public string THString => this.sensorState.HighAlarmTemperature.HasValue ?
+            this.sensorState.HighAlarmTemperature.Value.ToString() :
+            "?";
 
-        public string RawDataString
-        {
-            get
-            {
-                if (this.sensorState.RawData != null)
-                {
-                    return OW.Utils.ByteArrayToHexSpacedString(this.sensorState.RawData);
-                }
-                else
-                {
-                    return "-";
-                }
-            }
-        }
+        public string TLString => this.sensorState.LowAlarmTemperature.HasValue ?
+            this.sensorState.LowAlarmTemperature.Value.ToString() :
+            "?";
 
-        public string ComputedCrcString
-        {
-            get
-            {
-                return (this.sensorState.ComputedCrc.HasValue && this.sensorState.IsValidCrc.HasValue) ?
+        public OW.DS18B20.ThermometerResolution? ThermometerResolution => this.sensorState.ThermometerResolution;
+
+        public string ThermometerResolutionString => this.sensorState.ThermometerResolution.HasValue
+                    ? OW.DS18B20.ThermometerResolutionToString(this.sensorState.ThermometerResolution.Value)
+                    : "?";
+
+        public string RawDataString => this.sensorState.RawData != null ? OW.Utils.ByteArrayToHexSpacedString(this.sensorState.RawData) : "-";
+
+        public string ComputedCrcString => (this.sensorState.ComputedCrc.HasValue && this.sensorState.IsValidCrc.HasValue) ?
                     ("0x" + this.sensorState.ComputedCrc.Value.ToString("X2") + " (" + ((this.sensorState.IsValidCrc.Value) ? "OK" : "!") + ")") :
                     "?";
-            }
-        }
 
-        public bool? IsValidCrc
-        {
-            get
-            {
-                if (this.sensorState.IsValidCrc.HasValue)
-                {
-                    return this.sensorState.IsValidCrc.Value;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
+        public bool? IsValidCrc => this.sensorState.IsValidCrc ?? null;
 
-        public bool? IsValidReadings
-        {
-            get
-            {
-                if (this.sensorState.IsValidCrc.HasValue && this.sensorState.TemperatureRawCode.HasValue)
-                {
-                    return this.sensorState.IsValidCrc.Value && OW.DS18B20.IsValidTemperatureCode(this.sensorState.TemperatureRawCode.Value);
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
+        public bool? IsValidReadings => this.sensorState.IsValidCrc.HasValue && this.sensorState.TemperatureRawCode.HasValue
+                    ? this.sensorState.IsValidCrc.Value && OW.DS18B20.IsValidTemperatureCode(this.sensorState.TemperatureRawCode.Value)
+                    : (bool?)null;
     }
 }

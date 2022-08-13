@@ -1,4 +1,5 @@
 ﻿<Window x:Class="DigitalThermometer.App.Views.MainWindow"
+        xmlns:local="clr-namespace:DigitalThermometer.App.Views"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{DynamicResource MainWindowTitle}" 
@@ -14,6 +15,7 @@
                 <ResourceDictionary Source="/DigitalThermometer.App;component/Assets/PathData.xaml" />
                 <ResourceDictionary Source="/DigitalThermometer.App;component/Assets/MetroColors.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" />
         </ResourceDictionary>
     </Window.Resources>
 
@@ -208,8 +210,8 @@
 
             <DataGrid.Resources>
                 <!-- TODO: unstable menu opening -->
-                <ContextMenu x:Key="RowMenu" 
-                              DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                <ContextMenu x:Key="RowMenu">
+                    <!-- MenuItem bind to Item DataContext -->
                     <MenuItem Command="{Binding CopyRomCodeHexLEStringCommand}">
                         <MenuItem.Header>
                             <TextBlock Text="{DynamicResource CopyRomCodeHexLEStringMenuItemText}" />
@@ -218,6 +220,15 @@
                     <MenuItem Command="{Binding CopyRomCodeHexNumberCommand}">
                         <MenuItem.Header>
                             <TextBlock Text="{DynamicResource CopyRomCodeHexNumberMenuItemText}" />
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <Separator />
+                    <!-- MenuItem bind to MainWindow DataContext, passing Item as CommandParameter -->
+                    <MenuItem Command="{Binding Path=DataContext.OpenConfigurationBlockCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MainWindow}}}"
+                              CommandParameter="{Binding}"
+                              IsEnabled="{Binding Path=DataContext.IsConfigurationBlockEnabled, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:MainWindow}}}">
+                        <MenuItem.Header>
+                            <TextBlock Text="{DynamicResource OpenConfigurationBlockMenuItemText}" />
                         </MenuItem.Header>
                     </MenuItem>
                 </ContextMenu>
@@ -278,17 +289,17 @@
                                 Binding="{Binding THString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="35" />
+                                Width="38" />
                 <DataGridTextColumn Header="TL"
                                 Binding="{Binding TLString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="35" />
+                                Width="38" />
                 <DataGridTextColumn
                                 Binding="{Binding ThermometerResolutionString}" 
                                 CanUserSort="False"
                                 FontFamily="Courier New"
-                                Width="60">
+                                Width="54">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="{DynamicResource DataGridModeHeader}" />
                     </DataGridTextColumn.Header>
@@ -439,13 +450,109 @@
                                Text="{DynamicResource PerformMeasureButtonText}" />
                 </StackPanel>
             </Button>
-
         </StackPanel>
 
         <StatusBar Grid.Row="4"
                    Height="24">
             <TextBlock FontSize="12" Text="{Binding BusState}" />
         </StatusBar>
+
+        <!-- Topmost dialog for configuration editing -->
+        <Canvas Panel.ZIndex="1" HorizontalAlignment="Center" Width="320" Height="150" Margin="0,40,0,0" Background="White"
+                    Visibility="{Binding IsConfigurationBlockOpened, Converter={StaticResource VisibleIfTrueConverter}}">
+            <Border BorderBrush="LightGray" BorderThickness="2" Width="320" Height="150">
+                <Grid HorizontalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="48" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Label Content="{Binding ConfigurationBlockRomCodeString}" FontWeight="Bold" Margin="8,4,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal">
+                        <Label Content="TH" Margin="0,2,0,0"/>
+                        <ComboBox Width="55" Height="24" FontSize="12"
+                          ItemsSource="{Binding ThTlRegisterValues}"
+                          SelectedValue="{Binding ConfigurationBlockTh}" />
+                        <Label Content="TL" Margin="2,2,0,0"/>
+                        <ComboBox Width="55" Height="24" FontSize="12"
+                          ItemsSource="{Binding ThTlRegisterValues}"
+                          SelectedValue="{Binding ConfigurationBlockTl}" />
+                        <Label Content="{DynamicResource ConfigurationBlockResolutionText}" Margin="4,2,0,0"/>
+                        <ComboBox Width="60" Height="24" FontSize="12"
+                          SelectedValuePath="Item1"
+                          DisplayMemberPath="Item2"
+                          ItemsSource="{Binding ThermometerResolutionItems}"
+                          SelectedValue="{Binding ConfigurationBlockThermometerResolution}" />
+                    </StackPanel> 
+                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                        <CheckBox Content="{DynamicResource ConfigurationBlockSaveToEepromText}" 
+                          VerticalAlignment="Center"
+                          Margin="25,0,0,0"
+                          IsChecked="{Binding ConfigurationBlockSaveToEeprom, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <StackPanel.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Width" Value="90" />
+                                <Setter Property="Height" Value="32" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="FontSize" Value="12" />
+                                <Setter Property="Margin" Value="1,1,1,1" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="IsTabStop" Value="False" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Stretch" Value="Uniform" />
+                                <Setter Property="Stroke" Value="Black" />
+                                <Setter Property="Width" Value="20" />
+                                <Setter Property="Height" Value="20" />
+                            </Style>
+                        </StackPanel.Resources>
+                        <Button Margin="8,0,4,0"
+                            ToolTip="{DynamicResource CloseConfigurationBlockButtonToolTip}"
+                            Command="{Binding CloseConfigurationBlockCommand}">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ContentControl>
+                                    <Path Data="{Binding Source={StaticResource pathDataClose}}">
+                                        <Path.Fill>
+                                            <SolidColorBrush Color="{StaticResource MetroDarken}"/>
+                                        </Path.Fill>
+                                    </Path>
+                                </ContentControl>
+                                <TextBlock Text="{DynamicResource CloseConfigurationBlockButtonText}"
+                                    Margin="5,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Margin="5,0,10,0"
+                                IsEnabled="{Binding IsMeasuresEnabled}"
+                                ToolTip="{DynamicResource WriteConfigurationButtonToolTip}"
+                                Command="{Binding WriteConfigurationCommand}">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <ContentControl>
+                                    <Path Data="{Binding Source={StaticResource pathDataCheck01}}">
+                                        <Path.Fill>
+                                            <SolidColorBrush Color="{StaticResource MetroGreen}"/>
+                                        </Path.Fill>
+                                    </Path>
+                                </ContentControl>
+                                <TextBlock Text="{DynamicResource WriteConfigurationButtonText}"
+                                    Margin="5,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Canvas>
 
     </Grid>
 </Window>

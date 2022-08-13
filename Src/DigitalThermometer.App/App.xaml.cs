@@ -44,10 +44,9 @@ namespace DigitalThermometer.App
 
         private void CurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            var exception = e.ExceptionObject as Exception;
-            if (exception != null)
+            if (e.ExceptionObject as Exception != null)
             {
-                MessageBox.Show(exception.ToString(), "Unhandled exception (CurrentDomain)", MessageBoxButton.OK, MessageBoxImage.Stop);
+                MessageBox.Show((e.ExceptionObject as Exception).ToString(), "Unhandled exception (CurrentDomain)", MessageBoxButton.OK, MessageBoxImage.Stop);
             }
             else
             {

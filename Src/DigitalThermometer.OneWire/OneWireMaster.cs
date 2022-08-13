@@ -122,7 +122,7 @@ namespace DigitalThermometer.OneWire
             var busResetResponse = await this.OneWireBusResetAsync();
             if (busResetResponse != OneWireBusResetResponse.PresencePulse)
             {
-                throw new IOException($"No proper bus reset response was received ({busResetResponse})");
+                throw new IOException($"No proper bus reset response was received ({busResetResponse}).");
             }
 
             var request = new List<byte>(ReadScratchpadRequestLength);
@@ -137,12 +137,11 @@ namespace DigitalThermometer.OneWire
             var response = await this.WaitResponseAsync(BusResetResponseLength + request.Count - 1, this.BusResponseTimeout);
             if (!response)
             {
-                throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}]");
+                throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}].");
             }
 
             var romCodeBuffer = new byte[Utils.RomCodeLength];
             this.receiveBuffer.CopyTo(2, romCodeBuffer, 0, romCodeBuffer.Length);
-
             var romCode = BitConverter.ToUInt64(romCodeBuffer, 0);
 
             return romCode;
@@ -232,13 +231,13 @@ namespace DigitalThermometer.OneWire
         /// <summary>
         /// Perform temperature measure on specified DS18B20 slave device
         /// </summary>
-        /// <param name="romCode">ROM code of DS18B20</param>
+        /// <param name="romCode">ROM code of DS18B20.</param>
         /// <returns>Scratchpad contents</returns>
         public async Task<DS18B20.Scratchpad> PerformDS18B20TemperatureMeasurementAsync(UInt64 romCode)
         {
             await this.PerformDS18B20TemperatureConversionAsync(romCode); // TODO: use merged requests version
 
-            byte[] scratchpadData = null;
+            byte[] scratchpadData;
             if (this.UseMergedRequests)
             {
                 scratchpadData = await this.ReadDS18B20ScratchpadDataMergedRequestAsync(romCode);
@@ -251,6 +250,74 @@ namespace DigitalThermometer.OneWire
             var scratchpad = new DS18B20.Scratchpad(scratchpadData);
 
             return scratchpad;
+        }
+
+        /// <summary>
+        /// Perform writing given configuration values to scratchpad.
+        /// </summary>
+        /// <param name="romCode">ROM code of DS18B20.</param>
+        /// <param name="Th">Value of Th register.</param>
+        /// <param name="Tl">Value of Tl register.</param>
+        /// <param name="resolution">Thermometer resolution.</param>
+        /// <param name="saveToEeprom">Save values to EEPROM.</param>
+        /// <returns></returns>
+        public async Task WriteConfigurationAsync(UInt64 romCode, int Th, int Tl, DS18B20.ThermometerResolution resolution, bool saveToEeprom)
+        {
+            var busResetResponse = await this.OneWireBusResetAsync();
+            if (busResetResponse != OneWireBusResetResponse.PresencePulse)
+            {
+                throw new IOException($"No proper bus reset response was received ({busResetResponse}).");
+            }
+            
+            // TODO: test for request building function
+            var request = new List<byte>();
+            request.Add(DS2480B.SwitchToDataMode);
+
+            request.Add(DS18B20.MATCH_ROM);
+            request.AddRange(BitConverter.GetBytes(romCode));
+
+            request.Add(DS18B20.WRITE_SCRATCHPAD);
+            request.Add(unchecked((byte)(sbyte)Th));
+            request.Add(unchecked((byte)(sbyte)Tl));
+            request.Add(DS18B20.Scratchpad.ConfigurationRegisterFromResolution(resolution));
+
+            await this.TransmitDataPacketAsync(request);
+            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Count - 1, this.BusResponseTimeout);
+            if (!response)
+            {
+                throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}].");
+            }
+
+            if (saveToEeprom)
+            {
+                await this.CopyScratchpadToEepromAsync(romCode);
+            }
+        }
+
+        private async Task CopyScratchpadToEepromAsync(UInt64 romCode)
+        {
+            var busResetResponse = await this.OneWireBusResetAsync();
+            if (busResetResponse != OneWireBusResetResponse.PresencePulse)
+            {
+                throw new IOException($"No proper bus reset response was received ({busResetResponse}).");
+            }
+
+            var request = new List<byte>();
+            request.Add(DS2480B.SwitchToDataMode);
+
+            request.Add(DS18B20.MATCH_ROM);
+            request.AddRange(BitConverter.GetBytes(romCode));
+        
+            request.Add(DS18B20.COPY_SCRATCHPAD);
+
+            await this.TransmitDataPacketAsync(request);
+            await Task.Delay(10);
+
+            var response = await this.WaitResponseAsync(BusResetResponseLength + request.Count - 1, this.BusResponseTimeout);
+            if (!response)
+            {
+                throw new IOException($"No proper response was received [{Utils.ByteArrayToHexSpacedString(this.receiveBuffer)}].");
+            }
         }
 
         #endregion
@@ -436,7 +503,7 @@ namespace DigitalThermometer.OneWire
                     return true;
                 }
 
-                await Task.Delay(1); // TODO: async version of AutoResetEvent: this.rxDataWaitHandle.WaitOne(1); ?
+                await Task.Delay(1); // TODO: ! async version of AutoResetEvent: this.rxDataWaitHandle.WaitOne(1);
             }
 
             return false;

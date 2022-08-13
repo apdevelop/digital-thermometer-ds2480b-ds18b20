@@ -1,14 +1,16 @@
-﻿namespace DigitalThermometer.App.Utils
-{
-    using System;
-    using System.Windows.Input;
+﻿using System;
+using System.Windows.Input;
 
+namespace DigitalThermometer.App.Utils
+{
     // http://www.c-sharpcorner.com/UploadFile/1a81c5/a-simple-silverlight-application-implementing-mvvm2/
 
     public class RelayCommand : ICommand
     {
-        private Func<bool> canExecute;
-        private Action<object> executeAction;
+        private readonly Func<bool> canExecute;
+       
+        private readonly Action<object> executeAction;
+      
         public event EventHandler CanExecuteChanged;
 
         public RelayCommand(Action<object> executeAction, Func<bool> canExecute)
@@ -23,22 +25,10 @@
             this.canExecute = () => true;
         }
 
-        public void RaiseCanExecuteChanged()
-        {
-            if (CanExecuteChanged != null)
-            {
-                CanExecuteChanged(this, EventArgs.Empty);
-            }
-        }
+        public void RaiseCanExecuteChanged() => this.CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 
-        public bool CanExecute(object parameter)
-        {
-            return canExecute == null ? true : canExecute();
-        }
+        public bool CanExecute(object parameter) => this.canExecute == null ? true : this.canExecute();
 
-        public void Execute(object parameter)
-        {
-            this.executeAction(parameter);
-        }
+        public void Execute(object parameter) => this.executeAction(parameter);
     }
 }

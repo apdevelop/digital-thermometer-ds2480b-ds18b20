@@ -1,9 +1,9 @@
-﻿namespace DigitalThermometer.App.Utils
-{
-    using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
+﻿using System;
+using System.ComponentModel;
+using System.Diagnostics;
 
+namespace DigitalThermometer.App.Utils
+{
     public abstract class BaseNotifyPropertyChanged : INotifyPropertyChanged
     {
         // https://joshsmithonwpf.wordpress.com/2007/08/29/a-base-class-which-implements-inotifypropertychanged/
@@ -16,10 +16,7 @@
             this.VerifyProperty(propertyName);
 
             var propertyChanged = this.PropertyChanged;
-            if (propertyChanged != null)
-            {
-                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            propertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         [Conditional("DEBUG")]
@@ -34,7 +31,6 @@
             {
                 var type = this.GetType();
                 var propInfo = type.GetProperty(propertyName);
-
                 if (propInfo == null)
                 {
                     throw new ArgumentException($"Property '{propertyName}' was not found in '{type.FullName}' class", nameof(propertyName));

@@ -25,6 +25,7 @@
 
     <sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Копировать код (как LE-строку)</sys:String>
     <sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Копировать код (как 16-ричное число)</sys:String>
+    <sys:String x:Key="OpenConfigurationBlockMenuItemText">Настройка&#x2026;</sys:String>
 
     <sys:String x:Key="DataGridRomCodeHeader">ROM код</sys:String>
     <sys:String x:Key="DataGridCodeHeader">Код</sys:String>
@@ -35,6 +36,14 @@
 
     <sys:String x:Key="CopyTableToClipboardButtonText">Копировать</sys:String>
     <sys:String x:Key="CopyTableToClipboardButtonToolTip">Копировать содержимое таблицы в буфер обмена</sys:String>
+
+    <sys:String x:Key="ConfigurationBlockResolutionText">Разрешение</sys:String>
+    <sys:String x:Key="CloseConfigurationBlockButtonText">Закрыть</sys:String>
+    <sys:String x:Key="CloseConfigurationBlockButtonToolTip">Закрыть без записи значений</sys:String>
+    <sys:String x:Key="WriteConfigurationButtonText">Записать</sys:String>
+    <sys:String x:Key="WriteConfigurationButtonToolTip">Записать значения</sys:String>
+    <sys:String x:Key="ConfigurationBlockSaveToEepromText">Сохранить в EEPROM</sys:String>
+    <sys:String x:Key="ConfigurationSaveCompletedText">Значения сохранены</sys:String>
 
     <sys:String x:Key="PerformOpenButtonText">Открыть&#x2026;</sys:String>
     <sys:String x:Key="PerformOpenButtonToolTip">Открыть текстовый файл со списком номеров устройств</sys:String>

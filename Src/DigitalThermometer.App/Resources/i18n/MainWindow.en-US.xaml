@@ -25,7 +25,8 @@
 
     <sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Copy ROM Code (as little-endian hex string)</sys:String>
     <sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Copy ROM Code (as hex number)</sys:String>
-
+    <sys:String x:Key="OpenConfigurationBlockMenuItemText">Configure&#x2026;</sys:String>
+    
     <sys:String x:Key="DataGridRomCodeHeader">ROM code</sys:String>
     <sys:String x:Key="DataGridCodeHeader">Code</sys:String>
     <sys:String x:Key="DataGridModeHeader">Mode</sys:String>
@@ -36,6 +37,14 @@
     <sys:String x:Key="CopyTableToClipboardButtonText">Copy</sys:String>
     <sys:String x:Key="CopyTableToClipboardButtonToolTip">Copy table contents to clipboard</sys:String>
 
+    <sys:String x:Key="ConfigurationBlockResolutionText">Resolution</sys:String>
+    <sys:String x:Key="CloseConfigurationBlockButtonText">Close</sys:String>
+    <sys:String x:Key="CloseConfigurationBlockButtonToolTip">Close without writing values</sys:String>
+    <sys:String x:Key="WriteConfigurationButtonText">Write</sys:String>
+    <sys:String x:Key="WriteConfigurationButtonToolTip">Write configuration values</sys:String>
+    <sys:String x:Key="ConfigurationBlockSaveToEepromText">Save to EEPROM</sys:String>
+    <sys:String x:Key="ConfigurationSaveCompletedText">Configuration values saved</sys:String>
+    
     <sys:String x:Key="PerformOpenButtonText">Open&#x2026;</sys:String>
     <sys:String x:Key="PerformOpenButtonToolTip">Open text file with devices ROM codes list</sys:String>
 
