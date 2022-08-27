@@ -69,10 +69,7 @@ namespace DigitalThermometer.App.Utils
         /// </summary>  
         /// <param name="cultureName">Culture name</param>  
         /// <returns>Dictionary file name</returns>  
-        private string GetDictionaryFileName(string element, string cultureName)
-        {
-            return element + "." + cultureName + ".xaml";
-        }
+        private static string GetDictionaryFileName(string element, string cultureName) => element + "." + cultureName + ".xaml";
 
         /// <summary>  
         /// Sets or replaces the ResourceDictionary by dynamically loading  

@@ -9,7 +9,7 @@ namespace DigitalThermometer.AvaloniaApp
 {
     public class App : Application
     {
-        internal static readonly Utils.LocalizationUtil Locale = new Utils.LocalizationUtil(); // TODO: remove global variable
+        internal static readonly Utils.LocalizationUtil Locale = new(); // TODO: remove global variable
 
         public override void Initialize()
         {

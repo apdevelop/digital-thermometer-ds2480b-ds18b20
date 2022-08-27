@@ -27,8 +27,7 @@ namespace DigitalThermometer.AvaloniaApp.Utils
         {
             get
             {
-                object res = null;
-                languageDictionary.TryGetResource(key, out res);
+                languageDictionary.TryGetResource(key, out object res);
                 return res as string;
             }
         }
@@ -38,10 +37,7 @@ namespace DigitalThermometer.AvaloniaApp.Utils
         /// </summary>  
         /// <param name="cultureName">Culture name</param>  
         /// <returns>Dictionary file name</returns>  
-        private string GetDictionaryFileName(string element, string cultureName)
-        {
-            return element + "." + cultureName + ".xaml";
-        }
+        private static string GetDictionaryFileName(string element, string cultureName) => element + "." + cultureName + ".xaml";
 
         /// <summary>  
         /// Sets or replaces the ResourceDictionary by dynamically loading  

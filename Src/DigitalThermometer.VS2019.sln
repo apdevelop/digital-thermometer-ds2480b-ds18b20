@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalThermometer.UnitTests", "DigitalThermometer.UnitTests\DigitalThermometer.UnitTests.csproj", "{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalThermometer.App", "DigitalThermometer.App\DigitalThermometer.App.csproj", "{07195702-B4F0-4BC7-B9EA-96F59008D7D8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitalThermometer.OneWire", "DigitalThermometer.OneWire\DigitalThermometer.OneWire.csproj", "{A08490C1-0CFE-42AD-95A5-03910E18AE37}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{39CD16B7-1C35-4320-99D5-AC86A3524140}"
+	ProjectSection(SolutionItems) = preProject
+		..\Docs\DigitalThermometerAvaloniaAppRPi.png = ..\Docs\DigitalThermometerAvaloniaAppRPi.png
+		..\Docs\DigitalThermometerConsoleRPi.png = ..\Docs\DigitalThermometerConsoleRPi.png
+		..\Docs\DigitalThermometerScreenshot.png = ..\Docs\DigitalThermometerScreenshot.png
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B90EF2A-2D9B-47AE-A843-FE270FD28D08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07195702-B4F0-4BC7-B9EA-96F59008D7D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07195702-B4F0-4BC7-B9EA-96F59008D7D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07195702-B4F0-4BC7-B9EA-96F59008D7D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07195702-B4F0-4BC7-B9EA-96F59008D7D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A08490C1-0CFE-42AD-95A5-03910E18AE37}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {46C01886-0A27-421C-9B01-A7CF1890B047}
+	EndGlobalSection
+EndGlobal
