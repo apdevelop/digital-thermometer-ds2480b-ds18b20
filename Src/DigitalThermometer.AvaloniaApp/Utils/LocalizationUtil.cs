@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Styling;
 using System;
 using System.Globalization;
 
@@ -27,7 +28,7 @@ namespace DigitalThermometer.AvaloniaApp.Utils
         {
             get
             {
-                languageDictionary.TryGetResource(key, out object res);
+                languageDictionary.TryGetResource(key, ThemeVariant.Default, out object res);
                 return res as string;
             }
         }
@@ -55,7 +56,7 @@ namespace DigitalThermometer.AvaloniaApp.Utils
             for (var i = 0; i < element.Resources.MergedDictionaries.Count; i++)
             {
                 // Make sure your Localization ResourceDictionarys have the ResourceDictionaryName key
-                if (element.Resources.MergedDictionaries[i].TryGetResource("ResourceDictionaryName", out var name))
+                if (element.Resources.MergedDictionaries[i].TryGetResource("ResourceDictionaryName", ThemeVariant.Default, out var name))
                 {
                     langDictId = i;
                     break;

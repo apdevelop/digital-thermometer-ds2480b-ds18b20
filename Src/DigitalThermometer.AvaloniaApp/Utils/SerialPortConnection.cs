@@ -229,7 +229,7 @@ namespace DigitalThermometer.AvaloniaApp.Utils
                     {
                         if (this.serialPort == null)
                         {
-                            throw new InvalidOperationException($"Port <{serialPort.PortName}> is in invalid state (serialPort == null)");
+                            throw new InvalidOperationException($"Port is in invalid state (serialPort == null)");
                         }
                         else
                         {

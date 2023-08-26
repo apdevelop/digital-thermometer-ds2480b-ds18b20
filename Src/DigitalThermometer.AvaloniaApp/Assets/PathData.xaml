@@ -1,8 +1,10 @@
 ﻿<controls:ResourceDictionary
-    xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Styling"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:sys="clr-namespace:System;assembly=netstandard"      
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Base"
+    xmlns:sys="clr-namespace:System;assembly=netstandard"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
 
     <sys:String x:Key="pathDataConnector01">
         M0,11.800003L26,11.800003C25.699982,17.699997,21.299988,22.599998,15.699982,23.900002L15.699982,30.599998C15.699982,31.400002,15.100006,32,14.399994,32L11.899994,32C11.199982,32,10.5,31.300003,10.5,30.599998L10.5,23.900002C4.7999878,22.699997,0.29998779,17.699997,0,11.800003z M18.299988,0L19.600006,0C20.299988,0,20.899994,0.59999847,20.899994,1.3000031L20.899994,10.400002 17,10.400002 17,1.3000031C17,0.59999847,17.5,0,18.299988,0z M6.5,0L7.7999878,0C8.5,0,9.1000061,0.59999847,9.1000061,1.3000031L9.1000061,10.400002 5.1999817,10.400002 5.1999817,1.3000031C5.1999817,0.59999847,5.7999878,0,6.5,0z
@@ -69,4 +71,3 @@
     </sys:String>
     
 </controls:ResourceDictionary>
-    

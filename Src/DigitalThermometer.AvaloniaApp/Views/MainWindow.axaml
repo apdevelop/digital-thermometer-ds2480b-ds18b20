@@ -68,7 +68,7 @@
 			<ComboBox Width="120" Height="24" FontSize="12"
 					  ToolTip.Tip="{DynamicResource SelectedSerialPortNameTooltip}"
 					  IsEnabled="{Binding IsSelectSerialPortEnabled}"
-					  Items="{Binding SerialPortNames}"
+				      ItemsSource="{Binding SerialPortNames}"
 					  SelectedItem="{Binding SelectedSerialPortName}" />
 
 			<ContentControl
@@ -153,7 +153,7 @@
 			<ComboBox Width="90" Height="24" FontSize="12"
 					  ToolTip.Tip="{DynamicResource SelectedPulldownSlewRateControlTooltip}"
 					  IsEnabled="{Binding IsMeasuresEnabled}"
-					  Items="{Binding PulldownSlewRateControlItems}"
+				      ItemsSource="{Binding PulldownSlewRateControlItems}"
 					  SelectedItem="{Binding SelectedPulldownSlewRateControl}">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>
@@ -166,7 +166,7 @@
 			<ComboBox Width="60" Height="24" FontSize="12"
 					  ToolTip.Tip="{DynamicResource SelectedWrite1LowTimeTooltip}"
 					  IsEnabled="{Binding IsMeasuresEnabled}"
-					  Items="{Binding Write1LowTimeItems}"
+				      ItemsSource="{Binding Write1LowTimeItems}"
 					  SelectedItem="{Binding SelectedWrite1LowTime}">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>
@@ -179,7 +179,7 @@
 			<ComboBox Width="60" Height="24" FontSize="12"
 					  ToolTip.Tip="{DynamicResource SelectedDataSampleOffsetAndWrite0RecoveryTimeTooltip}"
 					  IsEnabled="{Binding IsMeasuresEnabled}"
-					  Items="{Binding DataSampleOffsetAndWrite0RecoveryTimeItems}"
+				      ItemsSource="{Binding DataSampleOffsetAndWrite0RecoveryTimeItems}"
 					  SelectedItem="{Binding SelectedDataSampleOffsetAndWrite0RecoveryTime}">
 				<ComboBox.ItemTemplate>
 					<DataTemplate>
@@ -195,7 +195,7 @@
 			  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 			  IsReadOnly="True"
 			  AutoGenerateColumns="False"
-			  Items="{Binding SensorsStateItems}">
+		      ItemsSource="{Binding SensorsStateItems}">
 
 			<DataGrid.Styles>
 				<Style Selector="DataGridRow">

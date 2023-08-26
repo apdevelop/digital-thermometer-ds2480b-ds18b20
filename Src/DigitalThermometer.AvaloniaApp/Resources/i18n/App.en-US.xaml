@@ -1,71 +1,71 @@
 ﻿<controls:ResourceDictionary
-    xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Styling"
+    xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Base"
     xmlns:sys="clr-namespace:System;assembly=netstandard"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <sys:String x:Key="ResourceDictionaryName">en-US</sys:String>
+	<sys:String x:Key="ResourceDictionaryName">en-US</sys:String>
 
-    <sys:String x:Key="MainWindowTitle">Digital Thermometer Demo App (DS2480B + DS18B20)</sys:String>
-    <sys:String x:Key="RefreshSerialPortsListTooltip">Refresh serial ports list</sys:String>
-    <sys:String x:Key="SelectedSerialPortNameTooltip">Serial port</sys:String>
+	<sys:String x:Key="MainWindowTitle">Digital Thermometer Demo App (DS2480B + DS18B20)</sys:String>
+	<sys:String x:Key="RefreshSerialPortsListTooltip">Refresh serial ports list</sys:String>
+	<sys:String x:Key="SelectedSerialPortNameTooltip">Serial port</sys:String>
 
-    <sys:String x:Key="ParasitePowerTooltip">Parasite powered DS18B20 are on bus</sys:String>
-    <sys:String x:Key="PowerUpTemperatureTooltip">Power-up temperature value (+85 C) on some sensors</sys:String>
-    <sys:String x:Key="CrcErrorTooltip">CRC error on some sensors</sys:String>
+	<sys:String x:Key="ParasitePowerTooltip">Parasite powered DS18B20 are on bus</sys:String>
+	<sys:String x:Key="PowerUpTemperatureTooltip">Power-up temperature value (+85 C) on some sensors</sys:String>
+	<sys:String x:Key="CrcErrorTooltip">CRC error on some sensors</sys:String>
 
-    <sys:String x:Key="IsSimultaneousMeasurementsModeText">Simultaneous</sys:String>
-    <sys:String x:Key="IsSimultaneousMeasurementsModeTooltip">Simultaneous measurement on all sensors</sys:String>
-    <sys:String x:Key="UseMergedRequestsText">Merge requests</sys:String>
-    <sys:String x:Key="UseMergedRequestsTooltip">Use merged requests for serial connection</sys:String>
-    <sys:String x:Key="IsTimerMeasurementsModeText">Timer</sys:String>
-    <sys:String x:Key="IsTimerMeasurementsModeTooltip">Periodic measurements using timer (30 seconds)</sys:String>
+	<sys:String x:Key="IsSimultaneousMeasurementsModeText">Simultaneous</sys:String>
+	<sys:String x:Key="IsSimultaneousMeasurementsModeTooltip">Simultaneous measurement on all sensors</sys:String>
+	<sys:String x:Key="UseMergedRequestsText">Merge requests</sys:String>
+	<sys:String x:Key="UseMergedRequestsTooltip">Use merged requests for serial connection</sys:String>
+	<sys:String x:Key="IsTimerMeasurementsModeText">Timer</sys:String>
+	<sys:String x:Key="IsTimerMeasurementsModeTooltip">Periodic measurements using timer (30 seconds)</sys:String>
 
-    <sys:String x:Key="SelectedPulldownSlewRateControlTooltip">(PDSRC) Pulldown Slew Rate Control (V/μs)</sys:String>
-    <sys:String x:Key="SelectedWrite1LowTimeTooltip">(W1LT) Write-1 Low Time, μs</sys:String>
-    <sys:String x:Key="SelectedDataSampleOffsetAndWrite0RecoveryTimeTooltip">(DSO/W0RT) Data Sample Offset and Write 0 Recovery Time, μs</sys:String>
+	<sys:String x:Key="SelectedPulldownSlewRateControlTooltip">(PDSRC) Pulldown Slew Rate Control (V/μs)</sys:String>
+	<sys:String x:Key="SelectedWrite1LowTimeTooltip">(W1LT) Write-1 Low Time, μs</sys:String>
+	<sys:String x:Key="SelectedDataSampleOffsetAndWrite0RecoveryTimeTooltip">(DSO/W0RT) Data Sample Offset and Write 0 Recovery Time, μs</sys:String>
 
-    <sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Copy ROM Code (as little-endian hex string)</sys:String>
-    <sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Copy ROM Code (as hex number)</sys:String>
+	<sys:String x:Key="CopyRomCodeHexLEStringMenuItemText">Copy ROM Code (as little-endian hex string)</sys:String>
+	<sys:String x:Key="CopyRomCodeHexNumberMenuItemText">Copy ROM Code (as hex number)</sys:String>
 
-    <sys:String x:Key="DataGridRomCodeHeader">ROM code</sys:String>
-    <sys:String x:Key="DataGridCodeHeader">Code</sys:String>
-    <sys:String x:Key="DataGridCodeHeaderTooltip">Raw temperature data</sys:String>
-    <sys:String x:Key="DataGridModeHeader">Mode</sys:String>
-    <sys:String x:Key="DataGridCrcHeader">CRC</sys:String>
-    <sys:String x:Key="DataGridCrcHeaderTooltip">Computed CRC of scratchpad data</sys:String>
-    <sys:String x:Key="DataGridRawDataHeader">Scratchpad Raw Data</sys:String>
+	<sys:String x:Key="DataGridRomCodeHeader">ROM code</sys:String>
+	<sys:String x:Key="DataGridCodeHeader">Code</sys:String>
+	<sys:String x:Key="DataGridCodeHeaderTooltip">Raw temperature data</sys:String>
+	<sys:String x:Key="DataGridModeHeader">Mode</sys:String>
+	<sys:String x:Key="DataGridCrcHeader">CRC</sys:String>
+	<sys:String x:Key="DataGridCrcHeaderTooltip">Computed CRC of scratchpad data</sys:String>
+	<sys:String x:Key="DataGridRawDataHeader">Scratchpad Raw Data</sys:String>
 
-    <sys:String x:Key="MeasureInDemoModeButtonText">Demo</sys:String>
+	<sys:String x:Key="MeasureInDemoModeButtonText">Demo</sys:String>
 
-    <sys:String x:Key="PerformOpenButtonText">Open&#x2026;</sys:String>
-    <sys:String x:Key="PerformOpenButtonToolTip">Open text file with devices ROM codes list</sys:String>
+	<sys:String x:Key="PerformOpenButtonText">Open&#x2026;</sys:String>
+	<sys:String x:Key="PerformOpenButtonToolTip">Open text file with devices ROM codes list</sys:String>
 
-    <sys:String x:Key="PerformReadRomButtonText">Read ROM</sys:String>
-    <sys:String x:Key="PerformReadRomButtonToolTip">Read ROM code of SINGLE 1-Wire device on bus</sys:String>
+	<sys:String x:Key="PerformReadRomButtonText">Read ROM</sys:String>
+	<sys:String x:Key="PerformReadRomButtonToolTip">Read ROM code of SINGLE 1-Wire device on bus</sys:String>
 
-    <sys:String x:Key="PerformSearchButtonText">Search</sys:String>
-    <sys:String x:Key="PerformSearchButtonToolTip">Search 1-Wire devices on bus</sys:String>
+	<sys:String x:Key="PerformSearchButtonText">Search</sys:String>
+	<sys:String x:Key="PerformSearchButtonToolTip">Search 1-Wire devices on bus</sys:String>
 
-    <sys:String x:Key="PerformMeasureButtonText">Measure</sys:String>
-    <sys:String x:Key="PerformMeasureButtonToolTip">Perform temperature measurement on all sensors</sys:String>
+	<sys:String x:Key="PerformMeasureButtonText">Measure</sys:String>
+	<sys:String x:Key="PerformMeasureButtonToolTip">Perform temperature measurement on all sensors</sys:String>
 
-    <!-- Messages text -->
-    <sys:String x:Key="MessageInitializing">Initializing...</sys:String>
-    <sys:String x:Key="MessagePerformingBusReset">Performing bus reset...</sys:String>
-    <sys:String x:Key="MessageNoResponseReceived">Bus reset response was not received</sys:String>
-    <sys:String x:Key="MessageNoPresencePulse">No presence pulse</sys:String>
-    <sys:String x:Key="MessageBusShorted">Bus is shorted</sys:String>
-    <sys:String x:Key="MessagePresencePulseOk">Presence pulse OK</sys:String>
-    <sys:String x:Key="MessageSearchingDevicesOnBus">Searching devices on bus...</sys:String>
-    <sys:String x:Key="MessageSensorFound">Sensor found</sys:String>
-    <sys:String x:Key="MessageTotalSensorsFound">Total sensors found</sys:String>
-    <sys:String x:Key="MessagePerformingMeasure">Performing measure</sys:String>
-    <sys:String x:Key="MessageResult">Result</sys:String>
-    <sys:String x:Key="MessageError">Error</sys:String>
-    <sys:String x:Key="MessageCompleted">Completed</sys:String>
-    <sys:String x:Key="MessageFatalError">Fatal error</sys:String>
+	<!-- Messages text -->
+	<sys:String x:Key="MessageInitializing">Initializing...</sys:String>
+	<sys:String x:Key="MessagePerformingBusReset">Performing bus reset...</sys:String>
+	<sys:String x:Key="MessageNoResponseReceived">Bus reset response was not received</sys:String>
+	<sys:String x:Key="MessageNoPresencePulse">No presence pulse</sys:String>
+	<sys:String x:Key="MessageBusShorted">Bus is shorted</sys:String>
+	<sys:String x:Key="MessagePresencePulseOk">Presence pulse OK</sys:String>
+	<sys:String x:Key="MessageSearchingDevicesOnBus">Searching devices on bus...</sys:String>
+	<sys:String x:Key="MessageSensorFound">Sensor found</sys:String>
+	<sys:String x:Key="MessageTotalSensorsFound">Total sensors found</sys:String>
+	<sys:String x:Key="MessagePerformingMeasure">Performing measure</sys:String>
+	<sys:String x:Key="MessageResult">Result</sys:String>
+	<sys:String x:Key="MessageError">Error</sys:String>
+	<sys:String x:Key="MessageCompleted">Completed</sys:String>
+	<sys:String x:Key="MessageFatalError">Fatal error</sys:String>
 
 </controls:ResourceDictionary>

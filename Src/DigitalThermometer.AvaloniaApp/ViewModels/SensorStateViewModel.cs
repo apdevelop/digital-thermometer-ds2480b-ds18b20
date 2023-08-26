@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reactive;
 
-using Avalonia;
+using Avalonia.Controls;
 using ReactiveUI;
 
-using DigitalThermometer.AvaloniaApp.Models;
+using M = DigitalThermometer.AvaloniaApp.Models;
 using OW = DigitalThermometer.OneWire;
 
 namespace DigitalThermometer.AvaloniaApp.ViewModels
@@ -13,19 +13,23 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
     {
         private readonly int indexNumber = 0;
 
-        private readonly SensorStateModel sensorState;
+        private readonly M.SensorStateModel sensorState;
+
+        private readonly Window window;
 
         public ReactiveCommand<Unit, Unit> CopyRomCodeHexLEStringCommand { get; private set; }
 
         public ReactiveCommand<Unit, Unit> CopyRomCodeHexNumberCommand { get; private set; }
 
-        public SensorStateViewModel(int indexNumber, SensorStateModel sensorState)
+        public SensorStateViewModel(int indexNumber, M.SensorStateModel sensorState, Window window)
         {
             this.indexNumber = indexNumber;
             this.sensorState = sensorState;
+            this.window = window;
 
-            this.CopyRomCodeHexLEStringCommand = ReactiveCommand.CreateFromTask(async () => { await Application.Current.Clipboard.SetTextAsync(this.RomCodeString); });
-            this.CopyRomCodeHexNumberCommand = ReactiveCommand.CreateFromTask(async () => { await Application.Current.Clipboard.SetTextAsync("0x" + this.sensorState.RomCode.ToString("X16")); });
+            // instance of Window for clipboard access
+            this.CopyRomCodeHexLEStringCommand = ReactiveCommand.CreateFromTask(async () => { await TopLevel.GetTopLevel(this.window)?.Clipboard.SetTextAsync(this.RomCodeString); });
+            this.CopyRomCodeHexNumberCommand = ReactiveCommand.CreateFromTask(async () => { await TopLevel.GetTopLevel(this.window)?.Clipboard.SetTextAsync("0x" + this.sensorState.RomCode.ToString("X16")); });
         }
 
         public int IndexNumberString => this.indexNumber + 1;
@@ -57,9 +61,9 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
                     OW.Utils.ByteArrayToHexSpacedString(this.sensorState.RawData) :
                     "-";
 
-        public string ComputedCrcString => (this.sensorState.ComputedCrc.HasValue && this.sensorState.IsValidCrc.HasValue) ?
-                    ("0x" + this.sensorState.ComputedCrc.Value.ToString("X2") + " (" + ((this.sensorState.IsValidCrc.Value) ? "OK" : "!") + ")") :
-                    "?";
+        public string ComputedCrcString => (this.sensorState.ComputedCrc.HasValue && this.sensorState.IsValidCrc.HasValue)
+                    ? ("0x" + this.sensorState.ComputedCrc.Value.ToString("X2") + " (" + ((this.sensorState.IsValidCrc.Value) ? "OK" : "!") + ")")
+                    : "?";
 
         public bool? IsValidCrc => this.sensorState.IsValidCrc ?? null;
 

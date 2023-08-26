@@ -8,14 +8,8 @@ namespace DigitalThermometer.AvaloniaApp
 {
     public class PathGeometryConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return PathGeometry.Parse(value.ToString());
-        }
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => PathGeometry.Parse(value.ToString());
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

@@ -29,7 +29,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
 
         public ReactiveCommand<Unit, Unit> MeasureInDemoModeCommand { get; private set; }
 
-        private Window window = null;
+        private readonly Window window = null;
 
         public MainWindowViewModel(Window window)
         {
@@ -99,10 +99,10 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
 
         private async Task OpenDevicesListFile()
         {
-            var result = await new OpenFileDialog().ShowAsync(this.window); // TODO: GLib-GObject-WARNING issue
-            if (result != null)
+            var result = await this.window.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions { AllowMultiple = false, });
+            if (result != null && result.Count > 0)
             {
-                var path = result[0];
+                var path = result[0].Path.AbsolutePath;
                 var text = System.IO.File.ReadAllText(path);
 
                 this.sensorsList = text
@@ -724,13 +724,7 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
 
         private int measuresCompleted = 0;
 
-        public string MeasuresCounter
-        {
-            get
-            {
-                return $"{this.measuresCompleted}/{this.measuresRuns}";
-            }
-        }
+        public string MeasuresCounter => $"{this.measuresCompleted}/{this.measuresRuns}";
 
         private IList<SensorStateModel> sensorsState;
 
@@ -770,16 +764,9 @@ namespace DigitalThermometer.AvaloniaApp.ViewModels
             }
         }
 
-        public IList<SensorStateViewModel> SensorsStateItems
-        {
-            get
-            {
-                return (this.SensorsState != null) ?
-                    this.SensorsState
-                        .Select((state, index) => new SensorStateViewModel(index, state))
-                        .ToList() :
-                        null;
-            }
-        }
+        public IList<SensorStateViewModel> SensorsStateItems =>
+            this.SensorsState != null
+                    ? this.SensorsState.Select((state, index) => new SensorStateViewModel(index, state, this.window)).ToList()
+                    : null;
     }
 }
