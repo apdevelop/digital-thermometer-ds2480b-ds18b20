@@ -16,7 +16,7 @@ namespace DigitalThermometer.UnitTests
             var busMaster = new OneWireMaster(emulator);
             var result = await busMaster.OpenAsync();
 
-            Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
+            Assert.That(result, Is.EqualTo(OneWireBusResetResponse.PresencePulse));
         }
 
         [Test]
@@ -26,7 +26,7 @@ namespace DigitalThermometer.UnitTests
             var busMaster = new OneWireMaster(emulator);
             var result = await busMaster.OpenAsync();
 
-            Assert.AreEqual(OneWireBusResetResponse.NoPresencePulse, result);
+            Assert.That(result, Is.EqualTo(OneWireBusResetResponse.NoPresencePulse));
         }
 
         [Test]
@@ -39,12 +39,15 @@ namespace DigitalThermometer.UnitTests
             var busMaster = new OneWireMaster(emulator);
             var result = await busMaster.OpenAsync();
 
-            Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
+            Assert.That(result, Is.EqualTo(OneWireBusResetResponse.PresencePulse));
 
             var devices = await busMaster.SearchDevicesOnBusAsync();
-            Assert.AreEqual(2, devices.Count);
-            Assert.AreEqual(device1, devices[0]);
-            Assert.AreEqual(device2, devices[1]);
+            Assert.That(devices, Has.Count.EqualTo(2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(devices[0], Is.EqualTo(device1));
+                Assert.That(devices[1], Is.EqualTo(device2));
+            });
         }
 
         [Test]
@@ -54,12 +57,16 @@ namespace DigitalThermometer.UnitTests
             var emulator = new ThermoStringEmulator(romCodes);
             var busMaster = new OneWireMaster(emulator);
             var result = await busMaster.OpenAsync();
-            Assert.AreEqual(OneWireBusResetResponse.PresencePulse, result);
+            Assert.That(result, Is.EqualTo(OneWireBusResetResponse.PresencePulse));
 
             var measurements = await busMaster.PerformDS18B20TemperatureMeasurementAsync(romCodes);
-            Assert.AreEqual(measurements.Count, romCodes.Length);
-            Assert.AreEqual(25.9375, measurements[romCodes[0]].Temperature);
-            Assert.AreEqual(25.9375, measurements[romCodes[1]].Temperature);
+           
+            Assert.Multiple(() =>
+            {
+                Assert.That(romCodes, Has.Length.EqualTo(measurements.Count));
+                Assert.That(measurements[romCodes[0]].Temperature, Is.EqualTo(25.9375));
+                Assert.That(measurements[romCodes[1]].Temperature, Is.EqualTo(25.9375));
+            });
         }
     }
 }

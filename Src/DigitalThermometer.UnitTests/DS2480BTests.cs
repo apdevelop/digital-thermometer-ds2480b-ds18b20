@@ -10,33 +10,45 @@ namespace DigitalThermometer.UnitTests
         [Test]
         public void IsBusResetResponse()
         {
-            Assert.IsTrue(DS2480B.IsBusResetResponse(0xCD));
-            Assert.IsTrue(DS2480B.IsBusResetResponse(0xED));
-            Assert.IsTrue(DS2480B.IsBusResetResponse(0xCF));
-            Assert.IsTrue(DS2480B.IsBusResetResponse(0xEF));
-            Assert.IsTrue(DS2480B.IsBusResetResponse(0xCC));
-            Assert.IsTrue(DS2480B.IsBusResetResponse(0xEC));
+            Assert.Multiple(() =>
+            {
+                Assert.That(DS2480B.IsBusResetResponse(0xCD));
+                Assert.That(DS2480B.IsBusResetResponse(0xED));
+                Assert.That(DS2480B.IsBusResetResponse(0xCF));
+                Assert.That(DS2480B.IsBusResetResponse(0xEF));
+                Assert.That(DS2480B.IsBusResetResponse(0xCC));
+                Assert.That(DS2480B.IsBusResetResponse(0xEC));
+            });
         }
 
         [Test]
         public void CheckResetResponsePresencePulse()
         {
-            Assert.AreEqual(OneWireBusResetResponse.PresencePulse, DS2480B.GetBusResetResponse(0xCD));
-            Assert.AreEqual(OneWireBusResetResponse.PresencePulse, DS2480B.GetBusResetResponse(0xED)); // Bit 5 is reserved and undefined.
+            Assert.Multiple(() =>
+            {
+                Assert.That(DS2480B.GetBusResetResponse(0xCD), Is.EqualTo(OneWireBusResetResponse.PresencePulse));
+                Assert.That(DS2480B.GetBusResetResponse(0xED), Is.EqualTo(OneWireBusResetResponse.PresencePulse)); // Bit 5 is reserved and undefined.
+            });
         }
 
         [Test]
         public void CheckResetResponseNoPresencePulse()
         {
-            Assert.AreEqual(OneWireBusResetResponse.NoPresencePulse, DS2480B.GetBusResetResponse(0xCF));
-            Assert.AreEqual(OneWireBusResetResponse.NoPresencePulse, DS2480B.GetBusResetResponse(0xEF));
+            Assert.Multiple(() =>
+            {
+                Assert.That(DS2480B.GetBusResetResponse(0xCF), Is.EqualTo(OneWireBusResetResponse.NoPresencePulse));
+                Assert.That(DS2480B.GetBusResetResponse(0xEF), Is.EqualTo(OneWireBusResetResponse.NoPresencePulse));
+            });
         }
 
         [Test]
         public void CheckResetResponseBusShorted()
         {
-            Assert.AreEqual(OneWireBusResetResponse.BusShorted, DS2480B.GetBusResetResponse(0xCC));
-            Assert.AreEqual(OneWireBusResetResponse.BusShorted, DS2480B.GetBusResetResponse(0xEC));
+            Assert.Multiple(() =>
+            {
+                Assert.That(DS2480B.GetBusResetResponse(0xCC), Is.EqualTo(OneWireBusResetResponse.BusShorted));
+                Assert.That(DS2480B.GetBusResetResponse(0xEC), Is.EqualTo(OneWireBusResetResponse.BusShorted));
+            });
         }
     }
 }
